@@ -1,6 +1,7 @@
 import MyService from './my.service'
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { DimxRelations } from './metadata'
+import { v4 as uuid } from 'uuid';
 
 export async function collection(client: Client, request: Request) {
     const service = new MyService(client);
@@ -60,6 +61,7 @@ export async function items(client: Client, request: Request) {
             break;
         }
         case 'POST': {
+            request.body.Key = await getItemKey(service, request.body, collectionName);            
             result = await service.upsertItem(collectionName, request.body);
             break;
         }
@@ -108,5 +110,28 @@ async function checkHidden(service: MyService, body: any) {
             throw new Error('Cannot delete collection with items not hidden');
         }
     }
+}
+
+async function getItemKey(service: MyService, body: any, collectionName: string): Promise<string> {
+    let key = '';
+
+    if ('Key' in body) {
+        key = body.Key;
+    }
+    else {
+        const scheme: any = await service.getCollection(collectionName);
+        if (scheme.CompositeKeyType === 'Generate') {
+            key = uuid();
+        }
+        else if (scheme.CompositeKeyType === 'Fields') {
+            let fieldsValues: string[] = [];
+            scheme.CompositeKeyFields.forEach((field) => {
+                fieldsValues.push(body[field]);
+            })
+            key = fieldsValues.join('_');
+        }
+    }
+
+    return key
 }
 
