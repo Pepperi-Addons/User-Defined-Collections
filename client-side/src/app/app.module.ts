@@ -8,8 +8,11 @@ import { PepAddonService } from '@pepperi-addons/ngx-lib';
 import { TranslateModule, TranslateLoader, TranslateStore } from '@ngx-translate/core';
 
 import { AppRoutingModule } from './app.routes';
-import { AddonModule } from './addon/addon.module';
+import { AddonModule } from './collection-list/collection-list.module';
 import { AppComponent } from './app.component';
+import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
+import { PepMenuModule } from '@pepperi-addons/ngx-lib/menu';
 
 @NgModule({
     declarations: [

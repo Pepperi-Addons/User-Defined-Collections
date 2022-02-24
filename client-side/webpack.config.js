@@ -34,7 +34,7 @@ module.exports = (config, options, env) => {
                 name: `${filename}`,
                 filename: `${filename}.js`,
                 exposes: {
-                  './AddonModule': './src/app/addon/index.ts'
+                  './AddonModule': './src/app/collection-list/index.ts'
                 },
                 shared: share({
                     "@angular/core": { eager: true, singleton: true, strictVersion: true, requiredVersion: 'auto' },

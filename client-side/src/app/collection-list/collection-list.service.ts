@@ -4,11 +4,12 @@ import { PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { TransitiveCompileNgModuleMetadata } from '@angular/compiler';
 
 
 @Injectable({ providedIn: 'root' })
 export class AddonService {
-
+    
     accessToken = '';
     parsedToken: any
     papiBaseURL = ''
@@ -49,4 +50,30 @@ export class AddonService {
 
     }
 
+    async getCollections(hidden: boolean = false, params: any) {
+        let options: any = {};
+        if (hidden) {
+            options.include_deleted = true;
+            options.where ='Hidden = true';
+        }
+        if (params.searchString) {
+            options.where = `Name LIKE ${params.searchString} OR Description LIKE ${params.searchString}`;
+        }
+        return await this.papiClient.addons.api.uuid(this.addonUUID).sync().file('api').func('collection').get(options);
+    }
+    
+    async restoreCollection(name: string) {
+        return await this.papiClient.addons.api.uuid(this.addonUUID).sync().file('api').func('collection').post({}, {
+            Name: name,
+            Hidden: false
+        });
+    }
+
+    async deleteCollection(name: string) {
+        return await this.papiClient.addons.api.uuid(this.addonUUID).sync().file('api').func('collection').post({}, {
+            Name: name,
+            Hidden: true
+        });
+    }
+    
 }
