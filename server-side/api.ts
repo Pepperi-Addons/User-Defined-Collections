@@ -11,10 +11,10 @@ export async function collection(client: Client, request: Request) {
         case 'GET': {
             const collectionName = request.query.name;
             if (collectionName) {
-                result = await service.getCollection(collectionName);
+                result = await service.getCollection(collectionName, request.query);
             }
             else {
-                result = await service.getAllCollections();
+                result = await service.getAllCollections(request.query);
             }
             break;
         }

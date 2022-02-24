@@ -29,6 +29,6 @@
     },
     "dependencies": {
         "@pepperi-addons/debug-server": "*",
-        "@pepperi-addons/papi-sdk": "^1.30.0"
+        "@pepperi-addons/papi-sdk": "file:../../papi-sdk/pepperi-addons-papi-sdk-1.30.0.tgz"
     }
 }

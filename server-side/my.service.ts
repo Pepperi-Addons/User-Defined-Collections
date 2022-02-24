@@ -29,12 +29,12 @@ class MyService {
         return await this.papiClient.addons.data.schemes.post(collectionObj);
     }
     
-    async getCollection(tableName:string): Promise<AddonDataScheme> {
-        return await this.papiClient.addons.data.schemes.name.get(tableName);
+    async getCollection(tableName:string, options: any = {}): Promise<AddonDataScheme> {
+        return await this.papiClient.addons.data.schemes.name(tableName).get(options);
     }
     
-    async getAllCollections(): Promise<AddonDataScheme[]> {
-        return await this.papiClient.addons.data.schemes.get();
+    async getAllCollections(options: any = {}): Promise<AddonDataScheme[]> {
+        return await this.papiClient.addons.data.schemes.get(options);
     }
     
     async getAllitemsInCollection(collectionName: any, options: any): Promise<AddonData[]> {
