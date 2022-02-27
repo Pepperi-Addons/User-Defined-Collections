@@ -8,7 +8,7 @@ import { TransitiveCompileNgModuleMetadata } from '@angular/compiler';
 
 
 @Injectable({ providedIn: 'root' })
-export class AddonService {
+export class CollectionsService {
     
     accessToken = '';
     parsedToken: any

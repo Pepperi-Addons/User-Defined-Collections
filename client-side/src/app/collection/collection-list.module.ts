@@ -11,11 +11,12 @@ import { PepIconRegistry, pepIconSystemClose } from '@pepperi-addons/ngx-lib/ico
 
 import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 
-import { AddonService } from './collection-list.service';
+import { CollectionsService } from './collection-list.service';
 import { CollectionListComponent } from './index';
 import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import { PepMenuModule } from '@pepperi-addons/ngx-lib/menu';
+import { CollectionFormComponent } from './form/collection-form.component';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -31,6 +32,7 @@ export const routes: Routes = [
 @NgModule({
     declarations: [
         CollectionListComponent,
+        CollectionFormComponent
     ],
     imports: [
         CommonModule,
@@ -55,10 +57,10 @@ export const routes: Routes = [
     providers: [
         TranslateStore,
         // When loading this module from route we need to add this here (because only this module is loading).
-        AddonService
+        CollectionsService
     ]
 })
-export class AddonModule {
+export class CollectionListModule {
     constructor(
         translate: TranslateService,
         private pepIconRegistry: PepIconRegistry,

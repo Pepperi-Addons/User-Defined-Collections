@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angu
 import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { TranslateService } from '@ngx-translate/core';
 
-import { AddonService } from "./collection-list.service";
+import { CollectionsService } from "./collection-list.service";
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
@@ -34,7 +34,7 @@ export class CollectionListComponent implements OnInit {
     deleteError = 'Cannot delete collection with items not hidden';
 
     constructor(
-        public addonService: AddonService,
+        public collectionsService: CollectionsService,
         public layoutService: PepLayoutService,
         public translate: TranslateService,
         public genericListService: PepGenericListService,
@@ -49,7 +49,7 @@ export class CollectionListComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.addonService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
+        this.collectionsService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
         this.recycleBin = this.activateRoute.snapshot.queryParams.recycle_bin == 'true' || false;
         this.menuItems = this.getMenuItems();
     }
@@ -76,7 +76,7 @@ export class CollectionListComponent implements OnInit {
         return {
             init: async(params:any) => {
                 console.log('init list');
-                let collections = await this.addonService.getCollections(this.recycleBin, params);
+                let collections = await this.collectionsService.getCollections(this.recycleBin, params);
                 return Promise.resolve({
                     dataView: {
                         Context: {
@@ -137,7 +137,7 @@ export class CollectionListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Restore'),
                         handler: async (objs) => {
-                            await this.addonService.restoreCollection(objs.rows[0]);
+                            await this.collectionsService.restoreCollection(objs.rows[0]);
                             this.dataSource = this.getDataSource();
                         }
                     })
@@ -146,7 +146,7 @@ export class CollectionListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Edit'),
                         handler: async (objs) => {
-                            this.navigateToCollectionForm('Edit', objs.rows[0]);
+                            this.navigateToCollectionForm(objs.rows[0]);
                         }
                     });
                     actions.push({
@@ -175,8 +175,11 @@ export class CollectionListComponent implements OnInit {
 
     menuItems:PepMenuItem[] = []
 
-    navigateToCollectionForm(arg0: string, arg1: any = {}) {
-        throw new Error("Method not implemented.");
+    navigateToCollectionForm(name: string) {
+        this.router.navigate([name], {
+            relativeTo: this.activateRoute,
+            queryParamsHandling: 'preserve'
+        })
     }
 
     menuItemClick(event: any) {
@@ -211,7 +214,7 @@ export class CollectionListComponent implements OnInit {
             .subscribe(async (isDeletePressed) => {
                 if (isDeletePressed) {
                     try {
-                        await this.addonService.deleteCollection(name);
+                        await this.collectionsService.deleteCollection(name);
                         this.dataSource = this.getDataSource();
                     }
                     catch (error) {

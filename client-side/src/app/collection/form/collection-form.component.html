@@ -1,0 +1,18 @@
+
+<pep-page-layout [addPadding]="false">
+    <ng-container pep-top-area>
+        <pep-top-bar>
+            <div header-start-content>
+                <pep-button class="pep-spacing-element" (buttonClick)="goBack()" [iconName]="'arrow_left_alt'"></pep-button>
+            </div>
+            <div header-end-content>
+                <!-- <pep-button class="pep-spacing-element" [value]="'Cancel' | translate" (buttonClick)="cancelClicked()"></pep-button>  -->
+                <pep-button class="pep-spacing-element" [value]="'Save' | translate" [styleType]="'strong'" (buttonClick)="saveClicked()"></pep-button>
+            </div>
+        </pep-top-bar>
+    </ng-container>
+
+    <ng-container pep-main-area>
+        
+    </ng-container>
+</pep-page-layout>
