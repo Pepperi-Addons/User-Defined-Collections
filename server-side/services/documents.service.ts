@@ -1,10 +1,12 @@
 import { PapiClient, InstalledAddon, AddonDataScheme, AddonData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { DimxRelations } from './metadata';
+import { DimxRelations } from '../metadata';
+import { UtilitiesService } from './utilities.service';
 
-class MyService {
+export class DocumentsService {
     
     papiClient: PapiClient
+    utilities: UtilitiesService = new UtilitiesService();
     
     constructor(private client: Client) {
         this.papiClient = new PapiClient({
@@ -16,37 +18,26 @@ class MyService {
         });
     }
     
-    // For page block template
-    upsertRelation(relation): Promise<any> {
-        return this.papiClient.post('/addons/data/relations', relation);
-    }
-    
-    async upsertCollection(body: any) {
-        const collectionObj = {
-            ...body,
-            Type: "meta_data"
-        }
-        return await this.papiClient.addons.data.schemes.post(collectionObj);
-    }
-    
-    async getCollection(tableName:string, options: any = {}): Promise<AddonDataScheme> {
-        return await this.papiClient.addons.data.schemes.name(tableName).get(options);
-    }
-    
-    async getAllCollections(options: any = {}): Promise<AddonDataScheme[]> {
-        return await this.papiClient.addons.data.schemes.get(options);
-    }
-    
-    async getAllitemsInCollection(collectionName: any, options: any): Promise<AddonData[]> {
+    async getAllDocumentsInCollection(collectionName: any, options: any): Promise<AddonData[]> {
         return await this.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).find(options);
     }
     
-    async getItemByKey(collectionName: any, key: any): Promise<AddonData> {
+    async getDocumentByKey(collectionName: any, key: any): Promise<AddonData> {
         return await this.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(key).get();
     }
     
-    async upsertItem(collectionName: any, body: any): Promise<AddonData> {
+    async upsertDocument(collectionName: any, body: any): Promise<AddonData> {
         return await this.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(body);
+    }
+
+    async checkHidden(body: any) {
+        if ('Hidden' in body && body.Hidden) {
+            const collectionName = body.Name;
+            const items = await this.getAllDocumentsInCollection(collectionName, {});
+            if (items.length > 0) {
+                throw new Error('Cannot delete collection with items not hidden');
+            }
+        }
     }
 
     //DIMX
@@ -61,5 +52,3 @@ class MyService {
         return body;
      }
 }
-
-export default MyService;

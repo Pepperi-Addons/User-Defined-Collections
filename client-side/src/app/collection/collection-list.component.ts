@@ -22,7 +22,6 @@ export class CollectionListComponent implements OnInit {
     
     screenSize: PepScreenSizeType;
 
-    noDataMessage: string;
     dataSource: IPepGenericListDataSource = this.getDataSource();
 
     pager: IPepGenericListPager = {
