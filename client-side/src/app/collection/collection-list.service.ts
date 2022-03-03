@@ -1,12 +1,11 @@
-import { Observable } from 'rxjs';
 import jwt from 'jwt-decode';
-import { PapiClient } from '@pepperi-addons/papi-sdk';
+import { AddonData, Collection, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
-import { TransitiveCompileNgModuleMetadata } from '@angular/compiler';
 
-
+export type FormMode = 'Add' | 'Edit';
+export const EMPTY_OBJECT_NAME = 'NewCollection';
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
     
@@ -33,23 +32,6 @@ export class CollectionsService {
         this.papiBaseURL = this.parsedToken["pepperi.baseurl"];
     }
 
-    async get(endpoint: string): Promise<any> {
-        return await this.papiClient.get(endpoint);
-    }
-
-    async post(endpoint: string, body: any): Promise<any> {
-        return await this.papiClient.post(endpoint, body);
-    }
-
-    pepGet(endpoint: string): Observable<any> {
-        return this.pepHttp.getPapiApiCall(endpoint);
-    }
-
-    pepPost(endpoint: string, body: any): Observable<any> {
-        return this.pepHttp.postPapiApiCall(endpoint, body);
-
-    }
-
     async getCollections(hidden: boolean = false, params: any) {
         let options: any = {};
         if (hidden) {
@@ -59,21 +41,32 @@ export class CollectionsService {
         if (params.searchString) {
             options.where = `Name LIKE ${params.searchString} OR Description LIKE ${params.searchString}`;
         }
-        return await this.papiClient.addons.api.uuid(this.addonUUID).sync().file('api').func('collection').get(options);
+        return await this.papiClient.userDefinedCollections.schemes.find(options);
     }
     
-    async restoreCollection(name: string) {
-        return await this.papiClient.addons.api.uuid(this.addonUUID).sync().file('api').func('collection').post({}, {
-            Name: name,
-            Hidden: false
-        });
+    async upsertCollection(obj: Collection) {
+        return await this.papiClient.userDefinedCollections.schemes.upsert(obj);
     }
 
-    async deleteCollection(name: string) {
-        return await this.papiClient.addons.api.uuid(this.addonUUID).sync().file('api').func('collection').post({}, {
-            Name: name,
-            Hidden: true
-        });
+    async getCollectionByName(collectionName: string): Promise<Collection> {
+        if (collectionName !== EMPTY_OBJECT_NAME) {
+            return await this.papiClient.userDefinedCollections.schemes.name(collectionName).get();
+        }
+        else {
+            return {
+                Name: '',
+                DocumentKey: {
+                    Delimiter: '@',
+                    Type: 'AutoGenerate',
+                    Fields: []
+                },
+                Fields: {}
+            };
+        }
     }
-    
+
+    async getCollectionDocuments(collectionName: string): Promise<AddonData[]> {
+        return await this.papiClient.userDefinedCollections.documents(collectionName).find();
+    }
+        
 }

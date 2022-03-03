@@ -1,6 +1,6 @@
 {
   "AddonUUID": "122c0e9d-c240-4865-b446-f37ece866c22",
-  "AddonVersion": "0.0.4",
+  "AddonVersion": "0.0.5",
   "DebugPort": 4500,
   "WebappBaseUrl": "https://app.sandbox.pepperi.com",
   "DefaultEditor": "main",
@@ -17,7 +17,7 @@
       {
         "ParentPackageName": "Configuration",
         "PackageName": "udc",
-        "Description": "Collections"
+        "Description": "User Defined Collections"
       }
     ],
     "Dependencies": {},

@@ -43,7 +43,7 @@ export class CollectionsService {
         await Promise.all(DimxRelations.map(async (singleRelation) => {
             // overide the name with the collectionName
             singleRelation.Name = collectionName;
-            await this.papiClient.post('/addons/data/relations', singleRelation);
+            await this.papiClient.addons.data.relations.upsert(singleRelation);
         }));
     }
 }

@@ -35,7 +35,7 @@ export class DocumentsService {
             const collectionName = body.Name;
             const items = await this.getAllDocumentsInCollection(collectionName, {});
             if (items.length > 0) {
-                throw new Error('Cannot delete collection with items not hidden');
+                throw new Error('Cannot delete collection with documents');
             }
         }
     }

@@ -3,5 +3,22 @@
     "Collection_List_Title": "User Defined Collections",
     "Collection_DeleteDialogTitle": "Delete Collection",
     "Collection_DeleteDialogContent": "Are you sure you want to delete this collection?",
-    "Collection_DeleteDialogError": "Cannot delete collection with items not hidden"
+    "Collection_DeleteDialogError": "Cannot delete collection with items not hidden",
+    "Collection_Edit_Title": "Edit - {{collection_name}}",
+    "Collection_Add_Title": "Create Collection",
+    "Collection_Fields_Title": "Fields",
+    "Back_to_list": "Back to list",
+    "DocumentKey_Options_AutoGenerate": "Auto generate",
+    "DocumentKey_Options_Composite": "based on fields",
+    "DocumenyKey_Delimiter_Title": "Delimiter",
+    "DocumentKey_Select_Title": "Unique document identifier",
+    "UID_Fields_Title": "Unique document identifier fields",
+    "Collection_UpdateFailed_Title": "Error saving collection",
+    "Collection_UpdateFailed_Content": "Failed saving collection. please try again later.",
+    "Collection_UpdateSuccess_Title": "Collection saved",
+    "Collection_UpdateSuccess_Content": "Collection saved successfuly",
+    "FormField_Title_Edit": "Edit - {{field_name}}",
+    "FormField_Title_Add": "Create Field",
+    "DeleteField_DialogTitle": "Delete Field",
+    "DeleteField_DialogContent": "Are you sure you want to delete '{{field_name}}' field?"
 }

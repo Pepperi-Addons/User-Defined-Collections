@@ -1,3 +1,4 @@
+import { FieldsFormComponent } from './form/fields/fields-form.component';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRouteSnapshot, RouterModule, Routes } from '@angular/router';
@@ -17,6 +18,10 @@ import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import { PepMenuModule } from '@pepperi-addons/ngx-lib/menu';
 import { CollectionFormComponent } from './form/collection-form.component';
+import { PepTextboxModule } from '@pepperi-addons/ngx-lib/textbox';
+import { PepSelectModule } from '@pepperi-addons/ngx-lib/select';
+import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
+import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -32,18 +37,23 @@ export const routes: Routes = [
 @NgModule({
     declarations: [
         CollectionListComponent,
-        CollectionFormComponent
+        CollectionFormComponent,
+        FieldsFormComponent
     ],
     imports: [
         CommonModule,
         HttpClientModule,
         PepNgxLibModule,
         PepSizeDetectorModule,
+        PepTextboxModule,
         PepTopBarModule,
         PepPageLayoutModule,
         PepGenericListModule,
         PepButtonModule,
         PepMenuModule,
+        PepSelectModule,
+        PepTextareaModule,
+        PepDialogModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,

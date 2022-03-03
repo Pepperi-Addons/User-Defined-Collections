@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angu
 import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { TranslateService } from '@ngx-translate/core';
 
-import { CollectionsService } from "./collection-list.service";
+import { CollectionsService, EMPTY_OBJECT_NAME, FormMode } from "./collection-list.service";
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
@@ -27,6 +27,8 @@ export class CollectionListComponent implements OnInit {
     pager: IPepGenericListPager = {
         type: 'scroll',
     };
+    
+    EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
 
     recycleBin: boolean = false;
 
@@ -74,7 +76,6 @@ export class CollectionListComponent implements OnInit {
     getDataSource() {
         return {
             init: async(params:any) => {
-                console.log('init list');
                 let collections = await this.collectionsService.getCollections(this.recycleBin, params);
                 return Promise.resolve({
                     dataView: {
@@ -136,7 +137,12 @@ export class CollectionListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Restore'),
                         handler: async (objs) => {
-                            await this.collectionsService.restoreCollection(objs.rows[0]);
+                            // await this.collectionsService.restoreCollection(objs.rows[0]);
+                            await this.collectionsService.upsertCollection({
+                                Name: objs.rows[0],
+                                Hidden: false,
+                            });
+    
                             this.dataSource = this.getDataSource();
                         }
                     })
@@ -145,7 +151,7 @@ export class CollectionListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Edit'),
                         handler: async (objs) => {
-                            this.navigateToCollectionForm(objs.rows[0]);
+                            this.navigateToCollectionForm('Edit', objs.rows[0]);
                         }
                     });
                     actions.push({
@@ -174,10 +180,12 @@ export class CollectionListComponent implements OnInit {
 
     menuItems:PepMenuItem[] = []
 
-    navigateToCollectionForm(name: string) {
+    navigateToCollectionForm(mode: FormMode, name: string) {
+        this.router['form_mode'] = mode;
         this.router.navigate([name], {
             relativeTo: this.activateRoute,
-            queryParamsHandling: 'preserve'
+            queryParamsHandling: 'preserve',
+            state: {form_mode: 'Edit'}
         })
     }
 
@@ -213,7 +221,10 @@ export class CollectionListComponent implements OnInit {
             .subscribe(async (isDeletePressed) => {
                 if (isDeletePressed) {
                     try {
-                        await this.collectionsService.deleteCollection(name);
+                        await this.collectionsService.upsertCollection({
+                            Name: name,
+                            Hidden: true,
+                        });
                         this.dataSource = this.getDataSource();
                     }
                     catch (error) {
