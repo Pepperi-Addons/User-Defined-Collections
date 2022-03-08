@@ -1,7 +1,9 @@
 import { NgModule } from '@angular/core';
 import { Component } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { CollectionListComponent, CollectionFormComponent } from './collection/index';
+
+import { CollectionListComponent, CollectionFormComponent } from './collection';
+import { DocumentsListComponent } from './documents';
 
 // Important for single spa
 @Component({
@@ -24,6 +26,13 @@ const routes: Routes = [
             {
                 path: ':editor/:collection_name',
                 component: CollectionFormComponent
+                // TODO: solve routing
+                // path: '**',
+                // loadChildren: () => import('./addon/addon.module').then(m => m.AddonModule)
+            },
+            {
+                path: ':editor/:collection_name/documents',
+                component: DocumentsListComponent
                 // TODO: solve routing
                 // path: '**',
                 // loadChildren: () => import('./addon/addon.module').then(m => m.AddonModule)

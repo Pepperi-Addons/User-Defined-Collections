@@ -10,6 +10,7 @@ import { AppRoutingModule } from './app.routes';
 import { AppComponent } from './app.component';
 
 import { CollectionListModule } from './collection';
+import { DocumentsListModule } from './documents';
 
 @NgModule({
     declarations: [
@@ -20,6 +21,7 @@ import { CollectionListModule } from './collection';
         BrowserAnimationsModule,
         HttpClientModule,
         CollectionListModule,
+        DocumentsListModule,
         AppRoutingModule,
         TranslateModule.forRoot({
             loader: {

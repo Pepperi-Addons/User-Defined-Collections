@@ -163,15 +163,15 @@ export class CollectionListComponent implements OnInit {
                     // actions.push({
                     //     title: this.translate.instant('Export'),
                     //     handler: async (objs) => {
-                    //         this.exportCollectionScheme(objs[0]);
+                    //         this.exportCollectionScheme(objs.rows[0]);
                     //     }
                     // })
-                    // actions.push({
-                    //     title: this.translate.instant('Edit data'),
-                    //     handler: async (objs) => {
-                    //         this.navigateToDataForm(objs[0]);
-                    //     }
-                    // })
+                    actions.push({
+                        title: this.translate.instant('Edit data'),
+                        handler: async (objs) => {
+                            this.navigateToDocumentsView(objs.rows[0]);
+                        }
+                    })
                 }
             }
             return actions;
@@ -241,4 +241,11 @@ export class CollectionListComponent implements OnInit {
                 }
         });      
     }
+
+    navigateToDocumentsView(collectionName: string) {
+        this.router.navigate([`${collectionName}/documents`], {
+            relativeTo: this.activateRoute
+        });
+    }
+
 }
