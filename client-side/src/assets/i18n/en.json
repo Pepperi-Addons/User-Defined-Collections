@@ -20,5 +20,7 @@
     "FormField_Title_Edit": "Edit - {{field_name}}",
     "FormField_Title_Add": "Create Field",
     "DeleteField_DialogTitle": "Delete Field",
-    "DeleteField_DialogContent": "Are you sure you want to delete '{{field_name}}' field?"
+    "DeleteField_DialogContent": "Are you sure you want to delete '{{field_name}}' field?",
+    "UidFields_SelectLabel": "Choose field to add",
+    "SortForm_Label": "Field index"
 }

@@ -20,7 +20,6 @@
                 type="text"
                 [mandatory]="false"
                 [disabled]="!emptyCollection"
-                (valueChange)="changeCollectionName($event)"
             ></pep-textbox>
             <pep-textbox
                 [(value)]="collection.Description"
@@ -101,7 +100,7 @@
 </pep-page-layout>
 
 <ng-template #UidFieldForm> 
-    <pep-dialog [title]=''>
+    <pep-dialog [showHeader]="false">
         <ng-container pep-dialog-content>
             <pep-select
                 [(value)]="fieldKey"
@@ -124,3 +123,4 @@
         </ng-container>
     </pep-dialog>
 </ng-template>
+

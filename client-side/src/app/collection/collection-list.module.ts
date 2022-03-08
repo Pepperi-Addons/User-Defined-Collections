@@ -1,3 +1,4 @@
+import { SortingFormComponent } from './form/sorting/sorting-form.component';
 import { FieldsFormComponent } from './form/fields/fields-form.component';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -38,7 +39,8 @@ export const routes: Routes = [
     declarations: [
         CollectionListComponent,
         CollectionFormComponent,
-        FieldsFormComponent
+        FieldsFormComponent,
+        SortingFormComponent
     ],
     imports: [
         CommonModule,

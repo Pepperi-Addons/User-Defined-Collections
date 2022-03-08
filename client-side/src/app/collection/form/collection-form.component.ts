@@ -5,9 +5,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
-import { Collection, CollectionField, DocumentKeyTypes } from '@pepperi-addons/papi-sdk/dist/entities';
+import { Collection, CollectionField, DataViewFieldType, DataViewFieldTypes, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk/dist/entities';
 import { CollectionsService, EMPTY_OBJECT_NAME, FormMode } from '../collection-list.service';
 import { MatDialogRef } from '@angular/material/dialog';
+import { SortingFormComponent, SortingFormData } from './sorting/sorting-form.component';
 
 @Component({
   selector: 'collection-form',
@@ -39,6 +40,12 @@ export class CollectionFormComponent implements OnInit {
                         this.showDeleteDialog(objs.rows[0]);
                     }
                 })
+                actions.push({
+                    title: this.translate.instant('Change Sort'),
+                    handler: async (objs) => {
+                        this.openSortingForm(objs.rows[0]);
+                    }
+                })
             }
             return actions;
         }
@@ -66,11 +73,11 @@ export class CollectionFormComponent implements OnInit {
     mode: FormMode;
     collectionFields: { key:string, value: string }[] = [];
     fieldKey: string;
+    fieldSort: number;
     dialogRef: MatDialogRef<CollectionFormComponent>
 
     @ViewChild('UidFieldForm', { read: TemplateRef }) UidFieldsTemplate: TemplateRef<any>;
-
-    collectionNameChanged: boolean;
+    @ViewChild('SortingForm', { read: TemplateRef }) SortingForm: TemplateRef<any>;
 
     constructor(private activateRoute: ActivatedRoute,
                 private router: Router,
@@ -101,13 +108,13 @@ export class CollectionFormComponent implements OnInit {
     getFieldsDataSource() {
         return {
             init: async(params:any) => {
-                let fields = Object.keys(this.collection.Fields).map(obj => {
-                    const type = this.collection.Fields[obj].Type;
+                let fields = this.collection.ListView.Fields.map(obj => {
+                    const type = this.collection.Fields[obj.FieldID].Type;
                     return {
-                        Key: obj,
-                        Type: type === 'Array' ? `${this.collection.Fields[obj].Items.Type} ${type}` : type,
-                        Description: this.collection.Fields[obj].Description,
-                        Mandatory: this.collection.Fields[obj].Mandatory,
+                        Key: obj.FieldID,
+                        Type: type === 'Array' ? `${this.collection.Fields[obj.FieldID].Items.Type} ${type}` : type,
+                        Description: this.collection.Fields[obj.FieldID].Description,
+                        Mandatory: this.collection.Fields[obj.FieldID].Mandatory,
                     };
                 });
                 return Promise.resolve({
@@ -256,10 +263,15 @@ export class CollectionFormComponent implements OnInit {
         })
         this.dialogService.openDialog(FieldsFormComponent, dialogData, dialogConfig).afterClosed().subscribe(value => {
             if (value) {
-                if(name != EMPTY_OBJECT_NAME && name != value.fieldName) {
+                const fieldName = value.fieldName;
+                if(name != EMPTY_OBJECT_NAME && name != fieldName) {
                     delete this.collection.Fields[name];
                 }
-                this.collection.Fields[value.fieldName] = value.field;
+                this.collection.Fields[fieldName] = value.field;
+                // if the field doesn't exist on the default data view, add it to the end of the array
+                if(!this.collection.ListView.Fields.find(field => field.FieldID === fieldName)) {
+                    this.collection.ListView.Fields.push(this.getDataViewField(fieldName, this.collection.Fields[fieldName]));
+                }
                 this.fieldsDataSource = this.getFieldsDataSource();
             }
         })
@@ -275,7 +287,7 @@ export class CollectionFormComponent implements OnInit {
     async saveClicked() {
         try {
             // we cannot change the collection name, so we need first to delete the "old" one
-            if (this.collectionNameChanged) { 
+            if (this.collectionName != EMPTY_OBJECT_NAME && this.collection.Name != this.collectionName) { 
                 await this.collectionsService.upsertCollection({
                     Name: this.collectionName,
                     Hidden: true
@@ -339,12 +351,8 @@ export class CollectionFormComponent implements OnInit {
                 value: field
             }
         })
-        const data = new PepDialogData({
-            title: '',
-            content: this.UidFieldsTemplate,
-            actionsType: 'cancel-continue'
-        })
-        this.dialogRef = this.dialogService.openDialog(this.UidFieldsTemplate, data);
+
+        this.dialogRef = this.dialogService.openDialog(this.UidFieldsTemplate, undefined);
     }
 
     saveField() {
@@ -356,9 +364,58 @@ export class CollectionFormComponent implements OnInit {
         this.dialogRef?.close();
     }
 
-    changeCollectionName(name) {
-        if (name != this.collectionName && this.mode == 'Edit') {
-            this.collectionNameChanged = true;
+    getDataViewField(fieldName: string, field: CollectionField): GridDataViewField {
+        return {
+            FieldID: fieldName,
+            Mandatory: field.Mandatory,
+            ReadOnly: field.Mandatory ? false : true,
+            Title: fieldName,
+            Type: this.getDataViewFieldType(field.Type)
         }
+    }
+
+    getDataViewFieldType(fieldType: SchemeFieldType): DataViewFieldType{
+        let type: DataViewFieldType;
+        switch (fieldType) {
+            case 'String': {
+                type = 'TextBox'
+                break;
+            }
+            case 'Integer': {
+                type = 'NumberInteger'
+                break;
+            }
+            case 'Double': {
+                type = 'NumberReal'
+                break;
+            }
+            case 'Bool': {
+                type = 'Boolean'
+                break;
+            }
+            default: {
+                type = 'TextBox'
+                break;
+            }
+        }
+        return type;
+    }
+
+    openSortingForm(fieldName) {
+        const config = this.dialogService.getDialogConfig({});
+        const data: SortingFormData = {
+            FieldName: fieldName,
+            MaxValue: this.collection.ListView.Fields.length - 1
+        }
+        this.dialogService.openDialog(SortingFormComponent, data, config).afterClosed().subscribe((fieldSort) => {
+            if (fieldSort) {
+                const index = this.collection.ListView.Fields.findIndex(field => field.FieldID === fieldName);
+                if (index > -1) {
+                    const dvField = this.collection.ListView.Fields.splice(index, 1)[0];
+                    this.collection.ListView.Fields.splice(fieldSort, 0, dvField);
+                    this.fieldsDataSource = this.getFieldsDataSource();
+                }
+            }
+        });
     }
 }

@@ -60,7 +60,11 @@ export class CollectionsService {
                     Type: 'AutoGenerate',
                     Fields: []
                 },
-                Fields: {}
+                Fields: {},
+                ListView: {
+                    Type: 'Grid',
+                    Fields: [],
+                },
             };
         }
     }
