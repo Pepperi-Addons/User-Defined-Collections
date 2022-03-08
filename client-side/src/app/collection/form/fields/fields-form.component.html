@@ -35,6 +35,7 @@
         </div>
         <div class="form-row">
             <pep-textarea
+                *ngIf="dialogData.Field.Type === 'String'"
                 [value]='dialogData.Field?.OptionalValues?.join("\n")'
                 [label]="'Optional Values' | translate"
                 [mandatory]="false"
