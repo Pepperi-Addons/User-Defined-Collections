@@ -6,9 +6,11 @@ import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addo
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
 import { Collection, CollectionField, DataViewFieldType, DataViewFieldTypes, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk/dist/entities';
-import { CollectionsService, EMPTY_OBJECT_NAME, FormMode } from '../collection-list.service';
+import { CollectionsService } from '../../services/collections.service';
+import { EMPTY_OBJECT_NAME, FormMode } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { SortingFormComponent, SortingFormData } from './sorting/sorting-form.component';
+import { from } from 'rxjs';
 
 @Component({
   selector: 'collection-form',

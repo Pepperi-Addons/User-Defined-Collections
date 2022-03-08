@@ -3,9 +3,8 @@ import { AddonData, Collection, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { EMPTY_OBJECT_NAME } from './utilities.service';
 
-export type FormMode = 'Add' | 'Edit';
-export const EMPTY_OBJECT_NAME = 'NewCollection';
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
     

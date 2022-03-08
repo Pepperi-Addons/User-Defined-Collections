@@ -25,7 +25,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
         this.dialogRef.close(this.fieldSort);
     }
 
-    close() {
+    close() { 
         this.dialogRef.close();
     }
 

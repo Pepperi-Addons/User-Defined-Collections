@@ -2,7 +2,8 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angu
 import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { TranslateService } from '@ngx-translate/core';
 
-import { CollectionsService, EMPTY_OBJECT_NAME, FormMode } from "./collection-list.service";
+import { EMPTY_OBJECT_NAME, FormMode } from "../services/utilities.service";
+import { CollectionsService } from "../services/collections.service";
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
@@ -15,7 +16,6 @@ import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog"
     styleUrls: ['./collection-list.component.scss']
 })
 export class CollectionListComponent implements OnInit {
-
     @Input() hostObject: any;
     
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
@@ -32,7 +32,7 @@ export class CollectionListComponent implements OnInit {
 
     recycleBin: boolean = false;
 
-    deleteError = 'Cannot delete collection with items not hidden';
+    deleteError = 'Cannot delete collection with documents';
 
     constructor(
         public collectionsService: CollectionsService,
