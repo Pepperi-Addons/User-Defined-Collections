@@ -1,6 +1,5 @@
 import { v4 as uuid } from 'uuid';
 import { CollectionsService } from './collections.service';
-import { DocumentsService } from './documents.service';
 
 export class UtilitiesService {
 
