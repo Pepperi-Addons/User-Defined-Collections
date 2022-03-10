@@ -6,14 +6,14 @@
                 [label]="'Key' | translate"
                 type="text"
                 [mandatory]="true"
-                [disabled]="!dialogData.EmptyCollection && dialogData.Mode !== 'Add'"
+                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
             ></pep-textbox>
             <pep-textbox
                 [(value)]="dialogData.Field.Description"
                 [label]="'Description' | translate"
                 type="text"
                 [mandatory]="false"
-                [disabled]="false"
+                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
             ></pep-textbox>
         </div>
         <div class="form-row">
@@ -23,6 +23,7 @@
                 type="select"
                 [options]="fieldTypes"
                 [emptyOption]="false"
+                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
             ></pep-select>
             <pep-select
                 [(value)]="fieldSubType"
@@ -31,11 +32,12 @@
                 [options]="fieldSubTypes"
                 [emptyOption]="false"
                 [visible]="dialogData.Field.Type === 'Array'"
+                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
             ></pep-select>
         </div>
         <div class="form-row">
             <pep-textarea
-                *ngIf="dialogData.Field.Type === 'String'"
+                *ngIf="dialogData.Field.Type === 'String' || dialogData.Field.Items?.Type === 'String'"
                 [value]='dialogData.Field?.OptionalValues?.join("\n")'
                 [label]="'Optional Values' | translate"
                 [mandatory]="false"
@@ -43,6 +45,7 @@
                 xAlignment="left"
                 [rowSpan]="3"
                 (valueChange)=saveOptionalValues($event)
+                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
             ></pep-textarea>
         </div>
         <div class="form-row">

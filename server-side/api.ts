@@ -9,11 +9,12 @@ export async function collection(client: Client, request: Request) {
     const documentsService = new DocumentsService(client);
     let result;
 
-    const collectionName = request.query.name || request.body.Name;
+    console.log('inside collection method.', JSON.stringify(request));
+    const collectionName = request.query?.name || request.body?.Name;
     switch (request.method) {
         case 'GET': {
             if (collectionName) {
-                result = await collectionService.getCollection(collectionName, request.query);
+                result = await collectionService.getCollection(collectionName);
             }
             else {
                 result = await collectionService.getAllCollections(request.query);
@@ -39,6 +40,7 @@ export async function collection(client: Client, request: Request) {
 }
 
 export async function items(client: Client, request: Request) {
+    console.log('inside items method.', JSON.stringify(request));
     const documentsService = new DocumentsService(client);
     let result;
 

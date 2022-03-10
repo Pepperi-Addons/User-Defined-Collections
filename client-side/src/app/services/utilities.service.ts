@@ -48,13 +48,38 @@ export class UtilitiesService {
                 ListView: {
                     Type: 'Grid',
                     Fields: [],
+                    Columns: [],
                 },
             };
         }
     }
 
-    async getCollectionDocuments(collectionName: string, options: FindOptions = {}): Promise<AddonData[]> {
+    async getCollectionDocuments(collectionName: string, params: any = {}, searchFields: string[] = [], hidden: boolean = false): Promise<AddonData[]> {
+        const pageSize = (params.toIndex - params.fromIndex) + 1 || 50;
+        const options: FindOptions = {
+            page: (params.fromIndex / pageSize) + 1 || 1,
+            page_size: pageSize,
+            where: ''
+        };
+
+        if (hidden) {
+            options.include_deleted = true;
+            options.where = 'Hidden = true';
+        }
+
+        if (params.searchString) {
+            options.where += this.getWhereClause(params.searchString, searchFields);
+        }
+
         return await this.papiClient.userDefinedCollections.documents(collectionName).find(options);
+    }
+
+    getWhereClause(searchString: string, fields: string[]) {
+        let whereClause = '';
+        fields.forEach(field => {
+            whereClause += `${field} LIKE "%${searchString}%" OR `;
+        })
+        return whereClause.substring(0, whereClause.length - 3);
     }
         
 }

@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angu
 import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { TranslateService } from '@ngx-translate/core';
 
-import { EMPTY_OBJECT_NAME, FormMode } from "../services/utilities.service";
+import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from "../services/utilities.service";
 import { CollectionsService } from "../services/collections.service";
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
@@ -41,7 +41,8 @@ export class CollectionListComponent implements OnInit {
         public genericListService: PepGenericListService,
         public activateRoute: ActivatedRoute,
         public dialogService: PepDialogService,
-        private router: Router
+        private router: Router,
+        private utilitiesService:UtilitiesService
 
     ) {
         this.layoutService.onResize$.subscribe(size => {
@@ -50,7 +51,7 @@ export class CollectionListComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.collectionsService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
+        this.utilitiesService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
         this.recycleBin = this.activateRoute.snapshot.queryParams.recycle_bin == 'true' || false;
         this.menuItems = this.getMenuItems();
     }

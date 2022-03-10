@@ -5,9 +5,9 @@ import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
-import { Collection, CollectionField, DataViewFieldType, DataViewFieldTypes, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk/dist/entities';
+import { Collection, CollectionField, DataViewFieldType, DataViewFieldTypes, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk/dist/entities';
 import { CollectionsService } from '../../services/collections.service';
-import { EMPTY_OBJECT_NAME, FormMode } from '../../services/utilities.service';
+import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { SortingFormComponent, SortingFormData } from './sorting/sorting-form.component';
 import { from } from 'rxjs';
@@ -85,10 +85,11 @@ export class CollectionFormComponent implements OnInit {
                 private router: Router,
                 private collectionsService: CollectionsService,
                 private translate: TranslateService,
-                private dialogService: PepDialogService) { }
+                private dialogService: PepDialogService,
+                private utilitiesService: UtilitiesService) { }
 
     ngOnInit(): void {
-        this.collectionsService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
+        this.utilitiesService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
         this.mode = this.router['form_mode'] ? this.router['form_mode'] : this.collectionName === EMPTY_OBJECT_NAME ? 'Add' : 'Edit';
         const filteredKeyTypes = DocumentKeyTypes.filter(type=> type!== 'Key');
@@ -98,12 +99,16 @@ export class CollectionFormComponent implements OnInit {
                 value: this.translate.instant(`DocumentKey_Options_${type}`),
             }
         })
-        this.collectionsService.getCollectionByName(this.collectionName).then(async (value) => {
+        this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
             this.collection = value;
             this.fieldsDataSource = this.getFieldsDataSource();
             this.uidFieldsDataSource = this.getUIDFieldsDataSource();
             this.collectionLoaded = true;
-            this.emptyCollection = this.mode === 'Edit' ? (await this.collectionsService.getCollectionDocuments(this.collectionName)).length == 0 : true
+            if (this.mode === 'Edit') {
+                const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
+                this.emptyCollection = documents.length == 0;
+                console.log('empty collection:', this.emptyCollection);
+            }
         });
     }
 
@@ -266,14 +271,26 @@ export class CollectionFormComponent implements OnInit {
         this.dialogService.openDialog(FieldsFormComponent, dialogData, dialogConfig).afterClosed().subscribe(value => {
             if (value) {
                 const fieldName = value.fieldName;
-                if(name != EMPTY_OBJECT_NAME && name != fieldName) {
-                    delete this.collection.Fields[name];
-                }
                 this.collection.Fields[fieldName] = value.field;
+                const dvField = this.getDataViewField(fieldName, value.field);
+                let index = this.collection.ListView.Fields.findIndex(field => field.FieldID === fieldName);
+                const nameChanged = (name != EMPTY_OBJECT_NAME && name != fieldName);
                 // if the field doesn't exist on the default data view, add it to the end of the array
-                if(!this.collection.ListView.Fields.find(field => field.FieldID === fieldName)) {
-                    this.collection.ListView.Fields.push(this.getDataViewField(fieldName, this.collection.Fields[fieldName]));
+                if (index < 0) {
+                    if (nameChanged) {
+                        index = this.collection.ListView.Fields.findIndex(field => field.FieldID === name);
+                        this.collection.ListView.Fields.splice(index, 1, dvField);
+                        delete this.collection.Fields[name];
+                    }
+                    else {
+                        this.collection.ListView.Fields.push(dvField);
+                        this.collection.ListView.Columns.push({Width:10});
+                    }
                 }
+                else {
+                    this.collection.ListView.Fields.splice(index, 1, dvField);
+                }
+
                 this.fieldsDataSource = this.getFieldsDataSource();
             }
         })
@@ -325,6 +342,8 @@ export class CollectionFormComponent implements OnInit {
         this.dialogService.openDefaultDialog(data).afterClosed().subscribe(isDeletePressed => {
             if(isDeletePressed) {
                 delete this.collection.Fields[fieldName];
+                const index = this.collection.ListView.Fields.findIndex(field => field.FieldID === fieldName);
+                this.collection.ListView.Fields.splice(index, 1);
                 this.fieldsDataSource = this.getFieldsDataSource();
             }
         });
@@ -370,7 +389,7 @@ export class CollectionFormComponent implements OnInit {
         return {
             FieldID: fieldName,
             Mandatory: field.Mandatory,
-            ReadOnly: field.Mandatory ? false : true,
+            ReadOnly: true,
             Title: fieldName,
             Type: this.getDataViewFieldType(field.Type)
         }
@@ -393,6 +412,10 @@ export class CollectionFormComponent implements OnInit {
             }
             case 'Bool': {
                 type = 'Boolean'
+                break;
+            }
+            case 'DateTime': {
+                type = 'DateAndTime'
                 break;
             }
             default: {
@@ -419,5 +442,12 @@ export class CollectionFormComponent implements OnInit {
                 }
             }
         });
+    }
+
+    documentKeyTypeChanged(value: DocumentKeyType) {
+        if (value != 'Composite') {
+            this.collection.DocumentKey.Fields = [];
+            this.collection.DocumentKey.Delimiter = '@';
+        }
     }
 }

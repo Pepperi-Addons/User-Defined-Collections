@@ -1,5 +1,5 @@
 import { UtilitiesService } from './utilities.service';
-import { PapiClient, AddonDataScheme } from '@pepperi-addons/papi-sdk'
+import { PapiClient, AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { DimxRelations } from '../metadata';
 import { DocumentsService } from './documents.service';
@@ -31,8 +31,8 @@ export class CollectionsService {
         return collection;
     }    
     
-    async getCollection(tableName:string, options: any = {}): Promise<AddonDataScheme> {
-        return await this.papiClient.addons.data.schemes.name(tableName).get(options);
+    async getCollection(tableName:string): Promise<Collection> {
+        return await this.papiClient.addons.data.schemes.name(tableName).get() as Collection;
     }
     
     async getAllCollections(options: any = {}): Promise<AddonDataScheme[]> {

@@ -7,6 +7,7 @@ import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from "@pepperi-addons/ngx-composite-lib/generic-list";
+import { DIMXComponent } from '@pepperi-addons/ngx-composite-lib/dimx-export';
 
 import { AddonData, Collection, GridDataViewColumn } from "@pepperi-addons/papi-sdk";
 
@@ -25,6 +26,8 @@ export class DocumentsListComponent implements OnInit {
     @Input() hostObject: any;
     
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
+
+    @ViewChild('dimx') dimx:DIMXComponent | undefined;
     
     collectionName: string;
     recycleBin: boolean = false;
@@ -33,10 +36,6 @@ export class DocumentsListComponent implements OnInit {
     screenSize: PepScreenSizeType;
     
     dataSource: IPepGenericListDataSource;
-    
-    pager: IPepGenericListPager = {
-        type: 'scroll',
-    };
 
     menuItems: PepMenuItem[] = [];
     
@@ -49,8 +48,8 @@ export class DocumentsListComponent implements OnInit {
                         title: this.translate.instant('Restore'),
                         handler: async (objs) => {
                             // await this.collectionsService.restoreCollection(objs.rows[0]);
-                            await this.documentsService.upsertDocument({
-                                Name: objs.rows[0],
+                            await this.documentsService.upsertDocument(this.collectionName, {
+                                Key: objs.rows[0],
                                 Hidden: false,
                             });
     
@@ -81,7 +80,7 @@ export class DocumentsListComponent implements OnInit {
         private activateRoute: ActivatedRoute,
         private translate: TranslateService,
         private documentsService: DocumentsService,
-        private utilitiesService: UtilitiesService,
+        public utilitiesService: UtilitiesService,
         private router: Router,
         private dialogService: PepDialogService,
         private layoutService: PepLayoutService,
@@ -93,7 +92,7 @@ export class DocumentsListComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.documentsService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
+        this.utilitiesService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
         this.utilitiesService.getCollectionByName(this.collectionName).then(value => {
             this.collectionData = value;
@@ -105,11 +104,8 @@ export class DocumentsListComponent implements OnInit {
     getDataSource() {
         return {
             init: async (params:any) => {
-                let documents: AddonData[] = await this.utilitiesService.getCollectionDocuments(this.collectionName, {
-                    ...params,
-                    include_deleted: this.recycleBin,
-                    where: `Hidden=${this.recycleBin}`
-                });
+                const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String');
+                let documents: AddonData[] = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
                 return Promise.resolve({
                     dataView: {
                         Context: {
@@ -119,13 +115,30 @@ export class DocumentsListComponent implements OnInit {
                         },
                         Type: 'Grid',
                         Title: '',
-                        Fields: this.collectionData.ListView.Fields,
-                        Columns: this.collectionData.ListView.Fields.map(() => {
-                            return {
-                                Width: 100 / this.collectionData.ListView.Fields.length,
+                        Fields: [
+                            ...this.collectionData.ListView.Fields,
+                            {
+                                FieldID: 'CreationDateTime',
+                                Title: this.translate.instant('Creation Date'),
+                                ReadOnly: true,
+                                Type: 'DateAndTime'
+                            },
+                            {
+                                FieldID: 'ModificationDateTime',
+                                Title: this.translate.instant('Modification Date'),
+                                ReadOnly: true,
+                                Type: 'DateAndTime'
+                            },
+                        ],
+                        Columns: [ 
+                            ...this.collectionData.ListView.Columns,
+                            {
+                                Width:10
+                            },
+                            {
+                                Width:10
                             }
-                        }),
-          
+                        ],
                         FrozenColumnsCount: 0,
                         MinimumColumnWidth: 0
                     },
@@ -136,7 +149,7 @@ export class DocumentsListComponent implements OnInit {
             inputs: () => {
                 return Promise.resolve({
                     pager: {
-                        type: 'scroll'
+                        type: 'pages'
                     },
                     selectionType: 'single'
                 });
@@ -168,15 +181,86 @@ export class DocumentsListComponent implements OnInit {
         }]
     }
 
-    menuItemClicked($event) {
-         console.log(`clicked on ${$event} menu item`);
+    menuItemClicked(event: any) {
+         console.log(`clicked on ${event} menu item`);
+         switch (event.source.key) {
+            case 'RecycleBin':
+            case 'BackToList': {
+                this.recycleBin = !this.recycleBin;
+                setTimeout(() => {
+                    this.router.navigate([], {
+                        queryParams: {
+                            recycle_bin: this.recycleBin
+                        },
+                        queryParamsHandling: 'merge',
+                        relativeTo: this.activateRoute,
+                        replaceUrl: true
+                    })
+                }, 0); 
+                this.dataSource = this.getDataSource(); 
+                this.menuItems = this.getMenuItems();
+                break;
+            }
+            case 'Import': {
+              this.dimx?.uploadFile(null, {
+                OverwriteOBject: true,
+                Delimiter: ",",
+                OwnerID: this.utilitiesService.addonUUID,
+                ActionID: '8896b834-a682-4ce4-b27c-08513cf54f72'
+              });
+              //this.dataSource = this.getDataSource();
+              break
+            }
+            case 'Export': {
+              this.dimx?.DIMXExportRun({
+                DIMXExportFormat: "csv",
+                DIMXExportIncludeDeleted: false,
+                DIMXExportFileName: "export",
+                DIMXExportFields: this.collectionData.ListView.Fields.map(field => field.FieldID).join(),
+                DIMXExportDelimiter: ";",
+                ActionID: '76354edf-a340-3246-e654-f37ece866c22'
+            });
+              break
+            }
+          }
     }
     
     navigateToDocumentsForm(formMode: FormMode, documentKey: string) {
         console.log(`opening editor for ${documentKey} in ${formMode} mode`)
     }
 
-    showDeleteDialog(documentKey: string) {
-        console.log('opening delete message')
+    showDeleteDialog(name: any) {
+        const dataMsg = new PepDialogData({
+            title: this.translate.instant('Documents_DeleteDialogTitle'),
+            actionsType: 'cancel-delete',
+            content: this.translate.instant('Documents_DeleteDialogContent')
+        });
+        this.dialogService.openDefaultDialog(dataMsg).afterClosed()
+            .subscribe(async (isDeletePressed) => {
+                if (isDeletePressed) {
+                    try {
+                        await this.documentsService.upsertDocument(this.collectionName, {
+                            Key: name,
+                            Hidden: true,
+                        });
+                        this.dataSource = this.getDataSource();
+                    }
+                    catch (error) {
+                            const dataMsg = new PepDialogData({
+                                title: this.translate.instant('Documents_DeleteDialogTitle'),
+                                actionsType: 'close',
+                                content: this.translate.instant('Documents_DeleteDialogError')
+                            });
+                            this.dialogService.openDefaultDialog(dataMsg);
+                    }
+                }
+        });      
+    }
+
+    BackToCollections() {
+        this.router.navigate(['../..'], {
+            relativeTo: this.activateRoute,
+            queryParamsHandling: 'preserve',
+        })
     }
 }

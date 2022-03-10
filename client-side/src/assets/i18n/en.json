@@ -22,5 +22,10 @@
     "DeleteField_DialogTitle": "Delete Field",
     "DeleteField_DialogContent": "Are you sure you want to delete '{{field_name}}' field?",
     "UidFields_SelectLabel": "Choose field to add",
-    "SortForm_Label": "Field index"
+    "SortForm_Label": "Field index",
+    "Documents_List_Title": "{{collection_name}}'s Documents",
+    "Documents_DeleteDialogTitle": "Delete Document",
+    "Documents_DeleteDialogContent": "Are you sure you want to delete this document?",
+    "Documents_DeleteDialogError": "Cannot delete document. please try again later",
+    "Documents_BackToCollection": "Back to list"
 }

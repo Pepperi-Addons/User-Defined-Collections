@@ -20,6 +20,7 @@ import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-
 
 import { DocumentsListComponent } from './documents-list.component';
 import { DocumentsService } from '../services/documents.service';
+import { PepDIMXModule } from '@pepperi-addons/ngx-composite-lib/dimx-export';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -50,6 +51,7 @@ export const routes: Routes = [
         PepSelectModule,
         PepTextareaModule,
         PepDialogModule,
+        PepDIMXModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,

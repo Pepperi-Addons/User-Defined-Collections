@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { CollectionsService } from './collections.service';
-import { DocumentsService } from './documents.service';
+import { Collection } from '@pepperi-addons/papi-sdk';
 
 export class UtilitiesService {
 
@@ -11,16 +11,17 @@ export class UtilitiesService {
             key = body.Key;
         }
         else {
-            const scheme: any = await service.getCollection(collectionName);
-            if (scheme.CompositeKeyType === 'Generate') {
+            const scheme: Collection = await service.getCollection(collectionName);
+            if (scheme.DocumentKey?.Type === 'AutoGenerate') {
                 key = uuid();
             }
-            else if (scheme.CompositeKeyType === 'Fields') {
+            else if (scheme.DocumentKey?.Type === 'Composite') {
                 let fieldsValues: string[] = [];
-                scheme.CompositeKeyFields.forEach((field) => {
+                const delimiter = scheme.DocumentKey.Delimiter || '_';
+                scheme.DocumentKey.Fields?.forEach((field) => {
                     fieldsValues.push(body[field]);
                 })
-                key = fieldsValues.join('_');
+                key = fieldsValues.join(delimiter);
             }
         }
 

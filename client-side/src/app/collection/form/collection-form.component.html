@@ -57,11 +57,12 @@
                 [label]="'DocumentKey_Select_Title' | translate"
                 type="select"
                 [mandatory]="false"
-                [disabled]="false"
+                [disabled]="!emptyCollection"
                 xAlignment="left"
                 [options]="documentKeyOptions"
                 [showTitle]="true"
                 [emptyOption]="false"
+                (valueChange)="documentKeyTypeChanged($event)"
             ></pep-select>
             <pep-textbox
                 [visible]="collection.DocumentKey.Type === 'Composite'"
