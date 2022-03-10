@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Routes } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterModule, Routes } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 
 import { PepNgxLibModule, PepAddonService } from '@pepperi-addons/ngx-lib';
@@ -11,8 +11,11 @@ import { PepIconRegistry, pepIconSystemClose } from '@pepperi-addons/ngx-lib/ico
 
 import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 
-import { AddonService } from './addon.service';
-import { AddonComponent } from './index';
+import { AddonService } from './collection-list.service';
+import { CollectionListComponent } from './index';
+import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
+import { PepMenuModule } from '@pepperi-addons/ngx-lib/menu';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -21,13 +24,13 @@ const pepIcons = [
 export const routes: Routes = [
     {
         path: '',
-        component: AddonComponent
+        component: CollectionListComponent
     }
 ];
 
 @NgModule({
     declarations: [
-        AddonComponent,
+        CollectionListComponent,
     ],
     imports: [
         CommonModule,
@@ -36,6 +39,9 @@ export const routes: Routes = [
         PepSizeDetectorModule,
         PepTopBarModule,
         PepPageLayoutModule,
+        PepGenericListModule,
+        PepButtonModule,
+        PepMenuModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
@@ -45,7 +51,7 @@ export const routes: Routes = [
         }),
         RouterModule.forChild(routes)
     ],
-    exports:[AddonComponent],
+    exports:[CollectionListComponent],
     providers: [
         TranslateStore,
         // When loading this module from route we need to add this here (because only this module is loading).
