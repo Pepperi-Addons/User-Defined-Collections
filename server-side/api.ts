@@ -40,6 +40,8 @@ export async function schemes(client: Client, request: Request) {
 
 export async function documents(client: Client, request: Request) {
     const documentsService = new DocumentsService(client);
+    const collectionService = new CollectionsService(client);
+
     let result;
 
     const collectionName = request.query.name;
@@ -61,7 +63,7 @@ export async function documents(client: Client, request: Request) {
             break;
         }
         case 'POST': {
-            result = await documentsService.upsertDocument(collectionName, request.body);
+            result = await documentsService.upsertDocument(collectionService, collectionName, request.body);
             break;
         }
         default: {

@@ -1,7 +1,10 @@
-import { PapiClient, InstalledAddon, AddonDataScheme, AddonData } from '@pepperi-addons/papi-sdk'
+import { PapiClient, InstalledAddon, AddonDataScheme, AddonData, Collection, SchemeFieldType } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { DimxRelations } from '../metadata';
 import { UtilitiesService } from './utilities.service';
+import { CollectionsService } from './collections.service';
+import { DocumentSchema } from '../jsonSchemes/documents';
+import { Schema, Validator } from 'jsonschema';
 
 export class DocumentsService {
     
@@ -26,8 +29,16 @@ export class DocumentsService {
         return await this.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(key).get();
     }
     
-    async upsertDocument(collectionName: any, body: any): Promise<AddonData> {
-        return await this.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(body);
+    async upsertDocument(service: CollectionsService, collectionName: any, body: any): Promise<AddonData> {
+        const collectionScheme = await service.getCollection(collectionName);
+        body.Key = await this.utilities.getItemKey(collectionScheme, body);
+        const validationResult = this.validateDocument(collectionScheme, body);
+        if (validationResult.valid) {
+            return await this.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(body);
+        }
+        else {
+            return validationResult.errors.map(error => error.stack.replace("instance.", ""));
+        }
     }
 
     async checkHidden(body: any) {
@@ -38,6 +49,73 @@ export class DocumentsService {
                 throw new Error('Cannot delete collection with documents');
             }
         }
+    }
+
+    validateDocument(collection: Collection, body: any) {
+        const schema = this.createSchema(collection);
+        console.log('document schema:', schema);
+        const validator = new Validator();
+        const result = validator.validate(body, schema);
+        return result;
+    }
+
+    createSchema(collection: Collection): Schema {
+        let schema: Schema = DocumentSchema;
+        Object.keys(collection.Fields!).forEach(fieldName => {
+            const field = collection.Fields![fieldName];
+
+            schema.properties![fieldName] = {
+                ...this.getFieldSchemaType(field.Type, field.Items?.Type || 'String'),
+                required: field.Mandatory
+            }
+            if (field.OptionalValues) {
+                if (field.Type === 'Array') {
+                    schema.properties![fieldName].items!['enum'] = field.OptionalValues;
+                }
+                else {
+                    schema.properties![fieldName].enum = field.OptionalValues;
+                }
+            }
+        })
+
+        return schema;
+    }
+
+    getFieldSchemaType(type: SchemeFieldType, itemsType: SchemeFieldType = 'String'): Schema {
+        const retVal: Schema = {};
+        switch (type) {
+            case 'Array': {
+                retVal.type = "array";
+                retVal.items = this.getFieldSchemaType(itemsType)
+                break;
+            }
+            case 'Bool': {
+                retVal.type = "boolean";
+                break;
+            }
+            case 'Double': 
+            case 'Integer': {
+                retVal.type = "number";
+                break;
+            }
+            case 'DateTime': {
+                retVal.type = "string";
+                retVal.format = "date-time";
+                break;
+            }
+            case 'String': {
+                retVal.type = "string";
+                break;
+            }
+            case 'Object': {
+                retVal.type = "object";
+                break;
+            }
+            default: {
+                retVal.type = "string";
+            }
+        }
+        return retVal;
     }
 
     //DIMX
