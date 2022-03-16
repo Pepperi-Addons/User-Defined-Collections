@@ -3,7 +3,8 @@ import { PapiClient, AddonDataScheme, Collection } from '@pepperi-addons/papi-sd
 import { Client } from '@pepperi-addons/debug-server';
 import { DimxRelations } from '../metadata';
 import { DocumentsService } from './documents.service';
-
+import { Validator, ValidatorResult } from 'jsonschema';
+import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
 export class CollectionsService {
     
     papiClient: PapiClient
@@ -25,11 +26,27 @@ export class CollectionsService {
             ...body,
             Type: "meta_data"
         }
-        await service.checkHidden(body);
-        const collection = await this.papiClient.addons.data.schemes.post(collectionObj);
-        await this.createDIMXRelations(collection.Name);
-        return collection;
-    }    
+        const validResult = this.validateScheme(body);
+        if(validResult.valid) {
+            await service.checkHidden(body);
+            const collection = await this.papiClient.addons.data.schemes.post(collectionObj);
+            await this.createDIMXRelations(collection.Name);
+            return collection;
+        }
+        else {
+            return validResult.errors.map(error => error.stack.replace("instance.", ""));
+        }
+    }
+
+    validateScheme(collection: Collection): ValidatorResult {
+        const validator = new Validator();
+        documentKeySchema.properties!['Fields'].enum = Object.keys(collection.Fields || {});
+        validator.addSchema(documentKeySchema, "/DocumentKey");
+        validator.addSchema(fieldsSchema, "/Fields");
+        validator.addSchema(dataViewSchema, "/DataView");
+        const result = validator.validate(collection, collectionSchema);
+        return result;
+    }
     
     async getCollection(tableName:string): Promise<Collection> {
         return await this.papiClient.addons.data.schemes.name(tableName).get() as Collection;
@@ -47,3 +64,4 @@ export class CollectionsService {
         }));
     }
 }
+
