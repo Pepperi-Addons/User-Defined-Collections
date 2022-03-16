@@ -21,12 +21,7 @@ export async function schemes(client: Client, request: Request) {
             break;
         }
         case 'POST': {
-            if (collectionName) {
-                result = await collectionService.upsertCollection(documentsService, request.body);
-            }
-            else {
-                throw new Error('Could not create collection without name');
-            }
+            result = await collectionService.upsertCollection(documentsService, request.body);
             break;
         }
         default: {

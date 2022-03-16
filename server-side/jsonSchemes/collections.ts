@@ -9,6 +9,7 @@ export const documentKeySchema: Schema = {
     properties: {
         Type: {
             enum: DocumentKeyTypes.filter(type => true),
+            required: true,
         },
         Delimiter: {
             type: "string",
@@ -34,6 +35,7 @@ export const documentKeySchema: Schema = {
         properties: {
             Delimiter: {
                 type: "string",
+                required: true,
             },
             Fields: {
                 type: "array",
@@ -41,12 +43,11 @@ export const documentKeySchema: Schema = {
                     type: "string"
                 },
                 uniqueItems: true,
-                minItems: 1
+                minItems: 1,
+                required: true,
             },
         },
-        required: ["Delimiter", "Fields"],
     },
-    required: ["Type"],
     additionalProperties: false,
 }
 
@@ -79,15 +80,19 @@ export const dataViewSchema: Schema = {
             properties: {
                 Type: {
                     enum: Object.keys(DataViewFieldTypes),
+                    required: true,
                 },
                 Title: {
                     type: "string",
+                    required: true,
                 },
                 Mandatory: {
                     type: "string",
+                    required: true,
                 },
                 ReadOnly: {
                     type: "boolean",
+                    required: true,
                 },
                 Layout: {
                     type:"object",
@@ -96,25 +101,27 @@ export const dataViewSchema: Schema = {
                             type: "object",
                             properties: {
                                 X: {
+                                    required: true,
                                     type: "number",
                                 },
                                 Y: {
+                                    required: true,
                                     type: "number",
                                 },
                             },
-                            required: ["X", "Y"],
                         },
                         Size: {
                             type: "object",
                             properties: {
                                 Width: {
                                     type: "number",
+                                    required: true,
                                 },
                                 Height: {
                                     type: "number",
+                                    required: true,
                                 },
                             },
-                            required: ["Width", "Height"],
                         },
                     }
                 },
@@ -126,18 +133,18 @@ export const dataViewSchema: Schema = {
                             properties: {
                                 Horizontal: {
                                     enum: Object.keys(HorizontalAlignments),
+                                    required: true,
                                 },
                                 Vertical: {
                                     enum: Object.keys(VerticalAlignments),
+                                    required: true,
                                 },
                             },
-                            required: ["Horizontal", "Vertical"],
+                            required: true,
                         },
                     },
-                    required: ["Alignment"],
                 }
             },
-            required: ["Type", "Title", "Mandatory", "ReadOnly"]
         },
         Columns: {
             type: "array",
@@ -148,6 +155,7 @@ export const dataViewSchema: Schema = {
                         type: "number",
                         exclusiveMinimum: 0,
                         exclusiveMaximum: 100,
+                        required: true,
                     },
                 },
             }
@@ -167,9 +175,11 @@ export const fieldsSchema: Schema = {
                 },
                 Type: {
                     enum: SchemeFieldTypes.filter(type => type !== 'MultipleStringValues'),
+                    required: true,
                 },
                 Mandatory: {
-                    type: "boolean"
+                    type: "boolean",
+                    required: true,
                 },
                 OptionalValues: {
                     type: "array",
@@ -178,7 +188,6 @@ export const fieldsSchema: Schema = {
                     }
                 }
             },
-            required: ["Type", "Mandatory"],
             if: {
                 properties: {
                     Type: {
@@ -193,12 +202,12 @@ export const fieldsSchema: Schema = {
                         properties: {
                             Type: {
                                 enum: SchemeFieldTypes.filter(type => type !== 'Array' && type !== 'MultipleStringValues'),
+                                required: true,
                             }
                         },
-                        required: ["Type"],
+                        required: true,
                     }
                 },
-                required: ["Items"],
             }
         }
     },
@@ -212,20 +221,24 @@ export const collectionSchema: Schema = {
         Name: {
             type: "string",
             pattern: regexPattern,
+            required: true,
         },
         Description: {
             type: "string",
         },
         DocumentKey: {
             type: "object",
-            $ref: documentKeySchema.$id
+            $ref: documentKeySchema.$id,
+            required: true,
         },
         ListView: {
             type: "object",
+            required: true,
             $ref: dataViewSchema.$id,
         },
         Fields: {
             type: "object",
+            required: true,
             $ref: fieldsSchema.$id,
         },
         Hidden: {
@@ -240,5 +253,4 @@ export const collectionSchema: Schema = {
             format: "date-time",
         },
     },
-    required: ["Name", "Fields", "ListView", "DocumentKey"],
 }
