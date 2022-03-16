@@ -205,8 +205,7 @@ export class DocumentsListComponent implements OnInit {
               this.dimx?.uploadFile(null, {
                 OverwriteOBject: true,
                 Delimiter: ",",
-                OwnerID: this.utilitiesService.addonUUID,
-                ActionID: '8896b834-a682-4ce4-b27c-08513cf54f72'
+                OwnerID: this.utilitiesService.addonUUID
               });
               //this.dataSource = this.getDataSource();
               break
@@ -215,10 +214,9 @@ export class DocumentsListComponent implements OnInit {
               this.dimx?.DIMXExportRun({
                 DIMXExportFormat: "csv",
                 DIMXExportIncludeDeleted: false,
-                DIMXExportFileName: "export",
+                DIMXExportFileName: this.collectionName,
                 DIMXExportFields: this.collectionData.ListView.Fields.map(field => field.FieldID).join(),
-                DIMXExportDelimiter: ";",
-                ActionID: '76354edf-a340-3246-e654-f37ece866c22'
+                DIMXExportDelimiter: ","
             });
               break
             }

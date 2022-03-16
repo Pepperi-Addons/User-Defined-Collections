@@ -3,13 +3,12 @@ import { CollectionsService } from './services/collections.service'
 import { DocumentsService } from './services/documents.service';
 import { UtilitiesService } from './services/utilities.service';
 
-export async function collection(client: Client, request: Request) {
+export async function schemes(client: Client, request: Request) {
     
     const collectionService = new CollectionsService(client);
     const documentsService = new DocumentsService(client);
     let result;
 
-    console.log('inside collection method.', JSON.stringify(request));
     const collectionName = request.query?.name || request.body?.Name;
     switch (request.method) {
         case 'GET': {
@@ -39,8 +38,7 @@ export async function collection(client: Client, request: Request) {
     return result;
 }
 
-export async function items(client: Client, request: Request) {
-    console.log('inside items method.', JSON.stringify(request));
+export async function documents(client: Client, request: Request) {
     const documentsService = new DocumentsService(client);
     let result;
 
