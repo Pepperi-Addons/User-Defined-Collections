@@ -1,8 +1,21 @@
 import { v4 as uuid } from 'uuid';
-import { CollectionsService } from './collections.service';
-import { Collection } from '@pepperi-addons/papi-sdk';
+import { Collection, PapiClient } from '@pepperi-addons/papi-sdk';
+import { UsageMonitorRelations } from '../metadata';
+import { Client } from '@pepperi-addons/debug-server';
 
 export class UtilitiesService {
+
+    papiClient: PapiClient
+
+    constructor(private client: Client) {
+        this.papiClient = new PapiClient({
+            baseURL: client.BaseURL,
+            token: client.OAuthAccessToken,
+            addonUUID: client.AddonUUID,
+            addonSecretKey: client.AddonSecretKey,
+            actionUUID: client.AddonUUID
+        });
+    }
 
     getItemKey(scheme: Collection, body: any): string {
         let key = '';
@@ -26,6 +39,12 @@ export class UtilitiesService {
         }
 
         return key
+    }
+
+    async createUsageMonitorRelations() {
+        await Promise.all(UsageMonitorRelations.map(async (singleRelation) => {
+            await this.papiClient.addons.data.relations.upsert(singleRelation);
+        }));
     }
 }
 

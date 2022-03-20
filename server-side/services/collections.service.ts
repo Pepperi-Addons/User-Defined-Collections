@@ -6,18 +6,10 @@ import { DocumentsService } from './documents.service';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
 export class CollectionsService {
-    
-    papiClient: PapiClient
-    utilities: UtilitiesService = new UtilitiesService();
+        
+    utilities: UtilitiesService = new UtilitiesService(this.client);
 
     constructor(private client: Client) {
-        this.papiClient = new PapiClient({
-            baseURL: client.BaseURL,
-            token: client.OAuthAccessToken,
-            addonUUID: client.AddonUUID,
-            addonSecretKey: client.AddonSecretKey,
-            actionUUID: client.AddonUUID
-        });
     }
 
     
@@ -29,7 +21,7 @@ export class CollectionsService {
         const validResult = this.validateScheme(body);
         if(validResult.valid) {
             await service.checkHidden(body);
-            const collection = await this.papiClient.addons.data.schemes.post(collectionObj);
+            const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
             await this.createDIMXRelations(collection.Name);
             return collection;
         }
@@ -49,18 +41,18 @@ export class CollectionsService {
     }
     
     async getCollection(tableName:string): Promise<Collection> {
-        return await this.papiClient.addons.data.schemes.name(tableName).get() as Collection;
+        return await this.utilities.papiClient.addons.data.schemes.name(tableName).get() as Collection;
     }
     
     async getAllCollections(options: any = {}): Promise<AddonDataScheme[]> {
-        return await this.papiClient.addons.data.schemes.get(options);
+        return await this.utilities.papiClient.addons.data.schemes.get(options);
     }
 
     async createDIMXRelations(collectionName: string) {
         await Promise.all(DimxRelations.map(async (singleRelation) => {
             // overide the name with the collectionName
             singleRelation.Name = collectionName;
-            await this.papiClient.addons.data.relations.upsert(singleRelation);
+            await this.utilities.papiClient.addons.data.relations.upsert(singleRelation);
         }));
     }
 }

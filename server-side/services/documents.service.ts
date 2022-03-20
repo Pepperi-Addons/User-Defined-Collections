@@ -8,25 +8,17 @@ import { Schema, Validator } from 'jsonschema';
 
 export class DocumentsService {
     
-    papiClient: PapiClient
-    utilities: UtilitiesService = new UtilitiesService();
+    utilities: UtilitiesService = new UtilitiesService(this.client);
     
     constructor(private client: Client) {
-        this.papiClient = new PapiClient({
-            baseURL: client.BaseURL,
-            token: client.OAuthAccessToken,
-            addonUUID: client.AddonUUID,
-            addonSecretKey: client.AddonSecretKey,
-            actionUUID: client.AddonUUID
-        });
     }
     
     async getAllDocumentsInCollection(collectionName: any, options: any): Promise<AddonData[]> {
-        return await this.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).find(options);
+        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).find(options);
     }
     
     async getDocumentByKey(collectionName: any, key: any): Promise<AddonData> {
-        return await this.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(key).get();
+        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(key).get();
     }
     
     async upsertDocument(service: CollectionsService, collectionName: any, body: any): Promise<AddonData> {
@@ -34,7 +26,7 @@ export class DocumentsService {
         body.Key = await this.utilities.getItemKey(collectionScheme, body);
         const validationResult = this.validateDocument(collectionScheme, body);
         if (validationResult.valid) {
-            return await this.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(body);
+            return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(body);
         }
         else {
             return validationResult.errors.map(error => error.stack.replace("instance.", ""));

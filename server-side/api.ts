@@ -1,4 +1,5 @@
 import { Client, Request } from '@pepperi-addons/debug-server'
+import { Collection } from '@pepperi-addons/papi-sdk';
 import { CollectionsService } from './services/collections.service'
 import { DocumentsService } from './services/documents.service';
 import { UtilitiesService } from './services/utilities.service';
@@ -90,4 +91,44 @@ export function import_data_source(client: Client, request: Request) {
     }
 }
 
+export async function collections_number(client: Client, request: Request) {
+    const service = new CollectionsService(client);
+    const collections = await service.getAllCollections();
 
+    return {
+        Title: "Setup",
+        "Resources": [
+            {
+                "Data": "Collections",
+                "Description": "Number of collections", 
+                "Size": collections.length,
+            },
+        ],
+        "ReportingPeriod": "Weekly",
+        "AggregationFunction": "LAST"
+    }
+}
+
+export async function total_documents(client: Client, request: Request) {
+    const collectionsService = new CollectionsService(client);
+    const documentsService = new DocumentsService(client);
+    const collections = await collectionsService.getAllCollections();
+    let count = 0;
+    await Promise.all(collections.map(async (collection) => {
+        const documents = await documentsService.getAllDocumentsInCollection(collection.Name, {page_size: -1});
+        count += documents.length;
+    }));
+    
+    return {
+        Title: "Data",
+        "Resources": [
+            {
+                "Data": "Documents",
+                "Description": "Number of documents",
+                "Size": count,
+            },
+        ],
+        "ReportingPeriod": "Weekly",
+        "AggregationFunction": "LAST"
+    }
+}

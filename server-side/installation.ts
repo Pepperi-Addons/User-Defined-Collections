@@ -9,12 +9,14 @@ The error Message is importent! it will be written in the audit log and help the
 */
 
 import { Client, Request } from '@pepperi-addons/debug-server'
+import { UtilitiesService } from './services/utilities.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
     // For page block template uncomment this.
     // const res = await createPageBlockRelation(client);
     // return res;
-    return {success:true,resultObject:{}}
+    const res = await createUsageMonitorRelations(client);
+    return res;
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
@@ -22,9 +24,27 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
-    return {success:true,resultObject:{}}
+    const res = await createUsageMonitorRelations(client);
+    return res;
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
     return {success:true,resultObject:{}}
+}
+
+async function createUsageMonitorRelations(client: Client) {
+    try {
+        const service = new UtilitiesService(client);
+        await service.createUsageMonitorRelations();
+        return {
+            success:true,
+            resultObject: {}
+        }
+    } 
+    catch (err) {
+        return { 
+            success: false, 
+            resultObject: err , 
+            errorMessage: `Error in upsert usage monitor relations. error - ${err}`};
+    }
 }
