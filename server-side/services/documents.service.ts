@@ -43,6 +43,17 @@ export class DocumentsService {
         }
     }
 
+    async getAllDocumentsCount(collectionsService: CollectionsService): Promise<number> {
+        const collections = await collectionsService.getAllCollections();
+        let count = 0;
+        await Promise.all(collections.map(async (collection) => {
+            const documents = await this.getAllDocumentsInCollection(collection.Name, {page_size: -1});
+            count += documents.length;
+        }));
+
+        return count;
+    }
+
     validateDocument(collection: Collection, body: any) {
         const schema = this.createSchema(collection);
         console.log('document schema:', schema);

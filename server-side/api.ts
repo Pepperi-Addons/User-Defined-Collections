@@ -112,12 +112,7 @@ export async function collections_number(client: Client, request: Request) {
 export async function total_documents(client: Client, request: Request) {
     const collectionsService = new CollectionsService(client);
     const documentsService = new DocumentsService(client);
-    const collections = await collectionsService.getAllCollections();
-    let count = 0;
-    await Promise.all(collections.map(async (collection) => {
-        const documents = await documentsService.getAllDocumentsInCollection(collection.Name, {page_size: -1});
-        count += documents.length;
-    }));
+    const count = await documentsService.getAllDocumentsCount(collectionsService);
     
     return {
         Title: "Data",
