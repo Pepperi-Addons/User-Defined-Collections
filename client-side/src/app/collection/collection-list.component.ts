@@ -75,6 +75,7 @@ export class CollectionListComponent implements OnInit {
     }
 
     getDataSource() {
+        const noDataMessageKey = this.recycleBin ? 'RecycleBin_NoDataFound' : 'Collection_List_NoDataFound'
         return {
             init: async(params:any) => {
                 let collections = await this.collectionsService.getCollections(this.recycleBin, params);
@@ -124,7 +125,8 @@ export class CollectionListComponent implements OnInit {
                     pager: {
                         type: 'scroll'
                     },
-                    selectionType: 'single'
+                    selectionType: 'single',
+                    noDataFoundMsg: this.translate.instant(noDataMessageKey)
                 });
             },
         } as IPepGenericListDataSource

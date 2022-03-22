@@ -1,12 +1,14 @@
 {
     "Title_Addon": "Title of the addon",
     "Collection_List_Title": "User Defined Collections",
+    "Collection_List_NoDataFound": "Click Add to define a collection",
     "Collection_DeleteDialogTitle": "Delete Collection",
     "Collection_DeleteDialogContent": "Are you sure you want to delete this collection?",
     "Collection_DeleteDialogError": "Cannot delete collection with items not hidden",
     "Collection_Edit_Title": "Edit - {{collection_name}}",
     "Collection_Add_Title": "Create Collection",
     "Collection_Fields_Title": "Fields",
+    "Collection_Fields_NoDataFound": "Click Add to define collection fields",
     "Back_to_list": "Back to list",
     "DocumentKey_Options_AutoGenerate": "Auto generate",
     "DocumentKey_Options_Composite": "based on fields",
@@ -21,11 +23,14 @@
     "FormField_Title_Add": "Create Field",
     "DeleteField_DialogTitle": "Delete Field",
     "DeleteField_DialogContent": "Are you sure you want to delete '{{field_name}}' field?",
+    "UidFields_NoDataFound": "Click Add to define the document identifier fields",
     "UidFields_SelectLabel": "Choose field to add",
     "SortForm_Label": "Field index",
     "Documents_List_Title": "{{collection_name}}'s Documents",
     "Documents_DeleteDialogTitle": "Delete Document",
     "Documents_DeleteDialogContent": "Are you sure you want to delete this document?",
     "Documents_DeleteDialogError": "Cannot delete document. please try again later",
-    "Documents_BackToCollection": "Back to list"
+    "Documents_BackToCollection": "Back to list",
+    "Documents_NoDataFound": "Click Add to add data",
+    "RecycleBin_NoDataFound": "Recycle bin is empty"
 }

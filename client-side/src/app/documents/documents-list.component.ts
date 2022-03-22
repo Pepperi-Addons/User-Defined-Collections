@@ -103,6 +103,7 @@ export class DocumentsListComponent implements OnInit {
     }
 
     getDataSource() {
+        const noDataMessageKey = this.recycleBin ? 'RecycleBin_NoDataFound' : 'Documents_NoDataFound'
         return {
             init: async (params:any) => {
                 const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String');
@@ -152,7 +153,8 @@ export class DocumentsListComponent implements OnInit {
                     pager: {
                         type: 'pages'
                     },
-                    selectionType: 'single'
+                    selectionType: 'single',
+                    noDataFoundMsg: this.translate.instant(noDataMessageKey)
                 });
             },
         } as IPepGenericListDataSource
