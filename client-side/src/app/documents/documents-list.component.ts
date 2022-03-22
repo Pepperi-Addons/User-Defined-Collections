@@ -3,17 +3,18 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angu
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router";
 import { TranslateService } from '@ngx-translate/core';
 
-import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
+import { KeyValuePair, ObjectsDataRow, ObjectsDataRowCell, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { DIMXComponent } from '@pepperi-addons/ngx-composite-lib/dimx-export';
 
-import { AddonData, Collection, GridDataViewColumn } from "@pepperi-addons/papi-sdk";
+import { AddonData, Collection, FormDataView, GridDataViewColumn } from "@pepperi-addons/papi-sdk";
 
 import { DocumentsService } from "../services/documents.service";
 import { FormMode } from "../services/utilities.service";
 import { UtilitiesService } from "../services/utilities.service";
+import { DocumentsFormComponent, DocumentsFormData } from './form/documents-form.component';
 
 @Component({
     selector: 'documents-list',
@@ -224,7 +225,43 @@ export class DocumentsListComponent implements OnInit {
     }
     
     navigateToDocumentsForm(formMode: FormMode, documentKey: string) {
-        console.log(`opening editor for ${documentKey} in ${formMode} mode`)
+        const listItem = this.genericListService.getItemById(documentKey);
+        let item = {};
+        if (formMode == 'Edit') {
+            item['Key'] = documentKey;
+            listItem?.Fields.forEach((rowItem: ObjectsDataRowCell) => {
+                if (this.collectionData.Fields[rowItem.ApiName]?.Type === 'Array') {
+                    item[rowItem.ApiName] = rowItem.Value.split(",").join(";");
+                }
+                else {
+                    item[rowItem.ApiName] = rowItem.Value;
+                }
+            });
+        }
+        else {
+            Object.keys(this.collectionData.Fields).forEach(field => {
+                item[field] = '';
+            })
+        }
+        const formData: DocumentsFormData = {
+            Item: item,
+            Mode: formMode,
+            DataView: this.getFormDataView()
+        }
+        const config = this.dialogService.getDialogConfig({}, 'inline');
+        config.data = new PepDialogData({
+            content: DocumentsFormComponent
+        })
+        this.dialogService.openDialog(DocumentsFormComponent, formData, config).afterClosed().subscribe((value) => {
+            if (value) {
+                console.log('value got:', value);
+                this.documentsService.upsertDocument(this.collectionName, value).then(()=> {
+                    this.dataSource = this.getDataSource();
+                }).catch((err: Error) => {
+                    console.log('could not save document', err.message.split("faultstring"));
+                });
+            }
+        });
     }
 
     showDeleteDialog(name: any) {
@@ -260,5 +297,37 @@ export class DocumentsListComponent implements OnInit {
             relativeTo: this.activateRoute,
             queryParamsHandling: 'preserve',
         })
+    }
+
+    getFormDataView(): FormDataView {
+        let dataView: FormDataView = {
+            Type:"Form",
+            Fields: [],
+            Context: {
+                Name: "",
+                Profile: { },
+                ScreenSize: 'Tablet'
+            }
+        };
+
+        this.collectionData.ListView.Fields.forEach(field => {
+            const formField = {
+                FieldID: field.FieldID,
+                Mandatory: field.Mandatory,
+                Type: field.Type,
+                Title: field.Title,
+                ReadOnly: false,
+            }
+            const optionalValues = this.collectionData.Fields[field.FieldID].OptionalValues?.map(item => {
+                return {
+                    Key: item,
+                    Value: item
+                }
+            }) || []
+            optionalValues.length > 0 ? formField["OptionalValues"] = optionalValues : null;
+            dataView.Fields.push(formField);
+        })
+
+        return dataView;
     }
 }

@@ -1,0 +1,26 @@
+<pep-dialog [title]="'Documents_Form_Title' | translate">
+    <ng-container pep-dialog-content>
+        <pep-generic-form [dataSource]="item" [dataView]="incoming.DataView" (valueChange)="onValueChanged($event)">
+
+        </pep-generic-form>
+        <p class="error">{{error}}</p>
+    </ng-container>
+    <ng-container pep-dialog-actions>
+        <div class="pep-spacing-element-negative" style="display: flex;">         
+            <pep-button 
+                class="pep-spacing-element"
+                [sizeType]="'md'" 
+                [value]="'Cancel' | translate" 
+                [styleType]="'weak'" 
+                (buttonClick)="close()"
+            ></pep-button>
+            <pep-button 
+                class="pep-spacing-element"
+                [sizeType]="'md'" 
+                [value]="'Save' | translate" 
+                [styleType]="'strong'" 
+                (buttonClick)="saveDocument()"
+            ></pep-button>
+        </div>
+    </ng-container>
+</pep-dialog>

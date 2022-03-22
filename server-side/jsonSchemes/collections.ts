@@ -13,6 +13,7 @@ export const documentKeySchema: Schema = {
         },
         Delimiter: {
             type: "string",
+            required: false,
         },
         Fields: {
             type: "array",
@@ -20,8 +21,8 @@ export const documentKeySchema: Schema = {
                 type: "string"
             },
             uniqueItems: true,
-            minItems: 1,
-            maxItems: 8
+            minItems: 0,
+            required: false,
         },
     },
     if: {
@@ -77,74 +78,79 @@ export const dataViewSchema: Schema = {
         },
         Fields: {
             type: "array",
-            properties: {
-                Type: {
-                    enum: Object.keys(DataViewFieldTypes),
-                    required: true,
-                },
-                Title: {
-                    type: "string",
-                    required: true,
-                },
-                Mandatory: {
-                    type: "string",
-                    required: true,
-                },
-                ReadOnly: {
-                    type: "boolean",
-                    required: true,
-                },
-                Layout: {
-                    type:"object",
-                    properties: {
-                        Origin: {
-                            type: "object",
-                            properties: {
-                                X: {
-                                    required: true,
-                                    type: "number",
-                                },
-                                Y: {
-                                    required: true,
-                                    type: "number",
+            items: {
+                type: "object",
+                properties: {
+                    Type: {
+                        enum: Object.keys(DataViewFieldTypes),
+                        required: true,
+                    },
+                    Title: {
+                        type: "string",
+                        required: true,
+                    },
+                    Mandatory: {
+                        type: "boolean",
+                        required: true,
+                    },
+                    ReadOnly: {
+                        type: "boolean",
+                        required: true,
+                    },
+                    Layout: {
+                        type:"object",
+                        properties: {
+                            Origin: {
+                                type: "object",
+                                properties: {
+                                    X: {
+                                        required: true,
+                                        type: "number",
+                                    },
+                                    Y: {
+                                        required: true,
+                                        type: "number",
+                                    },
                                 },
                             },
-                        },
-                        Size: {
-                            type: "object",
-                            properties: {
-                                Width: {
-                                    type: "number",
-                                    required: true,
+                            Size: {
+                                type: "object",
+                                properties: {
+                                    Width: {
+                                        type: "number",
+                                        required: true,
+                                    },
+                                    Height: {
+                                        type: "number",
+                                        required: true,
+                                    },
                                 },
-                                Height: {
-                                    type: "number",
-                                    required: true,
+                            },
+                        }
+                    },
+                    Style: {
+                        type:"object",
+                        properties: {
+                            Alignment: {
+                                type: "object",
+                                properties: {
+                                    Horizontal: {
+                                        enum: Object.keys(HorizontalAlignments),
+                                        required: true,
+                                    },
+                                    Vertical: {
+                                        enum: Object.keys(VerticalAlignments),
+                                        required: true,
+                                    },
                                 },
+                                required: true,
                             },
                         },
                     }
                 },
-                Style: {
-                    type:"object",
-                    properties: {
-                        Alignment: {
-                            type: "object",
-                            properties: {
-                                Horizontal: {
-                                    enum: Object.keys(HorizontalAlignments),
-                                    required: true,
-                                },
-                                Vertical: {
-                                    enum: Object.keys(VerticalAlignments),
-                                    required: true,
-                                },
-                            },
-                            required: true,
-                        },
-                    },
-                }
             },
+            required: true,
+            minItems: 1
         },
         Columns: {
             type: "array",
@@ -158,7 +164,9 @@ export const dataViewSchema: Schema = {
                         required: true,
                     },
                 },
-            }
+            },
+            required: true,
+            minItems: 1
         }
     }
 }
@@ -211,7 +219,7 @@ export const fieldsSchema: Schema = {
             }
         }
     },
-    minProperties: 1,
+    minProperties: 1
 }
 export const collectionSchema: Schema = {
     $schema: "https://json-schema.org/draft/2020-12/schema",

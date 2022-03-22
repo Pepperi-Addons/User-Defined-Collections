@@ -13,7 +13,6 @@
                 [label]="'Description' | translate"
                 type="text"
                 [mandatory]="false"
-                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
             ></pep-textbox>
         </div>
         <div class="form-row">
@@ -23,7 +22,6 @@
                 type="select"
                 [options]="fieldTypes"
                 [emptyOption]="false"
-                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
             ></pep-select>
             <pep-select
                 [(value)]="fieldSubType"
@@ -32,7 +30,6 @@
                 [options]="fieldSubTypes"
                 [emptyOption]="false"
                 [visible]="dialogData.Field.Type === 'Array'"
-                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
             ></pep-select>
         </div>
         <div class="form-row">
@@ -45,7 +42,6 @@
                 xAlignment="left"
                 [rowSpan]="3"
                 (valueChange)=saveOptionalValues($event)
-                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
             ></pep-textarea>
         </div>
         <div class="form-row">

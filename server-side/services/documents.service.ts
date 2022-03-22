@@ -22,14 +22,16 @@ export class DocumentsService {
     }
     
     async upsertDocument(service: CollectionsService, collectionName: any, body: any): Promise<AddonData> {
+        const updatingHidden = 'Hidden' in body;
         const collectionScheme = await service.getCollection(collectionName);
         body.Key = await this.utilities.getItemKey(collectionScheme, body);
         const validationResult = this.validateDocument(collectionScheme, body);
-        if (validationResult.valid) {
+        if (validationResult.valid || updatingHidden) {
             return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(body);
         }
         else {
-            return validationResult.errors.map(error => error.stack.replace("instance.", ""));
+            const errors = validationResult.errors.map(error => error.stack.replace("instance.", ""));
+            throw new Error(errors.join("\n"));
         }
     }
 
@@ -71,7 +73,7 @@ export class DocumentsService {
                 ...this.getFieldSchemaType(field.Type, field.Items?.Type || 'String'),
                 required: field.Mandatory
             }
-            if (field.OptionalValues) {
+            if (field.OptionalValues && field.OptionalValues.length > 0) {
                 if (field.Type === 'Array') {
                     schema.properties![fieldName].items!['enum'] = field.OptionalValues;
                 }

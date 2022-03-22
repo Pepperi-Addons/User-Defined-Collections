@@ -73,9 +73,8 @@
                 [disabled]="!emptyCollection"
             ></pep-textbox>
         </div>
-        <div class="genericListContainer">
+        <div class="genericListContainer" *ngIf="collection.DocumentKey.Type === 'Composite'">
             <pep-generic-list class="generic-list"
-                *ngIf="collection.DocumentKey.Type === 'Composite'"
                 [title] = "'UID_Fields_Title' | translate"
                 [showTopBar]="true" 
                 [dataSource]="uidFieldsDataSource" 

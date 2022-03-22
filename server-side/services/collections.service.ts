@@ -18,21 +18,23 @@ export class CollectionsService {
             ...body,
             Type: "meta_data"
         }
+        const updatingHidden = 'Hidden' in body;
         const validResult = this.validateScheme(body);
-        if(validResult.valid) {
+        if (validResult.valid || updatingHidden) {
             await service.checkHidden(body);
             const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
             await this.createDIMXRelations(collection.Name);
             return collection;
         }
         else {
-            return validResult.errors.map(error => error.stack.replace("instance.", ""));
+            const errors = validResult.errors.map(error => error.stack.replace("instance.", ""));
+            throw new Error(errors.join("\n"));
         }
     }
 
     validateScheme(collection: Collection): ValidatorResult {
         const validator = new Validator();
-        documentKeySchema.properties!['Fields'].enum = Object.keys(collection.Fields || {});
+        documentKeySchema.properties!['Fields'].items!['enum'] = Object.keys(collection.Fields || {});
         validator.addSchema(documentKeySchema, "/DocumentKey");
         validator.addSchema(fieldsSchema, "/Fields");
         validator.addSchema(dataViewSchema, "/DataView");

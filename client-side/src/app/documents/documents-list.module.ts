@@ -17,10 +17,12 @@ import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 
 import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { PepGenericFormModule } from '@pepperi-addons/ngx-composite-lib/generic-form';
 
 import { DocumentsListComponent } from './documents-list.component';
 import { DocumentsService } from '../services/documents.service';
 import { PepDIMXModule } from '@pepperi-addons/ngx-composite-lib/dimx-export';
+import { DocumentsFormComponent } from './form/documents-form.component';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -36,6 +38,7 @@ export const routes: Routes = [
 @NgModule({
     declarations: [
         DocumentsListComponent,
+        DocumentsFormComponent,
     ],
     imports: [
         CommonModule,
@@ -52,6 +55,7 @@ export const routes: Routes = [
         PepTextareaModule,
         PepDialogModule,
         PepDIMXModule,
+        PepGenericFormModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,

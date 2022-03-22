@@ -262,7 +262,7 @@ export class CollectionFormComponent implements OnInit {
             EmptyCollection: this.emptyCollection,
             Mode: name == EMPTY_OBJECT_NAME ? 'Add' : 'Edit',
             FieldName: name == EMPTY_OBJECT_NAME ? '' : name,
-            InUidFields: this.collection.DocumentKey.Fields.includes(name),
+            InUidFields: this.collection.DocumentKey.Fields?.includes(name) || false,
             Field: this.collection.Fields[name] || emptyField,
         }
         dialogConfig.data = new PepDialogData({
@@ -391,11 +391,11 @@ export class CollectionFormComponent implements OnInit {
             Mandatory: field.Mandatory,
             ReadOnly: true,
             Title: fieldName,
-            Type: this.getDataViewFieldType(field.Type)
+            Type: this.getDataViewFieldType(field.Type, field.OptionalValues.length > 0)
         }
     }
 
-    getDataViewFieldType(fieldType: SchemeFieldType): DataViewFieldType{
+    getDataViewFieldType(fieldType: SchemeFieldType, hasOptionalValues: boolean): DataViewFieldType{
         let type: DataViewFieldType;
         switch (fieldType) {
             case 'String': {
@@ -418,10 +418,22 @@ export class CollectionFormComponent implements OnInit {
                 type = 'DateAndTime'
                 break;
             }
+            case 'Array': {
+                if (hasOptionalValues) {
+                    type = 'MultiTickBox';
+                }
+                else {
+                    type = 'TextArea'
+                }
+                break;
+            }
             default: {
                 type = 'TextBox'
                 break;
             }
+        }
+        if (hasOptionalValues && fieldType !== 'Array') {
+            type = 'ComboBox'
         }
         return type;
     }
