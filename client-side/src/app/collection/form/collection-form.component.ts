@@ -325,10 +325,11 @@ export class CollectionFormComponent implements OnInit {
             });
         }
         catch (error) {
+            const errors = this.utilitiesService.getErrors(error.message);
             const dataMsg = new PepDialogData({
                 title: this.translate.instant('Collection_UpdateFailed_Title'),
                 actionsType: 'close',
-                content: this.translate.instant('Collection_UpdateFailed_Content')
+                content: this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
             });
             this.dialogService.openDefaultDialog(dataMsg);
         }

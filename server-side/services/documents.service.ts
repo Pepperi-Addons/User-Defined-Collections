@@ -22,7 +22,7 @@ export class DocumentsService {
     }
     
     async upsertDocument(service: CollectionsService, collectionName: any, body: any): Promise<AddonData> {
-        const updatingHidden = 'Hidden' in body;
+        const updatingHidden = 'Hidden' in body && body.Hidden;
         const collectionScheme = await service.getCollection(collectionName);
         body.Key = await this.utilities.getItemKey(collectionScheme, body);
         const validationResult = this.validateDocument(collectionScheme, body);

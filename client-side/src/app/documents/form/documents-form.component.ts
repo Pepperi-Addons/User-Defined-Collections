@@ -1,9 +1,12 @@
+import { DocumentsService } from './../../services/documents.service';
+import { UtilitiesService } from './../../services/utilities.service';
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericFormValueChange } from '@pepperi-addons/ngx-composite-lib/generic-form';
 import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
 import { FormMode } from 'src/app/services/utilities.service';
+import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 
 @Component({
   selector: 'documents-form',
@@ -19,6 +22,9 @@ export class DocumentsFormComponent implements OnInit {
     constructor(               
         private dialogRef: MatDialogRef<DocumentsFormComponent>,
         private translate: TranslateService,
+        private utilitiesService: UtilitiesService,
+        private dialogService: PepDialogService,
+        private documentsService: DocumentsService,
         @Inject(MAT_DIALOG_DATA) public incoming: DocumentsFormData) { }
 
     ngOnInit(): void {
@@ -26,15 +32,22 @@ export class DocumentsFormComponent implements OnInit {
         console.log(this.incoming);
     }
 
-    saveDocument() {
+    async saveDocument() {
         try {
             this.convertMultiChoiceValues();
             this.convertNumbers();
             this.convertTextArea();
-            this.dialogRef.close(this.item);
+            await this.documentsService.upsertDocument(this.incoming.CollectionName, this.item);
+            this.dialogRef.close(true);
         }
-        catch(err) {
-            this.error = err.message;
+        catch(error) {
+            const errors = this.utilitiesService.getErrors(error.message);
+            const dataMsg = new PepDialogData({
+                title: this.translate.instant('Collection_UpdateFailed_Title'),
+                actionsType: 'close',
+                content: this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
+            });
+            this.dialogService.openDefaultDialog(dataMsg);
         }
     }
 
@@ -49,7 +62,12 @@ export class DocumentsFormComponent implements OnInit {
     convertMultiChoiceValues() {
 
         this.incoming.DataView.Fields?.filter(field => field.Type === 'MultiTickBox').forEach(field => {
-            this.item[field.FieldID] = this.item[field.FieldID].split(";");
+            if (this.item[field.FieldID] != "") {
+                this.item[field.FieldID] = this.item[field.FieldID].split(";");
+            }
+            else {
+                this.item[field.FieldID] = [];
+            }
         })
     }
     
@@ -59,7 +77,6 @@ export class DocumentsFormComponent implements OnInit {
                 this.item[field.FieldID] = JSON.parse(this.item[field.FieldID])
             }
             catch {
-                throw new Error(`${field.FieldID} value is invalid`);
             }
         })
     }
@@ -74,5 +91,6 @@ export class DocumentsFormComponent implements OnInit {
 export type DocumentsFormData = {
     Mode: FormMode,
     Item: any,
-    DataView: FormDataView
+    DataView: FormDataView,
+    CollectionName: string
 }

@@ -205,7 +205,7 @@ export class DocumentsListComponent implements OnInit {
                 break;
             }
             case 'Import': {
-              this.dimx?.uploadFile(null, {
+              this.dimx?.uploadFile({
                 OverwriteOBject: true,
                 Delimiter: ",",
                 OwnerID: this.utilitiesService.addonUUID
@@ -248,7 +248,8 @@ export class DocumentsListComponent implements OnInit {
         const formData: DocumentsFormData = {
             Item: item,
             Mode: formMode,
-            DataView: this.getFormDataView()
+            DataView: this.getFormDataView(),
+            CollectionName: this.collectionName
         }
         const config = this.dialogService.getDialogConfig({}, 'inline');
         config.data = new PepDialogData({
@@ -256,12 +257,7 @@ export class DocumentsListComponent implements OnInit {
         })
         this.dialogService.openDialog(DocumentsFormComponent, formData, config).afterClosed().subscribe((value) => {
             if (value) {
-                console.log('value got:', value);
-                this.documentsService.upsertDocument(this.collectionName, value).then(()=> {
-                    this.dataSource = this.getDataSource();
-                }).catch((err: Error) => {
-                    console.log('could not save document', err.message.split("faultstring"));
-                });
+                this.dataSource = this.getDataSource();
             }
         });
     }

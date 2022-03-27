@@ -18,7 +18,7 @@ export class CollectionsService {
             ...body,
             Type: "meta_data"
         }
-        const updatingHidden = 'Hidden' in body;
+        const updatingHidden = 'Hidden' in body && body.Hidden;
         const validResult = this.validateScheme(body);
         if (validResult.valid || updatingHidden) {
             await service.checkHidden(body);

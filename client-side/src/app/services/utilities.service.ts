@@ -81,5 +81,12 @@ export class UtilitiesService {
         })
         return whereClause.substring(0, whereClause.length - 3);
     }
+
+    getErrors(message:string): string[] {
+        const start = message.indexOf('exception:') + 10;
+        const end = message.indexOf('","detail');
+        const errors = message.substring(start, end).split("\\n");
+        return errors;
+    }
         
 }
