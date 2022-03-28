@@ -1,5 +1,5 @@
 import config from '../addon.config.json';
-import { Relation } from "@pepperi-addons/papi-sdk";
+import { AddonDataScheme, Relation } from "@pepperi-addons/papi-sdk";
 
 export const DimxRelations: Relation[] = [{
 //     AddonUUID: config.AddonUUID,
@@ -36,7 +36,7 @@ export const DimxRelations: Relation[] = [{
 
 export const UsageMonitorRelations: Relation[] = [{
     AddonUUID: config.AddonUUID,
-    Name: 'Collections',
+    Name: 'UDCRelations',
     RelationName: 'UsageMonitor',
     Type: 'AddonAPI',
     AddonRelativeURL: '/api/collections_number',
@@ -44,9 +44,42 @@ export const UsageMonitorRelations: Relation[] = [{
 },
 {
     AddonUUID: config.AddonUUID,
-    Name: 'TotalDocuments',
+    Name: 'UDCRelations',
     RelationName: 'UsageMonitor',
     Type: 'AddonAPI',
     AddonRelativeURL: '/api/total_documents',
     Description: 'relation for "Data" tab in usage monitor to display total number of documents in all the collections',
 }]
+
+export const AtdRelations: Relation[] = [{
+    RelationName: "ATDImport",
+    AddonUUID: config.AddonUUID,
+    Name:"UDCRelations",
+    Description:"Relation from UDC addon to ATD Import addon",
+    Type:"AddonAPI",
+    AddonRelativeURL:"/api/import_udc_mappings"
+},
+{
+    RelationName: "ATDExport",
+    AddonUUID: config.AddonUUID,
+    Name:"UDCRelations",
+    Description:"Relation from UDC addon to ATD Export addon",
+    Type:"AddonAPI",
+    AddonRelativeURL:"/api/export_udc_mappings"
+},
+{   //meta data for realtion of type NgComponent
+    RelationName: "TransactionTypeListTabs",
+    AddonUUID: config.AddonUUID,
+    Name:"UDCRelations",
+    Description:"Collections",
+    SubType: "NG11",
+    ModuleName: "AtdConfigModule",
+    ComponentName: "AtdConfigComponent",
+    Type:"NgComponent",
+    AddonRelativeURL:"atd_config"
+}]
+
+export const AtdConfigScheme: AddonDataScheme = {
+    Name: 'AtdConfig',
+    Type: 'cpi_meta_data',
+}

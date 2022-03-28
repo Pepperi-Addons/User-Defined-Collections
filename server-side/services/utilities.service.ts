@@ -1,10 +1,10 @@
 import { v4 as uuid } from 'uuid';
 import { Collection, PapiClient } from '@pepperi-addons/papi-sdk';
-import { UsageMonitorRelations } from '../metadata';
+import { AtdConfigScheme } from '../metadata';
 import { Client } from '@pepperi-addons/debug-server';
 
 export class UtilitiesService {
-
+    
     papiClient: PapiClient
 
     constructor(private client: Client) {
@@ -41,10 +41,14 @@ export class UtilitiesService {
         return key
     }
 
-    async createUsageMonitorRelations() {
-        await Promise.all(UsageMonitorRelations.map(async (singleRelation) => {
+    async createRelations(relations) {
+        await Promise.all(relations.map(async (singleRelation) => {
             await this.papiClient.addons.data.relations.upsert(singleRelation);
         }));
+    }
+
+    async createADALSchemes() {
+        return await this.papiClient.addons.data.schemes.post(AtdConfigScheme);
     }
 }
 

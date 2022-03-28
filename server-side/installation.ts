@@ -9,14 +9,15 @@ The error Message is importent! it will be written in the audit log and help the
 */
 
 import { Client, Request } from '@pepperi-addons/debug-server'
+import { Relation } from '@pepperi-addons/papi-sdk';
+import { AtdConfigScheme, AtdRelations, UsageMonitorRelations } from './metadata';
 import { UtilitiesService } from './services/utilities.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
     // For page block template uncomment this.
     // const res = await createPageBlockRelation(client);
     // return res;
-    const res = await createUsageMonitorRelations(client);
-    return res;
+    return await createObjects(client);
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
@@ -24,18 +25,19 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
-    const res = await createUsageMonitorRelations(client);
-    return res;
+    return await createObjects(client);
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
     return {success:true,resultObject:{}}
 }
 
-async function createUsageMonitorRelations(client: Client) {
+async function createObjects(client: Client) {
     try {
         const service = new UtilitiesService(client);
-        await service.createUsageMonitorRelations();
+        await service.createRelations(UsageMonitorRelations);
+        await service.createRelations(AtdRelations);
+        await service.createADALSchemes();
         return {
             success:true,
             resultObject: {}
@@ -45,6 +47,8 @@ async function createUsageMonitorRelations(client: Client) {
         return { 
             success: false, 
             resultObject: err , 
-            errorMessage: `Error in upsert usage monitor relations. error - ${err}`};
+            errorMessage: `Error in creating necessary objects . error - ${err}`
+        };
     }
 }
+
