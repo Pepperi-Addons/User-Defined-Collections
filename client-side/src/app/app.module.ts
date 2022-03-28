@@ -2,27 +2,26 @@ import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslateModule, TranslateLoader, TranslateStore } from '@ngx-translate/core';
 
 import { PepAddonService } from '@pepperi-addons/ngx-lib';
 
-import { TranslateModule, TranslateLoader, TranslateStore } from '@ngx-translate/core';
-
 import { AppRoutingModule } from './app.routes';
-import { AddonModule } from './collection-list/collection-list.module';
 import { AppComponent } from './app.component';
-import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
-import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
-import { PepMenuModule } from '@pepperi-addons/ngx-lib/menu';
+
+import { CollectionListModule } from './collection';
+import { DocumentsListModule } from './documents';
 
 @NgModule({
     declarations: [
-        AppComponent
+        AppComponent,
     ],
     imports: [
         BrowserModule,
         BrowserAnimationsModule,
         HttpClientModule,
-        AddonModule,
+        CollectionListModule,
+        DocumentsListModule,
         AppRoutingModule,
         TranslateModule.forRoot({
             loader: {

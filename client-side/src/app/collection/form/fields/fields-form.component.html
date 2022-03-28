@@ -1,0 +1,76 @@
+<pep-dialog [title]="dialogTitle">
+    <ng-container pep-dialog-content>
+        <div class="form-row">
+            <pep-textbox
+                [(value)]="dialogData.FieldName"
+                [label]="'Key' | translate"
+                type="text"
+                [mandatory]="true"
+                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
+            ></pep-textbox>
+            <pep-textbox
+                [(value)]="dialogData.Field.Description"
+                [label]="'Description' | translate"
+                type="text"
+                [mandatory]="false"
+            ></pep-textbox>
+        </div>
+        <div class="form-row">
+            <pep-select
+                [(value)]="dialogData.Field.Type"
+                [label]="'Type' | translate"
+                type="select"
+                [options]="fieldTypes"
+                [emptyOption]="false"
+            ></pep-select>
+            <pep-select
+                [(value)]="fieldSubType"
+                [label]="'Items Type' | translate"
+                type="select"
+                [options]="fieldSubTypes"
+                [emptyOption]="false"
+                [visible]="dialogData.Field.Type === 'Array'"
+            ></pep-select>
+        </div>
+        <div class="form-row">
+            <pep-textarea
+                *ngIf="dialogData.Field.Type === 'String' || dialogData.Field.Items?.Type === 'String'"
+                [value]='dialogData.Field?.OptionalValues?.join("\n")'
+                [label]="'Optional Values' | translate"
+                [mandatory]="false"
+                [disabled]="false"
+                xAlignment="left"
+                [rowSpan]="3"
+                (valueChange)=saveOptionalValues($event)
+            ></pep-textarea>
+        </div>
+        <div class="form-row">
+            <pep-select
+                [(value)]="dialogData.Field.Mandatory"
+                [label]="'Mandatory' | translate"
+                type="select"
+                [options]="[{key:true, value:'True'},{key:false, value:'False'}]"
+                [emptyOption]="false"
+                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
+            ></pep-select>
+        </div>
+    </ng-container>
+    <ng-container pep-dialog-actions>
+        <div class="pep-spacing-element-negative" style="display: flex;">
+            <pep-button 
+                class="pep-spacing-element"
+                [sizeType]="'md'" 
+                [value]="'cancel' | translate" 
+                [styleType]="'weak'" 
+                (buttonClick)="close()"
+            ></pep-button>          
+            <pep-button 
+                class="pep-spacing-element"
+                [sizeType]="'md'" 
+                [value]="(dialogData.Mode === 'Edit' ? 'Update' : 'Save') | translate" 
+                [styleType]="'strong'" 
+                (buttonClick)="saveField()"
+            ></pep-button>
+        </div>
+    </ng-container>
+</pep-dialog>

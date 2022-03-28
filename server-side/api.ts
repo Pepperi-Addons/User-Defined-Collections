@@ -1,19 +1,20 @@
 import { Client, Request } from '@pepperi-addons/debug-server'
+import { Collection } from '@pepperi-addons/papi-sdk';
 import { CollectionsService } from './services/collections.service'
 import { DocumentsService } from './services/documents.service';
 import { UtilitiesService } from './services/utilities.service';
 
-export async function collection(client: Client, request: Request) {
+export async function schemes(client: Client, request: Request) {
     
     const collectionService = new CollectionsService(client);
     const documentsService = new DocumentsService(client);
     let result;
 
-    const collectionName = request.query.name || request.body.Name;
+    const collectionName = request.query?.name || request.body?.Name;
     switch (request.method) {
         case 'GET': {
             if (collectionName) {
-                result = await collectionService.getCollection(collectionName, request.query);
+                result = await collectionService.getCollection(collectionName);
             }
             else {
                 result = await collectionService.getAllCollections(request.query);
@@ -21,12 +22,7 @@ export async function collection(client: Client, request: Request) {
             break;
         }
         case 'POST': {
-            if (collectionName) {
-                result = await collectionService.upsertCollection(documentsService, request.body);
-            }
-            else {
-                throw new Error('Could not create collection without name');
-            }
+            result = await collectionService.upsertCollection(documentsService, request.body);
             break;
         }
         default: {
@@ -38,8 +34,10 @@ export async function collection(client: Client, request: Request) {
     return result;
 }
 
-export async function items(client: Client, request: Request) {
+export async function documents(client: Client, request: Request) {
     const documentsService = new DocumentsService(client);
+    const collectionService = new CollectionsService(client);
+
     let result;
 
     const collectionName = request.query.name;
@@ -61,7 +59,7 @@ export async function items(client: Client, request: Request) {
             break;
         }
         case 'POST': {
-            result = await documentsService.upsertDocument(collectionName, request.body);
+            result = await documentsService.upsertDocument(collectionService, collectionName, request.body);
             break;
         }
         default: {
@@ -93,4 +91,39 @@ export function import_data_source(client: Client, request: Request) {
     }
 }
 
+export async function collections_number(client: Client, request: Request) {
+    const service = new CollectionsService(client);
+    const collections = await service.getAllCollections();
 
+    return {
+        Title: "Setup",
+        "Resources": [
+            {
+                "Data": "Collections",
+                "Description": "Number of collections", 
+                "Size": collections.length,
+            },
+        ],
+        "ReportingPeriod": "Weekly",
+        "AggregationFunction": "LAST"
+    }
+}
+
+export async function total_documents(client: Client, request: Request) {
+    const collectionsService = new CollectionsService(client);
+    const documentsService = new DocumentsService(client);
+    const count = await documentsService.getAllDocumentsCount(collectionsService);
+    
+    return {
+        Title: "Data",
+        "Resources": [
+            {
+                "Data": "Documents",
+                "Description": "Number of documents",
+                "Size": count,
+            },
+        ],
+        "ReportingPeriod": "Weekly",
+        "AggregationFunction": "LAST"
+    }
+}

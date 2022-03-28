@@ -33,3 +33,20 @@ export const DimxRelations: Relation[] = [{
     Description: 'relation for exporting documents from collection',
     AddonRelativeURL: '/api/export_data_source'
 }]
+
+export const UsageMonitorRelations: Relation[] = [{
+    AddonUUID: config.AddonUUID,
+    Name: 'Collections',
+    RelationName: 'UsageMonitor',
+    Type: 'AddonAPI',
+    AddonRelativeURL: '/api/collections_number',
+    Description: 'relation for "Setup" tab in usage monitor to display number of collections',
+},
+{
+    AddonUUID: config.AddonUUID,
+    Name: 'TotalDocuments',
+    RelationName: 'UsageMonitor',
+    Type: 'AddonAPI',
+    AddonRelativeURL: '/api/total_documents',
+    Description: 'relation for "Data" tab in usage monitor to display total number of documents in all the collections',
+}]
