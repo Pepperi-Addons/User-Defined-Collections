@@ -23,6 +23,7 @@ export class CollectionFormComponent implements OnInit {
     collectionName: string;
     emptyCollection: boolean = true;
     EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
+    isOffline: boolean = false;
 
     fieldsDataSource: IPepGenericListDataSource;
 
@@ -109,6 +110,7 @@ export class CollectionFormComponent implements OnInit {
                 this.emptyCollection = documents.length == 0;
                 console.log('empty collection:', this.emptyCollection);
             }
+            this.isOffline = this.collection.Type == 'cpi_meta_data'
         });
     }
 
@@ -464,5 +466,9 @@ export class CollectionFormComponent implements OnInit {
             this.collection.DocumentKey.Fields = [];
             this.collection.DocumentKey.Delimiter = '@';
         }
+    }
+
+    offlineFieldChanged(value: boolean) {
+        this.collection.Type = value ? 'cpi_meta_data' : 'meta_data';
     }
 }

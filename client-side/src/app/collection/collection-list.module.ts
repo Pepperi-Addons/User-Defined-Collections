@@ -25,6 +25,7 @@ import { SortingFormComponent } from './form/sorting/sorting-form.component';
 import { FieldsFormComponent } from './form/fields/fields-form.component';
 import { CollectionFormComponent } from './form/collection-form.component';
 import { UtilitiesService } from './../services/utilities.service'
+import { PepCheckboxModule } from '@pepperi-addons/ngx-lib/checkbox';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -58,6 +59,7 @@ export const routes: Routes = [
         PepSelectModule,
         PepTextareaModule,
         PepDialogModule,
+        PepCheckboxModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,

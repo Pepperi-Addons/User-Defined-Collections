@@ -28,6 +28,14 @@
                 [mandatory]="false"
                 [disabled]="false"
             ></pep-textbox>
+            <pep-checkbox
+                [(value)]="isOffline"
+                [label]="'Offline' | translate"
+                type="checkbox"
+                [mandatory]="false"
+                [disabled]="mode === 'Edit'"
+                (valueChange)="offlineFieldChanged($event)"
+            ></pep-checkbox>
         </div>
         <div class="genericListContainer">
             <pep-generic-list class="generic-list"
