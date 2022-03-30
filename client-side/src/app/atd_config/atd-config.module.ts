@@ -1,3 +1,4 @@
+import { MappingsService } from './../services/mappings.service';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRouteSnapshot, RouterModule, Routes } from '@angular/router';
@@ -69,7 +70,9 @@ export const routes: Routes = [
         // When loading this module from route we need to add this here (because only this module is loading).
         CollectionsService,
         DocumentsService,
-        UtilitiesService
+        UtilitiesService,
+        MappingsService,
+        TranslateService,
     ]
 })
 export class AtdConfigModule {
