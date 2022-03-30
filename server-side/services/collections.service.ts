@@ -1,7 +1,7 @@
 import { UtilitiesService } from './utilities.service';
 import { PapiClient, AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { DimxRelations } from '../metadata';
+import { DimxRelations, UdcMappingsScheme } from '../metadata';
 import { DocumentsService } from './documents.service';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
@@ -48,7 +48,7 @@ export class CollectionsService {
     
     async getAllCollections(options: any = {}): Promise<AddonDataScheme[]> {
         let collections = await this.utilities.papiClient.addons.data.schemes.get(options);
-        return collections.filter(collection => collection.Name !== 'AtdConfig');
+        return collections.filter(collection => collection.Name !== UdcMappingsScheme.Name);
     }
 
     async createDIMXRelations(collectionName: string) {

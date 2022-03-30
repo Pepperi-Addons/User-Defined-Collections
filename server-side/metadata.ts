@@ -79,7 +79,7 @@ export const AtdRelations: Relation[] = [{
     AddonRelativeURL:"atd_config"
 }]
 
-export const AtdConfigScheme: AddonDataScheme = {
-    Name: 'AtdConfig',
+export const UdcMappingsScheme: AddonDataScheme = {
+    Name: 'UdcMappings',
     Type: 'cpi_meta_data',
 }
