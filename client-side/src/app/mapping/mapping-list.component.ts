@@ -47,10 +47,7 @@ export class MappingListComponent implements OnInit {
         }
     }
 
-    constructor(private router: Router,
-        private activateRoute: ActivatedRoute,
-        private genericListService: PepGenericListService,
-        public translate: TranslateService,
+    constructor (private translate: TranslateService,
         private mappingsService: MappingsService,
         private utilitiesService: UtilitiesService,
         private dialogService: PepDialogService) { }
