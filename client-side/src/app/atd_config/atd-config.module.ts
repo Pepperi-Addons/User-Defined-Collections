@@ -20,12 +20,10 @@ import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 
 import { CollectionsService } from '../services/collections.service';
-import { CollectionListComponent } from './index';
-import { SortingFormComponent } from './form/sorting/sorting-form.component';
-import { FieldsFormComponent } from './form/fields/fields-form.component';
-import { CollectionFormComponent } from './form/collection-form.component';
+import { DocumentsService } from '../services/documents.service';
 import { UtilitiesService } from './../services/utilities.service'
-import { PepCheckboxModule } from '@pepperi-addons/ngx-lib/checkbox';
+
+import { AtdConfigComponent } from './atd-config.component';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -34,16 +32,13 @@ const pepIcons = [
 export const routes: Routes = [
     {
         path: '',
-        component: CollectionListComponent
+        component: AtdConfigComponent
     }
 ];
 
 @NgModule({
     declarations: [
-        CollectionListComponent,
-        CollectionFormComponent,
-        FieldsFormComponent,
-        SortingFormComponent
+        AtdConfigComponent
     ],
     imports: [
         CommonModule,
@@ -59,7 +54,6 @@ export const routes: Routes = [
         PepSelectModule,
         PepTextareaModule,
         PepDialogModule,
-        PepCheckboxModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
@@ -69,15 +63,16 @@ export const routes: Routes = [
         }),
         RouterModule.forChild(routes)
     ],
-    exports:[CollectionListComponent],
+    exports:[AtdConfigComponent],
     providers: [
         TranslateStore,
         // When loading this module from route we need to add this here (because only this module is loading).
         CollectionsService,
+        DocumentsService,
         UtilitiesService
     ]
 })
-export class CollectionListModule {
+export class AtdConfigModule {
     constructor(
         translate: TranslateService,
         private pepIconRegistry: PepIconRegistry,
