@@ -11,7 +11,7 @@ import { AppComponent } from './app.component';
 
 import { CollectionListModule } from './collection';
 import { DocumentsListModule } from './documents';
-import { AtdConfigModule } from './atd_config';
+import { MappingsModule } from './mapping';
 
 @NgModule({
     declarations: [
@@ -23,7 +23,7 @@ import { AtdConfigModule } from './atd_config';
         HttpClientModule,
         CollectionListModule,
         DocumentsListModule,
-        AtdConfigModule,
+        MappingsModule,
         AppRoutingModule,
         TranslateModule.forRoot({
             loader: {

@@ -5,7 +5,7 @@ const share = mf.share;
 const singleSpaAngularWebpack = require('single-spa-angular/lib/webpack').default;
 const { merge } = require('webpack-merge');
 
-const filename = 'atd_config'; // addon
+const filename = 'mappings'; // addon
 
 const sharedMappings = new mf.SharedMappings();
 sharedMappings.register(
@@ -34,8 +34,8 @@ module.exports = (config, options, env) => {
                 name: `${filename}`,
                 filename: `${filename}.js`,
                 exposes: {
-                  './AtdConfigComponent': './src/app/atd_config/index.ts',
-                  './AtdConfigModule': './src/app/atd_config/index.ts'
+                  './MappingListComponent': './src/app/mapping/index.ts',
+                  './MappingsModule': './src/app/mapping/index.ts'
                 },
                 shared: share({
                     "@angular/core": { eager: true, singleton: true, strictVersion: true, requiredVersion: 'auto' },

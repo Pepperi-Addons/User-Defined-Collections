@@ -1,4 +1,4 @@
-import { MappingsService } from './../services/mappings.service';
+import { MappingsService } from '../services/mappings.service';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRouteSnapshot, RouterModule, Routes } from '@angular/router';
@@ -22,9 +22,9 @@ import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 
 import { CollectionsService } from '../services/collections.service';
 import { DocumentsService } from '../services/documents.service';
-import { UtilitiesService } from './../services/utilities.service'
+import { UtilitiesService } from '../services/utilities.service'
 
-import { AtdConfigComponent } from './atd-config.component';
+import { MappingListComponent } from './mapping-list.component';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -33,13 +33,13 @@ const pepIcons = [
 export const routes: Routes = [
     {
         path: '',
-        component: AtdConfigComponent
+        component: MappingListComponent
     }
 ];
 
 @NgModule({
     declarations: [
-        AtdConfigComponent
+        MappingListComponent
     ],
     imports: [
         CommonModule,
@@ -64,7 +64,7 @@ export const routes: Routes = [
         }),
         RouterModule.forChild(routes)
     ],
-    exports:[AtdConfigComponent],
+    exports:[MappingListComponent],
     providers: [
         TranslateStore,
         // When loading this module from route we need to add this here (because only this module is loading).
@@ -75,7 +75,7 @@ export const routes: Routes = [
         TranslateService,
     ]
 })
-export class AtdConfigModule {
+export class MappingsModule {
     constructor(
         translate: TranslateService,
         private pepIconRegistry: PepIconRegistry,

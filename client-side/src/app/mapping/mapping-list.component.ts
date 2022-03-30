@@ -11,11 +11,11 @@ import { FormMode, UtilitiesService } from '../services/utilities.service';
 import { MappingsService, UdcMapping } from '../services/mappings.service';
 
 @Component({
-  selector: 'app-atd-config',
-  templateUrl: './atd-config.component.html',
-  styleUrls: ['./atd-config.component.scss']
+  selector: 'app-mapping-list',
+  templateUrl: './mapping-list.component.html',
+  styleUrls: ['./mapping-list.component.scss']
 })
-export class AtdConfigComponent implements OnInit {
+export class MappingListComponent implements OnInit {
     @Input() hostObject: any;
     
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();

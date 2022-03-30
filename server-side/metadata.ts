@@ -73,10 +73,10 @@ export const AtdRelations: Relation[] = [{
     Name:"UDCRelations",
     Description:"Collections",
     SubType: "NG11",
-    ModuleName: "AtdConfigModule",
-    ComponentName: "AtdConfigComponent",
+    ModuleName: "MappingsModule",
+    ComponentName: "MappingListComponent",
     Type:"NgComponent",
-    AddonRelativeURL:"atd_config"
+    AddonRelativeURL:"mappings"
 }]
 
 export const UdcMappingsScheme: AddonDataScheme = {
