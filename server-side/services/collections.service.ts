@@ -22,9 +22,6 @@ export class CollectionsService {
         const validResult = this.validateScheme(body);
         if (validResult.valid || updatingHidden) {
             await service.checkHidden(body);
-            collectionObj["FieldsTmp"] = collectionObj.Fields;
-            delete collectionObj.Fields;
-            console.log(collectionObj);
             const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
             await this.createDIMXRelations(collection.Name);
             return collection;
@@ -46,24 +43,12 @@ export class CollectionsService {
     }
     
     async getCollection(tableName:string): Promise<Collection> {
-        const collection = await this.utilities.papiClient.addons.data.schemes.name(tableName).get() as Collection;
-        if (collection["FieldsTmp"]) {
-            collection.Fields = collection["FieldsTmp"];
-            collection["FieldsTmp"] = undefined;
-        }
-        return collection;
+        return await this.utilities.papiClient.addons.data.schemes.name(tableName).get() as Collection;
     }
     
     async getAllCollections(options: any = {}): Promise<AddonDataScheme[]> {
         let collections = await this.utilities.papiClient.addons.data.schemes.get(options);
-        collections = collections.filter(collection => collection.Name !== 'AtdConfig').map((collection) => {
-            if (collection["FieldsTmp"]) {
-                collection.Fields = collection["FieldsTmp"];
-                collection["FieldsTmp"] = undefined;
-            }
-            return collection;
-        })
-        return collections;
+        return collections.filter(collection => collection.Name !== 'AtdConfig');
     }
 
     async createDIMXRelations(collectionName: string) {

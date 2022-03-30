@@ -1,6 +1,6 @@
 {
   "AddonUUID": "122c0e9d-c240-4865-b446-f37ece866c22",
-  "AddonVersion": "0.0.29",
+  "AddonVersion": "0.0.33",
   "DebugPort": 4500,
   "WebappBaseUrl": "https://app.sandbox.pepperi.com",
   "DefaultEditor": "main",
@@ -20,7 +20,9 @@
         "Description": "User Defined Collections"
       }
     ],
-    "Dependencies": {},
+    "Dependencies": {
+      "adal": "1.0.197"
+    },
     "CPISide": [
       "addon-cpi.ts"
     ]
