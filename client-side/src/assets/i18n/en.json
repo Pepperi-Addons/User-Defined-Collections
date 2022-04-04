@@ -39,5 +39,17 @@
     "Mappings_List_NoDataFound": "Click Add to define new data",
     "Mapping_DeleteDialog_Title": "Delete Mapping",
     "Mapping_DeleteDialog_Content": "Are you sure you want to delete {{ApiName}} field?",
-    "Mapping_DeleteDialog_Error": "There was an error when deleting field. Please try again later"
+    "Mapping_DeleteDialog_Error": "There was an error when deleting field. Please try again later",
+    "FieldType_TextBox": "Single line of text",
+    "FieldType_TextArea": "Paragraph text",
+    "FieldType_Date": "Date",
+    "FieldType_DateAndTime": "Date and time",
+    "FieldType_NumberInteger": "Number",
+    "FieldType_NumberReal": "Decimal number",
+    "FieldType_Currency": "Currency",
+    "FieldType_Boolean": "Checkbox",
+    "FieldType_ComboBox": "Dropdown",
+    "FieldType_RichTextHTML": "HTML formatted text",
+    "Mapping_SaveFailed_Title": "{{Operation}} field failed",
+    "Mapping_SaveFailed_Content": "Could not {{Operation}} field {{Field}}. Please try again later"
 }

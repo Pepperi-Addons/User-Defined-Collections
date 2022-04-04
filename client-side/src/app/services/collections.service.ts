@@ -27,6 +27,13 @@ export class CollectionsService {
         }
         return await this.utilities.papiClient.userDefinedCollections.schemes.find(options);
     }
+
+    async getMappingsCollections() {
+        const collections = await this.utilities.papiClient.userDefinedCollections.schemes.find();
+        return collections.filter(collection => {
+            return collection.Type === 'cpi_meta_data' && collection.DocumentKey.Type === 'Composite'
+        })
+    }
     
     async upsertCollection(obj: Collection) {
         return await this.utilities.papiClient.userDefinedCollections.schemes.upsert(obj);

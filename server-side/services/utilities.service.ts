@@ -50,5 +50,13 @@ export class UtilitiesService {
     async createADALSchemes() {
         return await this.papiClient.addons.data.schemes.post(UdcMappingsScheme);
     }
+        
+    async getAtd(uuid: string) {
+        return  await this.papiClient.types.find({
+            where: `UUID='${uuid}'`
+        }).then((types) => {
+            return types[0]
+        });
+    }
 }
 

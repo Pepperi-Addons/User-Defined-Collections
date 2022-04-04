@@ -1,6 +1,7 @@
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { Collection } from '@pepperi-addons/papi-sdk';
-import { AtdService } from './services/atd.service';
+import { UdcMapping } from './entities';
+import { FieldsService } from './services/fields.service';
 import { CollectionsService } from './services/collections.service'
 import { DocumentsService } from './services/documents.service';
 import { MappingsService } from './services/mappings.service';
@@ -154,37 +155,8 @@ export async function mappings(client: Client, request: Request) {
     
 }
 
-export async function field(client: Client, request: Request) {
-    const service = new AtdService(client);
-    let result;
-    
-    switch (request.method) {
-        case 'GET': {
-            const atdID = request.query.AtdID;
-            const resource = request.query.Resource;
-            const fieldID = request.query.FieldID;
-            result = await service.getField(atdID, resource, fieldID);
-            break;
-        }
-        case 'POST': {
-            const atdID = request.body.AtdID;
-            const resource = request.body.Resource;
-            const field = request.body.Field;
-            result = await service.upsertField(atdID, resource, field);
-            break;
-        }
-        default: {
-            let err: any = new Error(`Method ${request.method} not allowed`);
-            err.code = 405;
-            throw err;
-        }        
-    }
-
-    return result;
-}
-
 export async function get_atd(client: Client, request: Request) {
-    const service = new AtdService(client);
+    const service = new UtilitiesService(client);
     let result;
     
     switch (request.method) {

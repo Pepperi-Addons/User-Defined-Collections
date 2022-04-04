@@ -25,6 +25,8 @@ import { DocumentsService } from '../services/documents.service';
 import { UtilitiesService } from '../services/utilities.service'
 
 import { MappingListComponent } from './mapping-list.component';
+import { MappingFormComponent } from './form/mapping-form.component';
+import { PepGenericFormModule } from '@pepperi-addons/ngx-composite-lib/generic-form';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -39,7 +41,8 @@ export const routes: Routes = [
 
 @NgModule({
     declarations: [
-        MappingListComponent
+        MappingListComponent,
+        MappingFormComponent
     ],
     imports: [
         CommonModule,
@@ -55,6 +58,7 @@ export const routes: Routes = [
         PepSelectModule,
         PepTextareaModule,
         PepDialogModule,
+        PepGenericFormModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,

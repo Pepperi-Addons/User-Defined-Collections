@@ -1,14 +1,16 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 
 import { IPepGenericListActions, IPepGenericListDataSource, PepGenericListService } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
-import { Type } from '@pepperi-addons/papi-sdk';
+import { BaseFormDataViewField, FormDataView, Type } from '@pepperi-addons/papi-sdk';
 
 import { FormMode, UtilitiesService } from '../services/utilities.service';
-import { MappingsService, UdcMapping } from '../services/mappings.service';
+import { MappingsService } from '../services/mappings.service';
+import { CollectionsService } from '../services/collections.service';
+import { MappingFormComponent, MappingFormData } from './form/mapping-form.component';
+import { MappingFieldTypes, UdcMapping } from '../../../../server-side/entities';
 
 @Component({
   selector: 'app-mapping-list',
@@ -49,6 +51,7 @@ export class MappingListComponent implements OnInit {
 
     constructor (private translate: TranslateService,
         private mappingsService: MappingsService,
+        private collectionsService: CollectionsService,
         private utilitiesService: UtilitiesService,
         private dialogService: PepDialogService) { }
 
@@ -75,7 +78,7 @@ export class MappingListComponent implements OnInit {
                         Title: '',
                         Fields: [
                             {
-                                FieldID: 'Field',
+                                FieldID: 'Title',
                                 Type: 'TextBox',
                                 Title: this.translate.instant('Field'),
                                 Mandatory: false,
@@ -96,7 +99,7 @@ export class MappingListComponent implements OnInit {
                                 ReadOnly: true
                             },
                             {
-                                FieldID: 'DataSource1',
+                                FieldID: 'valueSource',
                                 Type: 'TextBox',
                                 Title: this.translate.instant('Get value from'),
                                 Mandatory: false,
@@ -133,7 +136,10 @@ export class MappingListComponent implements OnInit {
                     },
                     totalCount: this.mappings.length,
                     items: this.mappings.map(mapping => {
-                        mapping['DataSource1'] = `${mapping.DataSource.Collection}.${mapping.DataSource.Field}`
+                        mapping['valueSource'] = `${mapping.DataSource.Collection}.${mapping.DataSource.Field}`;
+                        mapping['Title'] = mapping.Field.Title;
+                        mapping['ApiName'] = mapping.Field.ApiName;
+                        mapping['Temporary'] = mapping.Field.Temporary;
                         return mapping;
                     })
                 });
@@ -151,7 +157,33 @@ export class MappingListComponent implements OnInit {
     }
 
     openForm(mode: FormMode, selectedKey: string = undefined) {
-        console.log(`opening form in ${mode} mode, on field ${selectedKey}`);
+        const item = this.mappings.find(mapping=> mapping.Key === selectedKey);
+        const formData: MappingFormData = {
+            Item: {
+                Key: selectedKey,
+                AtdID: this.atd.InternalID,
+                Collection: item?.DataSource.Collection || '',
+                CollectionField: item?.DataSource.Field || '',
+                Filter: [],
+                Resource: item?.Resource || this.atd.Type === 2 ? 'transactions': 'activities',
+                Temporary: item?.Field.Temporary || false,
+                ApiName: item?.Field.ApiName || '',
+                Type: item?.Field.Type || 'TextBox',
+                Title: item?.Field.Title || '',
+                Description: item?.Field.Description || ''
+            },
+            DataView: this.createDataView(mode),
+            Mode: mode
+        }
+        const config = this.dialogService.getDialogConfig({ }, 'large');
+        config.data = new PepDialogData({
+            content: MappingFormComponent
+        })
+        this.dialogService.openDialog(MappingFormComponent, formData, config).afterClosed().subscribe((value) => {
+            if (value) {
+                this.dataSource = this.getDataSource();
+            }
+        });
     }
 
     showDeleteDialog(selectedKey: string) {
@@ -164,13 +196,8 @@ export class MappingListComponent implements OnInit {
             .subscribe(async (isDeletePressed) => {
                 if (isDeletePressed) {
                     try {
-                        const mappingObj = this.mappings.find(mapping => mapping.Key === selectedKey);
-                        if (mappingObj) {
-                            mappingObj.Hidden = true;
-                            await this.mappingsService.removeTSAField(mappingObj.ApiName, mappingObj.Resource, mappingObj.AtdID)
-                            await this.mappingsService.upsertMapping(mappingObj);
-                            this.dataSource = this.getDataSource();
-                        }
+                        await this.mappingsService.deleteMapping(selectedKey);
+                        this.dataSource = this.getDataSource();
                     }
                     catch (err) {
                         const errorMsg = new PepDialogData({
@@ -182,6 +209,282 @@ export class MappingListComponent implements OnInit {
                     }
                 }
         });
+    }
+
+    createDataView(mode: FormMode): FormDataView {
+        const dv: FormDataView = {
+            Type: 'Form',
+            Context: {
+                Name: '',
+                Profile: { },
+                ScreenSize: 'Tablet'
+            },
+            Fields: [{
+                FieldID: 'Title',
+                Mandatory: true,
+                ReadOnly: false,
+                Title: this.translate.instant('Field name'),
+                Type: 'TextBox',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 0
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            }, 
+            {
+                FieldID: 'Type',
+                Mandatory: true,
+                ReadOnly: mode == 'Edit',
+                Title: this.translate.instant('Type'),
+                Type: 'ComboBox',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 2
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            }, 
+            {
+                FieldID: 'ApiName',
+                Mandatory: true,
+                ReadOnly: mode === 'Edit',
+                Title: this.translate.instant('Field API name'),
+                Type: 'TextBox',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 1
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'Description',
+                Mandatory: true,
+                ReadOnly: false,
+                Title: this.translate.instant('Field description'),
+                Type: 'TextBox',
+                Layout: {
+                    Origin: {
+                        X: 1,
+                        Y: 0
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'Temporary',
+                Mandatory: false,
+                ReadOnly: false,
+                Title: this.translate.instant('Temporary'),
+                Type: 'ComboBox',
+                Layout: {
+                    Origin: {
+                        X: 1,
+                        Y: 1
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'DataSource',
+                Mandatory: false,
+                ReadOnly: false,
+                Title: this.translate.instant('Data source'),
+                Type: 'Separator',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 3
+                    },
+                    Size: {
+                        Width: 2,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'Collection',
+                Mandatory: true,
+                ReadOnly: false,
+                Title: this.translate.instant('Collection'),
+                Type: 'ComboBox',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 4
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'CollectionField',
+                Mandatory: true,
+                ReadOnly: false,
+                Title: this.translate.instant('Collection field'),
+                Type: 'ComboBox',
+                Layout: {
+                    Origin: {
+                        X: 1,
+                        Y: 4
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'Filter',
+                Mandatory: false,
+                ReadOnly: false,
+                Title: this.translate.instant('Filter'),
+                Type: 'Separator',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 5
+                    },
+                    Size: {
+                        Width: 2,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+
+            },
+        ],
+        Columns: [{}, {}],
+
+        }
+
+        dv.Fields[1]["OptionalValues"] = MappingFieldTypes.map(type => {
+            return {
+                Key: type,
+                Value: this.translate.instant(`FieldType_${type}`)
+            }
+        })
+        dv.Fields[4]["OptionalValues"] = [{
+            Key: true,
+            Value: 'True'
+        },
+        {
+            Key: false,
+            Value: 'False'
+        }]
+
+        if (this.atd.Type === 2) {
+            const resourceField: BaseFormDataViewField = {
+                FieldID: 'Resource',
+                Mandatory: true,
+                ReadOnly: mode === 'Edit',
+                Title: this.translate.instant('Resource'),
+                Type: 'ComboBox',
+                Layout: {
+                    Origin: {
+                        X: 1,
+                        Y: 2
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                },
+            }
+
+            resourceField["OptionalValues"] = [{
+                Key: 'transactions',
+                Value: 'Transactions'
+            },
+            {
+                Key: 'transaction_lines',
+                Value: 'Transaction Lines'
+            }]
+    
+            dv.Fields.push(resourceField);
+        }
+
+        return dv;
     }
 
 }

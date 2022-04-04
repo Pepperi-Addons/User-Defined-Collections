@@ -1,7 +1,7 @@
 import { UtilitiesService } from './utilities.service';
-import { PapiClient, AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk'
+import { AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { DimxRelations, UdcMappingsScheme } from '../metadata';
+import { DimxRelations, UdcMappingsScheme} from '../metadata';
 import { DocumentsService } from './documents.service';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
