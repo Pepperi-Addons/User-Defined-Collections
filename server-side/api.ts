@@ -1,7 +1,10 @@
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { Collection } from '@pepperi-addons/papi-sdk';
+import { UdcMapping } from './entities';
+import { FieldsService } from './services/fields.service';
 import { CollectionsService } from './services/collections.service'
 import { DocumentsService } from './services/documents.service';
+import { MappingsService } from './services/mappings.service';
 import { UtilitiesService } from './services/utilities.service';
 
 export async function schemes(client: Client, request: Request) {
@@ -126,4 +129,48 @@ export async function total_documents(client: Client, request: Request) {
         "ReportingPeriod": "Weekly",
         "AggregationFunction": "LAST"
     }
+}
+
+export async function mappings(client: Client, request: Request) {
+    const service = new MappingsService(client);
+
+    let result;
+    switch (request.method) {
+        case 'GET': {
+            result = await service.getMappings(request.query);
+            break;
+        }
+        case 'POST': {
+            result = await service.upsertMapping(request.body);
+            break;
+        }
+        default: {
+            let err: any = new Error(`Method ${request.method} not allowed`);
+            err.code = 405;
+            throw err;
+        }
+    }
+    
+    return result;
+    
+}
+
+export async function get_atd(client: Client, request: Request) {
+    const service = new UtilitiesService(client);
+    let result;
+    
+    switch (request.method) {
+        case 'GET': {
+            const uuid = request.query.uuid;
+            result = await service.getAtd(uuid);
+            break;
+        }
+        default: {
+            let err: any = new Error(`Method ${request.method} not allowed`);
+            err.code = 405;
+            throw err;
+        }        
+    }
+    
+    return result;   
 }

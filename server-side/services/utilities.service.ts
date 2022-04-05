@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { Collection, PapiClient } from '@pepperi-addons/papi-sdk';
-import { AtdConfigScheme } from '../metadata';
+import { UdcMappingsScheme } from '../metadata';
 import { Client } from '@pepperi-addons/debug-server';
 
 export class UtilitiesService {
@@ -13,7 +13,7 @@ export class UtilitiesService {
             token: client.OAuthAccessToken,
             addonUUID: client.AddonUUID,
             addonSecretKey: client.AddonSecretKey,
-            actionUUID: client.AddonUUID
+            actionUUID: client.ActionUUID
         });
     }
 
@@ -48,7 +48,15 @@ export class UtilitiesService {
     }
 
     async createADALSchemes() {
-        return await this.papiClient.addons.data.schemes.post(AtdConfigScheme);
+        return await this.papiClient.addons.data.schemes.post(UdcMappingsScheme);
+    }
+        
+    async getAtd(uuid: string) {
+        return  await this.papiClient.types.find({
+            where: `UUID='${uuid}'`
+        }).then((types) => {
+            return types[0]
+        });
     }
 }
 

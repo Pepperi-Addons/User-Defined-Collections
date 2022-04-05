@@ -1,3 +1,4 @@
+import { MappingsService } from '../services/mappings.service';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRouteSnapshot, RouterModule, Routes } from '@angular/router';
@@ -21,9 +22,11 @@ import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 
 import { CollectionsService } from '../services/collections.service';
 import { DocumentsService } from '../services/documents.service';
-import { UtilitiesService } from './../services/utilities.service'
+import { UtilitiesService } from '../services/utilities.service'
 
-import { AtdConfigComponent } from './atd-config.component';
+import { MappingListComponent } from './mapping-list.component';
+import { MappingFormComponent } from './form/mapping-form.component';
+import { PepGenericFormModule } from '@pepperi-addons/ngx-composite-lib/generic-form';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -32,13 +35,14 @@ const pepIcons = [
 export const routes: Routes = [
     {
         path: '',
-        component: AtdConfigComponent
+        component: MappingListComponent
     }
 ];
 
 @NgModule({
     declarations: [
-        AtdConfigComponent
+        MappingListComponent,
+        MappingFormComponent
     ],
     imports: [
         CommonModule,
@@ -54,6 +58,7 @@ export const routes: Routes = [
         PepSelectModule,
         PepTextareaModule,
         PepDialogModule,
+        PepGenericFormModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
@@ -63,16 +68,18 @@ export const routes: Routes = [
         }),
         RouterModule.forChild(routes)
     ],
-    exports:[AtdConfigComponent],
+    exports:[MappingListComponent],
     providers: [
         TranslateStore,
         // When loading this module from route we need to add this here (because only this module is loading).
         CollectionsService,
         DocumentsService,
-        UtilitiesService
+        UtilitiesService,
+        MappingsService,
+        TranslateService,
     ]
 })
-export class AtdConfigModule {
+export class MappingsModule {
     constructor(
         translate: TranslateService,
         private pepIconRegistry: PepIconRegistry,
