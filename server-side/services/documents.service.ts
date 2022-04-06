@@ -58,7 +58,6 @@ export class DocumentsService {
 
     validateDocument(collection: Collection, body: any) {
         const schema = this.createSchema(collection);
-        console.log('document schema:', schema);
         const validator = new Validator();
         const result = validator.validate(body, schema);
         return result;

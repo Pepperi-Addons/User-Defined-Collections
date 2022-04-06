@@ -29,16 +29,12 @@ export interface MappingDataSource {
     Collection: string;
     Field: string;
 }
-
-export interface MappingFilter {
-    Key: string;
-    Value: string
-}
-
 export interface UdcMapping extends AddonData {
     AtdID: number;
     Field: MappingField;
     DataSource: MappingDataSource;
     Resource: MappingResource;
-    Filter?: MappingFilter[];
+    Filter?: {
+        [Key: string]: string
+    }
 }

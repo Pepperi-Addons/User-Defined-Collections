@@ -16,6 +16,15 @@ export class FieldsService {
         return fields ? fields.find(field => field.FieldID === fieldId) : undefined;
     }
     
+    async getFields(atdId: number, resource: string): Promise<ApiFieldObject[]> {
+        if (resource === 'items' || resource === 'accounts') {
+            return await this.utilities.papiClient.metaData.type(resource).fields.get();
+        }
+        else {
+            return await this.utilities.papiClient.metaData.type(resource).types.subtype(atdId.toString()).fields.get();
+        }
+    }
+    
     async upsertField(obj: UdcMapping) {
         if(obj.Hidden) {
             this.removeField(obj.AtdID, obj.Field.ApiName, obj.Resource!)
@@ -48,7 +57,6 @@ export class FieldsService {
                     },
                 }
             }
-            debugger
             return await this.utilities.papiClient.metaData.type(obj.Resource!).types.subtype(obj.AtdID.toString()).fields.upsert(field);
         }
     }

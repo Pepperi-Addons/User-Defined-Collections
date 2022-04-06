@@ -1,8 +1,102 @@
-<pep-dialog [title]="'Mapping_Form_Title' | translate">
+<pep-dialog [title]="'Mapping_Form_Title' | translate: {mode: incoming.Mode, field: item.Title}">
     <ng-container pep-dialog-content>
-        <pep-generic-form [dataSource]="item" [dataView]="incoming.DataView" (valueChange)="onValueChanged($event)">
+        <!-- <pep-generic-form [dataSource]="item" [dataView]="incoming.DataView" (valueChange)="onValueChanged($event)">
 
-        </pep-generic-form>
+        </pep-generic-form> -->
+        <div class="form-row">
+            <pep-textbox
+                [(value)]="item.Title"
+                [label]="'MappingForm_Name_Title' | translate"
+                type="text"
+                [mandatory]="true"
+                (valueChange)="nameChanged('Title', $event)"
+                ></pep-textbox>
+                <pep-textbox
+                [(value)]="item.Description"
+                [label]="'MappingForm_Description_Title' | translate"
+                type="text"
+                [mandatory]="false"
+                ></pep-textbox>
+            </div>
+            <div class="form-row">
+                <pep-textbox
+                [(value)]="item.ApiName"
+                [label]="'MappingForm_ApiName_Title' | translate"
+                type="text"
+                [mandatory]="true"
+                [disabled]="incoming.Mode === 'Edit'"
+                (valueChange)="nameChanged('ApiName', $event)"
+            ></pep-textbox>
+            <pep-select
+                [(value)]="item.Temporary"
+                [label]="'MappingForm_Temporary_Title' | translate"
+                type="select"
+                [mandatory]="false"
+                [disabled]="incoming.Mode === 'Edit'"
+                [emptyOption]="false"
+                [options]="temporaryOptions"
+            ></pep-select>
+        </div>
+        <div class="form-row">
+            <pep-select
+                [(value)]="item.Type"
+                [label]="'MappingForm_Type_Title' | translate"
+                type="select"
+                [mandatory]="true"
+                [disabled]="incoming.Mode === 'Edit'"
+                [emptyOption]="false"
+                [options]="fieldTypes"
+                (valueChange)="typeChanged($event)"
+            ></pep-select>
+            <pep-select
+                *ngIf='item.Resource != "activities"'
+                [(value)]="item.Resource"
+                [label]="'MappingForm_Resource_Title' | translate"
+                type="select"
+                [mandatory]="false"
+                [disabled]="incoming.Mode === 'Edit'"
+                [emptyOption]="false"
+                [options]="resourceOptions"
+            ></pep-select>
+        </div>
+        <pep-separator 
+            [label]="'MappingForm_DateSource_Title' | translate"
+        ></pep-separator>
+        <div class="form-row">
+            <pep-select
+                [(value)]="item.Collection"
+                [label]="'MappingForm_Collection_Title' | translate"
+                type="select"
+                [mandatory]="true"
+                [disabled]="false"
+                [emptyOption]="false"
+                [options]="collectionsOptions"
+                (valueChange)="collectionChanged($event)"
+            ></pep-select>
+            <pep-select
+                [(value)]="item.CollectionField"
+                [label]="'MappingForm_CollectionField_Title' | translate"
+                type="select"
+                [mandatory]="true"
+                [disabled]="false"
+                [emptyOption]="false"
+                [options]="collectionFields"
+            ></pep-select>
+        </div>
+        <pep-separator 
+        [label]="'MappingForm_Filter_Title' | translate"
+        ></pep-separator>
+        <ng-template *ngIf="chosenCollection != undefined" ngFor let-field [ngForOf]="chosenCollection?.DocumentKey?.Fields" let-i="index">
+            <pep-select
+                [(value)]="item.Filter[field]"
+                [label]="'MappingForm_FilterField_Title' | translate: { field_name: field }"
+                type="select"
+                [mandatory]="true"
+                [disabled]="false"
+                [emptyOption]="false"
+                [options]="filterOptions[field]"
+            ></pep-select>
+        </ng-template>
     </ng-container>
     <ng-container pep-dialog-actions>
         <div class="pep-spacing-element-negative" style="display: flex;">         

@@ -108,7 +108,6 @@ export class CollectionFormComponent implements OnInit {
             if (this.mode === 'Edit') {
                 const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
                 this.emptyCollection = documents.length == 0;
-                console.log('empty collection:', this.emptyCollection);
             }
             this.isOffline = this.collection.Type == 'cpi_meta_data'
         });

@@ -29,7 +29,6 @@ export class DocumentsFormComponent implements OnInit {
 
     ngOnInit(): void {
         this.item = this.incoming.Item;
-        console.log(this.incoming);
     }
 
     async saveDocument() {
@@ -56,7 +55,6 @@ export class DocumentsFormComponent implements OnInit {
     }
 
     onValueChanged(event: IPepGenericFormValueChange) {
-        console.log(event);
     }
 
     convertMultiChoiceValues() {

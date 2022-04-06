@@ -185,7 +185,6 @@ export class DocumentsListComponent implements OnInit {
     }
 
     menuItemClicked(event: any) {
-         console.log(`clicked on ${event} menu item`);
          switch (event.source.key) {
             case 'RecycleBin':
             case 'BackToList': {

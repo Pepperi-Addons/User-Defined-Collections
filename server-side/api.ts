@@ -1,6 +1,6 @@
 import { Client, Request } from '@pepperi-addons/debug-server'
-import { Collection } from '@pepperi-addons/papi-sdk';
-import { UdcMapping } from './entities';
+import { ApiFieldObject } from '@pepperi-addons/papi-sdk';
+
 import { FieldsService } from './services/fields.service';
 import { CollectionsService } from './services/collections.service'
 import { DocumentsService } from './services/documents.service';
@@ -137,7 +137,8 @@ export async function mappings(client: Client, request: Request) {
     let result;
     switch (request.method) {
         case 'GET': {
-            result = await service.getMappings(request.query);
+            const atdID = Number(request.query.atd_id);
+            result = await service.getMappings(request.query, atdID);
             break;
         }
         case 'POST': {
@@ -173,4 +174,39 @@ export async function get_atd(client: Client, request: Request) {
     }
     
     return result;   
+}
+
+export async function fields(client: Client, request: Request) {
+    const service = new FieldsService(client);
+    let result: FieldsResult = {
+        Transactions: [],
+        Items: [],
+        Accounts: [],
+        TransactionLines: []
+    }
+    
+    switch (request.method) {
+        case 'GET': {
+            const atd_id = request.query.atd_id;
+            result.Transactions = await service.getFields(atd_id, "transactions");
+            result.Items = await service.getFields(atd_id, "items");
+            result.Accounts = await service.getFields(atd_id, "accounts");
+            result.TransactionLines = await service.getFields(atd_id, "transaction_lines");
+            break;
+        }
+        default: {
+            let err: any = new Error(`Method ${request.method} not allowed`);
+            err.code = 405;
+            throw err;
+        }        
+    }
+
+    return result;
+}
+
+type FieldsResult = {
+    Transactions: ApiFieldObject[],
+    Items: ApiFieldObject[],
+    Accounts: ApiFieldObject[],
+    TransactionLines: ApiFieldObject[]
 }

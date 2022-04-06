@@ -2,13 +2,15 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 
-import { FormDataView } from '@pepperi-addons/papi-sdk';
+import { Collection, FormDataView, Type } from '@pepperi-addons/papi-sdk';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 
 import { MappingFormItem, MappingsService } from 'src/app/services/mappings.service';
 import { FormMode, UtilitiesService } from './../../services/utilities.service';
-import { UdcMapping } from './../../../../../server-side/entities'
-import { IPepGenericFormValueChange, PepGenericFormService } from '@pepperi-addons/ngx-composite-lib/generic-form';
+import { MappingFieldTypes, UdcMapping } from './../../../../../server-side/entities'
+import { IPepGenericFormDataSource, IPepGenericFormValueChange, PepGenericFormService } from '@pepperi-addons/ngx-composite-lib/generic-form';
+import { KeyValuePair } from '@pepperi-addons/ngx-lib';
+import { CollectionsService } from 'src/app/services/collections.service';
 
 @Component({
   selector: 'app-mapping-form',
@@ -18,17 +20,65 @@ import { IPepGenericFormValueChange, PepGenericFormService } from '@pepperi-addo
 export class MappingFormComponent implements OnInit {
 
     item: MappingFormItem;
+    atdFields;
+
+    //dataSource: IPepGenericFormDataSource
+
+    temporaryOptions = [{
+        key: true,
+        value: "True"
+    }, 
+    {
+        key: false,
+        value: "False"
+    }]
+
+    fieldTypes = MappingFieldTypes.map(type => {
+        return {
+            key: type,
+            value: this.translate.instant(`FieldType_${type}`)
+        }
+    })
+
+    resourceOptions = [{
+        key: 'transactions',
+        value: 'Transactions'
+    },
+    {
+        key: 'transaction_lines',
+        value: 'Transaction Lines'
+    }]
+
+    collections: Collection[] = [];
+    collectionsOptions: any = [];
+    chosenCollection: Collection = undefined;
+    collectionFields: any = [];
+    filterOptions: any = {};
+
 
     constructor (private dialogRef: MatDialogRef<MappingFormComponent>,
         private translate: TranslateService,
         private utilitiesService: UtilitiesService,
         private dialogService: PepDialogService,
         private mappingService: MappingsService,
+        private collectionsService: CollectionsService,
         private genericFormService: PepGenericFormService,
         @Inject(MAT_DIALOG_DATA) public incoming: MappingFormData) { }
-
+        
     ngOnInit(): void {
         this.item = this.incoming.Item;
+        this.collectionsService.getMappingsCollections().then((items: Collection[]) => {
+            this.collections = items;
+            this.collectionsOptions = items.map(item => {
+                return {
+                    key: item.Name,
+                    value: item.Name
+                }
+            })
+            if (this.item.Collection) {
+                this.collectionChanged(this.item.Collection, false);
+            }
+        })
     }
 
     close() {
@@ -51,41 +101,122 @@ export class MappingFormComponent implements OnInit {
         }
     }
 
-    onValueChanged(event: IPepGenericFormValueChange) {
-        console.log('value changed', event);
-        switch (event.apiName) {
+    nameChanged(apiName: string, value: any) {
+        switch (apiName) {
             case 'Title': {
                 if (this.incoming.Mode === 'Add') {
-                  let fieldID = event.value.replace(/\s/g, '');
-                  this.item.ApiName = ('TSA' + fieldID).replace(/[^a-zA-Z 0-9]+/g, '');
-                  this.genericFormService.updateFieldValue({
-                      apiName: 'ApiName',
-                      value: this.item.ApiName,
-                      uid: event.uid
-                  })
+                    let fieldID = value.replace(/\s/g, '');
+                    this.item.ApiName = ('TSA' + fieldID).replace(/[^a-zA-Z 0-9]+/g, '');
                 }
-                this.item.Title = event.value;
+                this.item.Title = value;
                 break;
-              }
-              case 'ApiName': {
-                let fieldID = event.value.replace(/\s/g, '');
+            }
+            case 'ApiName': {
+                let fieldID = value.replace(/\s/g, '');
                 let name = fieldID.replace(/[^a-zA-Z 0-9]+/g, '');
-        
+                
                 if (name.substring(0,3) != 'TSA'){
-                  this.item.ApiName = ('TSA' + name);
-                  this.genericFormService.updateFieldValue({
-                      apiName: 'ApiName',
-                      value: this.item.ApiName,
-                      uid: event.uid
-                  })
+                    this.item.ApiName = ('TSA' + name);
                 }
                 else {
-                  this.item.ApiName = name;
+                    this.item.ApiName = name;
                 }
                 break;
-              }
+            }
         }
     }
+
+    typeChanged(value) {
+        this.item.CollectionField = '';
+        this.updateCollectionFields(this.chosenCollection, value)
+    }
+    
+    collectionChanged(value, clearFilter = true) {
+        this.mappingService.getFields(this.item.Atd.InternalID).then(tsaFields => {
+            this.atdFields = tsaFields;
+            this.chosenCollection = this.collections.find(collection => collection.Name === value);
+            this.updateCollectionFields(this.chosenCollection, this.item.Type);
+            clearFilter ? this.item.Filter = {} : null;
+            this.getFilterOptions();
+        });
+    }
+
+    getFilterOptions() {
+        this.chosenCollection.DocumentKey.Fields.forEach(field => {
+            const collectionField = this.chosenCollection?.Fields[field];
+            if (collectionField) {
+                const fieldType = collectionField.Type !== 'Array' ? collectionField.Type : collectionField.Items.Type;
+                this.filterOptions[field] = this.mappingService.getFilterOptions(this.atdFields, fieldType, this.item.Resource).map(item => {
+                    return {
+                        key: item.Key,
+                        value: item.Value
+                    }
+                });
+            }
+            else {
+                this.filterOptions[field] = [];
+            }
+        })
+    }
+
+    updateCollectionFields(collection, fieldType) {
+        if (collection) {
+            this.collectionFields = this.mappingService.getCollectionFields(collection, fieldType).map(item => {
+                return {
+                    key: item.Key,
+                    value: item.Value
+                }
+            });
+        }
+        else {
+            this.collectionFields = []
+        }
+
+    }
+
+    // async onValueChanged(event: IPepGenericFormValueChange) {
+    //     let changeDataSource: boolean = false;
+    //     let changeDataView: boolean = false;
+    //     switch (event.apiName) {
+    //         case 'Title': {
+    //             if (this.incoming.Mode === 'Add') {
+    //               let fieldID = event.value.replace(/\s/g, '');
+    //               this.item.ApiName = ('TSA' + fieldID).replace(/[^a-zA-Z 0-9]+/g, '');
+    //               changeDataSource = true;
+    //             }
+    //             this.item.Title = event.value;
+    //             break;
+    //         }
+    //         case 'ApiName': {
+    //             let fieldID = event.value.replace(/\s/g, '');
+    //             let name = fieldID.replace(/[^a-zA-Z 0-9]+/g, '');
+                
+    //             if (name.substring(0,3) != 'TSA'){
+    //                 this.item.ApiName = ('TSA' + name);
+    //                 changeDataSource = true;
+    //             }
+    //             else {
+    //                 this.item.ApiName = name;
+    //             }
+    //             break;
+    //         }
+    //         case 'Type': {
+    //             changeDataView = true;
+    //             break;
+    //         }
+    //         case 'Collection': {
+    //             changeDataView = true;
+    //             break;
+    //         }
+    //     }
+    //     if (changeDataView) {
+    //         this.incoming.DataView = await this.mappingService.createDataView(this.incoming.Mode, this.item);
+    //         console.log(this.incoming.DataView)
+    //         this.genericFormService.setUiControl(this.incoming.DataView);
+    //     }
+             
+    //     changeDataSource ? this.genericFormService.setDataSource(this.item as any) : null;
+    // }
 
 }
 

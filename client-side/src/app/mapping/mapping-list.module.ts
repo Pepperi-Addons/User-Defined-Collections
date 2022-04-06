@@ -1,32 +1,31 @@
-import { MappingsService } from '../services/mappings.service';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRouteSnapshot, RouterModule, Routes } from '@angular/router';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
 
-import { PepNgxLibModule, PepAddonService } from '@pepperi-addons/ngx-lib';
+import { PepNgxLibModule, PepAddonService, PepFileService } from '@pepperi-addons/ngx-lib';
 import { PepTopBarModule } from '@pepperi-addons/ngx-lib/top-bar';
 import { PepSizeDetectorModule } from '@pepperi-addons/ngx-lib/size-detector';
 import { PepPageLayoutModule } from '@pepperi-addons/ngx-lib/page-layout';
 import { PepIconRegistry, pepIconSystemClose } from '@pepperi-addons/ngx-lib/icon';
-
-import { TranslateLoader, TranslateModule, TranslateService, TranslateStore } from '@ngx-translate/core';
-
-import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepButtonModule } from '@pepperi-addons/ngx-lib/button';
 import { PepMenuModule } from '@pepperi-addons/ngx-lib/menu';
 import { PepTextboxModule } from '@pepperi-addons/ngx-lib/textbox';
 import { PepSelectModule } from '@pepperi-addons/ngx-lib/select';
 import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
+import { PepSeparatorModule } from '@pepperi-addons/ngx-lib/separator';
 
-import { CollectionsService } from '../services/collections.service';
-import { DocumentsService } from '../services/documents.service';
-import { UtilitiesService } from '../services/utilities.service'
+import { PepGenericListModule } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { PepGenericFormModule } from '@pepperi-addons/ngx-composite-lib/generic-form';
 
 import { MappingListComponent } from './mapping-list.component';
 import { MappingFormComponent } from './form/mapping-form.component';
-import { PepGenericFormModule } from '@pepperi-addons/ngx-composite-lib/generic-form';
+import { CollectionsService } from '../services/collections.service';
+import { DocumentsService } from '../services/documents.service';
+import { UtilitiesService } from '../services/utilities.service'
+import { MappingsService } from '../services/mappings.service';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -59,10 +58,27 @@ export const routes: Routes = [
         PepTextareaModule,
         PepDialogModule,
         PepGenericFormModule,
+        PepSeparatorModule,
+        // TranslateModule.forChild({
+        //     loader: {
+        //         provide: TranslateLoader,
+        //         useFactory: PepAddonService.createMultiTranslateLoader,
+        //         deps: [PepAddonService]
+        //     }, isolate: false
+        // }),
+        // TranslateModule.forChild({
+        //     loader: {
+        //         provide: TranslateLoader,
+        //         useFactory: (http: HttpClient, fileService: PepFileService, addonService: PepAddonService) => 
+        //             PepAddonService.createDefaultMultiTranslateLoader(http, fileService, addonService, "122c0e9d-c240-4865-b446-f37ece866c22"),
+        //         deps: [HttpClient, PepFileService, PepAddonService],
+        //     }, isolate: false
+        // }),
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
-                useFactory: PepAddonService.createMultiTranslateLoader,
+                useFactory: (addonService: PepAddonService) =>
+                    PepAddonService.createMultiTranslateLoader(addonService, ['ngx-lib', 'ngx-composite-lib'], "122c0e9d-c240-4865-b446-f37ece866c22"),
                 deps: [PepAddonService]
             }, isolate: false
         }),
@@ -76,7 +92,6 @@ export const routes: Routes = [
         DocumentsService,
         UtilitiesService,
         MappingsService,
-        TranslateService,
     ]
 })
 export class MappingsModule {

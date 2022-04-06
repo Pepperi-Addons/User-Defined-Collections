@@ -1,19 +1,26 @@
-
-import { AddonData, ApiFieldObject, DataViewFieldType, DataViewFieldTypes } from '@pepperi-addons/papi-sdk';
-import { KeyValuePair } from '@pepperi-addons/ngx-lib';
 import { Injectable } from '@angular/core';
-import { UtilitiesService } from './utilities.service';
-import { Type } from '@pepperi-addons/papi-sdk';
-import { MappingFieldType, MappingResource, UdcMapping } from '../../../../server-side/entities';
+import { TranslateService } from '@ngx-translate/core';
+
+import { KeyValuePair } from '@pepperi-addons/ngx-lib';
+import { AddonData, ApiFieldObject, BaseFormDataViewField, Collection, Type, FormDataView, SchemeFieldType } from '@pepperi-addons/papi-sdk';
+
+import { MappingFieldType, MappingFieldTypes, MappingResource, UdcMapping } from '../../../../server-side/entities';
+
+import { FormMode, UtilitiesService } from './utilities.service';
+import { CollectionsService } from './collections.service';
 
 @Injectable({ providedIn: 'root' })
 export class MappingsService {
     constructor(
-        private utilitiesService: UtilitiesService
+        private utilitiesService: UtilitiesService,
+        private collectionsService: CollectionsService,
+        private translate: TranslateService
     ) {}
 
-    async getMappings(): Promise<UdcMapping[]> {
-        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('mappings').get();
+    async getMappings(atdID: number): Promise<UdcMapping[]> {
+        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('mappings').get({
+            atd_id: atdID
+        });
     }
 
     async upsertMapping(mappingObj: MappingFormItem): Promise<UdcMapping> {
@@ -21,12 +28,9 @@ export class MappingsService {
         return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('mappings').post(undefined, obj);
     }
 
-    async deleteMapping(mappingKey: string): Promise<UdcMapping> {
-        const obj = {
-            Key: mappingKey,
-            Hidden: true
-        }
-        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('mappings').post(undefined, obj);
+    async deleteMapping(mappingObj: UdcMapping): Promise<UdcMapping> {
+        mappingObj.Hidden = true;
+        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('mappings').post(undefined, mappingObj);
     }
     
     async getAtd(uuid: string): Promise<Type>{
@@ -36,7 +40,7 @@ export class MappingsService {
     convertToApiObject(objToConvert: MappingFormItem): UdcMapping {
         return {
             Key: objToConvert.Key,
-            AtdID: objToConvert.AtdID,
+            AtdID: objToConvert.Atd.InternalID,
             DataSource: {
                 Collection: objToConvert.Collection,
                 Field: objToConvert.CollectionField
@@ -48,13 +52,465 @@ export class MappingsService {
                 Description: objToConvert.Description,
                 Type: objToConvert.Type
             },
-            Resource: objToConvert.Resource
+            Resource: objToConvert.Resource,
+            Filter: objToConvert.Filter
         }
+    }
+    
+    async createDataView(mode: FormMode, item: MappingFormItem): Promise<FormDataView> {
+        const dv: FormDataView = {
+            Type: 'Form',
+            Context: {
+                Name: '',
+                Profile: { },
+                ScreenSize: 'Tablet'
+            },
+            Fields: [{
+                FieldID: 'Title',
+                Mandatory: true,
+                ReadOnly: false,
+                Title: this.translate.instant('Field name'),
+                Type: 'TextBox',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 0
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            }, 
+            {
+                FieldID: 'Type',
+                Mandatory: true,
+                ReadOnly: mode == 'Edit',
+                Title: this.translate.instant('Type'),
+                Type: 'ComboBox',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 2
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            }, 
+            {
+                FieldID: 'ApiName',
+                Mandatory: true,
+                ReadOnly: mode === 'Edit',
+                Title: this.translate.instant('Field API name'),
+                Type: 'TextBox',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 1
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'Description',
+                Mandatory: true,
+                ReadOnly: false,
+                Title: this.translate.instant('Field description'),
+                Type: 'TextBox',
+                Layout: {
+                    Origin: {
+                        X: 1,
+                        Y: 0
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'Temporary',
+                Mandatory: false,
+                ReadOnly: false,
+                Title: this.translate.instant('Temporary'),
+                Type: 'ComboBox',
+                Layout: {
+                    Origin: {
+                        X: 1,
+                        Y: 1
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'DataSource',
+                Mandatory: false,
+                ReadOnly: false,
+                Title: this.translate.instant('Data source'),
+                Type: 'Separator',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 3
+                    },
+                    Size: {
+                        Width: 2,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            },
+            {
+                FieldID: 'Filter',
+                Mandatory: false,
+                ReadOnly: false,
+                Title: this.translate.instant('Filter'),
+                Type: 'Separator',
+                Layout: {
+                    Origin: {
+                        X: 0,
+                        Y: 5
+                    },
+                    Size: {
+                        Width: 2,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+
+            },
+        ],
+        Columns: [{}, {}],
+
+        }
+
+        dv.Fields[1]["OptionalValues"] = MappingFieldTypes.map(type => {
+            return {
+                Key: type,
+                Value: this.translate.instant(`FieldType_${type}`)
+            }
+        })
+        dv.Fields[4]["OptionalValues"] = [{
+            Key: true,
+            Value: 'True'
+        },
+        {
+            Key: false,
+            Value: 'False'
+        }]
+
+        if (item.Atd.Type === 2) {
+    
+            dv.Fields.push(this.getResourceDataView(mode));
+        }
+
+        const collectionDV = await this.getCollectionDataView();
+        dv.Fields.push(collectionDV);
+
+        if (item.Collection && item.Collection != '') {
+            const collectionObj: Collection = await this.utilitiesService.getCollectionByName(item.Collection);
+            const filterDVFields = await this.getFilterDataView(item, collectionObj);
+            const collectionFieldDV: BaseFormDataViewField = {
+                FieldID: 'CollectionField',
+                Mandatory: true,
+                ReadOnly: false,
+                Title: this.translate.instant('Collection field'),
+                Type: 'ComboBox',
+                Layout: {
+                    Origin: {
+                        X: 1,
+                        Y: 4
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            }
+            collectionFieldDV["OptionalValues"] = this.getCollectionFields(collectionObj, item.Type);
+            
+            dv.Fields.push(...filterDVFields);
+            dv.Fields.push(collectionFieldDV);
+        }
+
+        return dv;
+    }
+
+    async getFields(atdId: number): Promise<any> {
+        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('fields').get({
+            atd_id: atdId
+        });
+    }
+
+    filterFieldsByType(fields: ApiFieldObject[], fieldType: SchemeFieldType): ApiFieldObject[] {
+        return fields.filter((field: ApiFieldObject) => {
+            let retVal = false;
+            switch (fieldType) {
+                case 'String': {
+                    retVal = field.Format == 'String' || field.Format == 'Guid'
+                    break;
+                }
+                case 'DateTime': {
+                    retVal = field.Format == 'DateTime'
+                    break;
+                }
+                case 'Integer': {
+                    retVal = field.Format == 'Int16' || field.Format == 'Int32' || field.Format == 'Int64'
+                    break;
+                }
+                case 'Double': {
+                    retVal = field.Format == 'Decimal' || field.Format == 'Double'
+                    break;
+                }
+                case 'Bool': {
+                    retVal = field.Type == 'Boolean'
+                    break;
+                }
+            }
+            return retVal;
+        })
+    }
+
+    async getFilterDataView(item: MappingFormItem, collection: Collection): Promise<BaseFormDataViewField[]> {
+        const tsaFields = await this.getFields(item.Atd.InternalID);
+        const filterDVFields = await Promise.all(collection.DocumentKey?.Fields.map(async (field, index, arr): Promise<BaseFormDataViewField> => {
+            const fieldType = collection.Fields[field].Type !== 'Array' ? collection.Fields[field].Type : collection.Fields[field].Items.Type;
+            const intrest = index % 2;
+            const fieldDV: BaseFormDataViewField = {
+                FieldID: `Filter${index}`,
+                Mandatory: true,
+                ReadOnly: false,
+                Title: this.translate.instant('Mapping_FilterTitle', {FieldName: field}),
+                Type: 'ComboBox',
+                Layout: {
+                    Origin: {
+                        X: intrest,
+                        Y: intrest == 0 ? index + 6 : index + 5
+                    },
+                    Size: {
+                        Width: 1,
+                        Height: 0
+                    }
+                },
+                Style: {
+                    Alignment: {
+                        Horizontal: 'Stretch',
+                        Vertical: 'Stretch'
+                    }
+                }
+            }
+            
+            fieldDV["OptionalValues"] = this.getFilterOptions(tsaFields, fieldType, item.Resource);
+            
+            return fieldDV
+        }));
+        return filterDVFields;
+    }
+
+    getCollectionFields(collection: Collection, fieldType: MappingFieldType) {
+        const filteredFields = Object.keys(collection.Fields).filter(field => {
+            let retVal = false;
+            switch (fieldType) {
+                case 'TextBox':
+                case 'TextArea':
+                case 'ComboBox':
+                case 'RichTextHTML': {
+                    retVal = collection.Fields[field].Type === 'String';
+                    break;
+                }
+                case 'Date':
+                case 'DateAndTime': {
+                    retVal = collection.Fields[field].Type === 'DateTime';
+                    break;
+                }
+                case 'Boolean': {
+                    retVal = collection.Fields[field].Type === 'Bool';
+                    break;
+                }
+                case 'NumberInteger': {
+                    retVal = collection.Fields[field].Type === 'Integer';
+                    break;
+                }
+                case 'NumberReal': 
+                case 'Currency' : {
+                    retVal = collection.Fields[field].Type === 'Double';
+                    break;
+                }
+            }
+            return retVal;
+        });
+        return filteredFields.map(field => {
+            return {
+                Key: field,
+                Value: field
+            }
+        })
+    }
+
+    async getCollectionDataView(): Promise<BaseFormDataViewField> {
+        const dv: BaseFormDataViewField = {
+            FieldID: 'Collection',
+            Mandatory: true,
+            ReadOnly: false,
+            Title: this.translate.instant('Collection'),
+            Type: 'ComboBox',
+            Layout: {
+                Origin: {
+                    X: 0,
+                    Y: 4
+                },
+                Size: {
+                    Width: 1,
+                    Height: 0
+                }
+            },
+            Style: {
+                Alignment: {
+                    Horizontal: 'Stretch',
+                    Vertical: 'Stretch'
+                }
+            }
+        }
+
+        dv["OptionalValues"] = (await this.collectionsService.getMappingsCollections()).map(collection => {
+            return {
+                Key: collection.Name,
+                Value: collection.Name
+            }
+        })
+
+        return dv;
+    }
+
+    getResourceDataView(mode: FormMode) {
+        const resourceField: BaseFormDataViewField = {
+            FieldID: 'Resource',
+            Mandatory: true,
+            ReadOnly: mode === 'Edit',
+            Title: this.translate.instant('Resource'),
+            Type: 'ComboBox',
+            Layout: {
+                Origin: {
+                    X: 1,
+                    Y: 2
+                },
+                Size: {
+                    Width: 1,
+                    Height: 0
+                }
+            },
+            Style: {
+                Alignment: {
+                    Horizontal: 'Stretch',
+                    Vertical: 'Stretch'
+                }
+            },
+        }
+
+        resourceField["OptionalValues"] = [{
+            Key: 'transactions',
+            Value: 'Transactions'
+        },
+        {
+            Key: 'transaction_lines',
+            Value: 'Transaction Lines'
+        }]
+
+        return resourceField;
+    }
+
+    getFilterOptions(tsaFields, fieldType, itemResource) {
+        const transactionPrefix = itemResource === 'transaction_lines' ? 'Transaction.' : '';
+        const tranactionsFieldsOptions = this.filterFieldsByType(tsaFields.Transactions, fieldType).map(field => {
+            return {
+                Key: `${transactionPrefix}${field.FieldID}`,
+                Value: `${transactionPrefix}${field.Label}`
+            }
+        });
+        const itemsFieldsOptions = this.filterFieldsByType(tsaFields.Items, fieldType).map(field => {
+            return {
+                Key: `Item.${field.FieldID}`,
+                Value: `Item.${field.Label}`
+            }
+        });
+        const accountsFieldsOptions = this.filterFieldsByType(tsaFields.Accounts, fieldType).map(field => {
+            return {
+                Key: `Account.${field.FieldID}`,
+                Value: `Account.${field.Label}`
+            }
+        });
+        const linesFieldsOptions = itemResource === 'transaction_lines' ? this.filterFieldsByType(tsaFields.Transactions, fieldType).map(field => {
+            return {
+                Key: field.FieldID,
+                Value: field.Label
+            }
+        }) : [];
+        
+        return [
+            ...tranactionsFieldsOptions,
+            ...itemsFieldsOptions,
+            ...accountsFieldsOptions,
+            ...linesFieldsOptions
+        ].sort()
     }
 }
 
 export interface MappingFormItem extends AddonData {
-    AtdID: number;
+    Atd: Type;
     Title: string;
     ApiName: string;
     Description: string;
@@ -63,6 +519,8 @@ export interface MappingFormItem extends AddonData {
     Collection: string;
     CollectionField: string;
     Resource?: MappingResource;
-    Filter: KeyValuePair<string>[];
+    Filter: {
+        [key: string]: string
+    };
 }
 
