@@ -57,6 +57,7 @@
                 [disabled]="incoming.Mode === 'Edit'"
                 [emptyOption]="false"
                 [options]="resourceOptions"
+                (valueChange)="resourceChanged($event)"
             ></pep-select>
         </div>
         <pep-separator 
@@ -84,17 +85,19 @@
             ></pep-select>
         </div>
         <pep-separator 
+        *ngIf="chosenCollection != undefined"
         [label]="'MappingForm_Filter_Title' | translate"
         ></pep-separator>
         <ng-template *ngIf="chosenCollection != undefined" ngFor let-field [ngForOf]="chosenCollection?.DocumentKey?.Fields" let-i="index">
             <pep-select
-                [(value)]="item.Filter[field]"
+                [value]="item.DocumentKeyMapping[i]?.Value"
                 [label]="'MappingForm_FilterField_Title' | translate: { field_name: field }"
                 type="select"
                 [mandatory]="true"
                 [disabled]="false"
                 [emptyOption]="false"
                 [options]="filterOptions[field]"
+                (valueChange)="documentKeyMappingChanged($event, field, i)"
             ></pep-select>
         </ng-template>
     </ng-container>

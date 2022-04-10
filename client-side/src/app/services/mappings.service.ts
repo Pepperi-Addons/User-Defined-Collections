@@ -43,7 +43,8 @@ export class MappingsService {
             AtdID: objToConvert.Atd.InternalID,
             DataSource: {
                 Collection: objToConvert.Collection,
-                Field: objToConvert.CollectionField
+                Field: objToConvert.CollectionField,
+                Delimiter: objToConvert.CollectionDelimiter
             },
             Field: {
                 ApiName: objToConvert.ApiName,
@@ -53,7 +54,7 @@ export class MappingsService {
                 Type: objToConvert.Type
             },
             Resource: objToConvert.Resource,
-            Filter: objToConvert.Filter
+            DocumentKeyMapping: objToConvert.DocumentKeyMapping
         }
     }
     
@@ -331,7 +332,7 @@ export class MappingsService {
             const fieldType = collection.Fields[field].Type !== 'Array' ? collection.Fields[field].Type : collection.Fields[field].Items.Type;
             const intrest = index % 2;
             const fieldDV: BaseFormDataViewField = {
-                FieldID: `Filter${index}`,
+                FieldID: `DocumentMapping${index}`,
                 Mandatory: true,
                 ReadOnly: false,
                 Title: this.translate.instant('Mapping_FilterTitle', {FieldName: field}),
@@ -481,12 +482,12 @@ export class MappingsService {
                 Value: `${transactionPrefix}${field.Label}`
             }
         });
-        const itemsFieldsOptions = this.filterFieldsByType(tsaFields.Items, fieldType).map(field => {
+        const itemsFieldsOptions = itemResource === 'transaction_lines' ? this.filterFieldsByType(tsaFields.Items, fieldType).map(field => {
             return {
                 Key: `Item.${field.FieldID}`,
                 Value: `Item.${field.Label}`
             }
-        });
+        }) : [];
         const accountsFieldsOptions = this.filterFieldsByType(tsaFields.Accounts, fieldType).map(field => {
             return {
                 Key: `Account.${field.FieldID}`,
@@ -518,9 +519,11 @@ export interface MappingFormItem extends AddonData {
     Temporary: boolean;
     Collection: string;
     CollectionField: string;
+    CollectionDelimiter: string;
     Resource?: MappingResource;
-    Filter: {
-        [key: string]: string
-    };
+    DocumentKeyMapping: {
+        Key: string,
+        Value: string
+    }[];
 }
 

@@ -130,13 +130,19 @@ export class MappingFormComponent implements OnInit {
         this.item.CollectionField = '';
         this.updateCollectionFields(this.chosenCollection, value)
     }
+
+    resourceChanged(value) {
+        this.item.DocumentKeyMapping = [];
+        this.getFilterOptions();
+    }
     
     collectionChanged(value, clearFilter = true) {
         this.mappingService.getFields(this.item.Atd.InternalID).then(tsaFields => {
             this.atdFields = tsaFields;
             this.chosenCollection = this.collections.find(collection => collection.Name === value);
+            this.item.CollectionDelimiter = this.chosenCollection.DocumentKey?.Delimiter;
             this.updateCollectionFields(this.chosenCollection, this.item.Type);
-            clearFilter ? this.item.Filter = {} : null;
+            clearFilter ? this.item.DocumentKeyMapping = [] : null;
             this.getFilterOptions();
         });
     }
@@ -172,6 +178,13 @@ export class MappingFormComponent implements OnInit {
             this.collectionFields = []
         }
 
+    }
+
+    documentKeyMappingChanged(value, field, index) {
+        this.item.DocumentKeyMapping[index] = {
+            Key: field,
+            Value: value
+        }
     }
 
     // async onValueChanged(event: IPepGenericFormValueChange) {
