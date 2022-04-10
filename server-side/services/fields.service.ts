@@ -25,43 +25,35 @@ export class FieldsService {
         }
     }
     
-    async upsertField(obj: UdcMapping) {
+    async upsert(obj: UdcMapping) {
         if(obj.Hidden) {
-            this.removeField(obj.AtdID, obj.Field.ApiName, obj.Resource!)
+            this.delete(obj.AtdID, obj.Field.ApiName, obj.Resource!)
         }
         else {
-            let field: ApiFieldObject | undefined = await this.getField(obj.AtdID, obj.Resource!, obj.Field.ApiName);
             const jsReturnValue = this.getJSReturnValue(obj.Field.Type);
-            if (field) {
-                field.Label = obj.Field.Title;
-                field.Description = obj.Field.Description;
-                field.CalculatedRuleEngine.Temporary = obj.Field.Temporary;
-            }
-            else {
-                field = {
-                    FieldID: obj.Field.ApiName,
-                    Label: obj.Field.Title,
-                    Description: obj.Field.Description,
-                    UIType: {
-                        ID: DataViewFieldTypes[obj.Field.Type],
-                        Name: obj.Field.Type
+            const field = {
+                FieldID: obj.Field.ApiName,
+                Label: obj.Field.Title,
+                Description: obj.Field.Description,
+                UIType: {
+                    ID: DataViewFieldTypes[obj.Field.Type],
+                    Name: obj.Field.Type
+                },
+                CalculatedRuleEngine: {
+                    JSFormula: `// this field value is coming from UDC\nreturn ${jsReturnValue};`,
+                    ParticipatingFields: [],
+                    CalculatedOn: {
+                        ID: 2,
+                        Name: "OnChange"
                     },
-                    CalculatedRuleEngine: {
-                        JSFormula: `// this field value is coming from UDC\nreturn ${jsReturnValue};`,
-                        ParticipatingFields: [],
-                        CalculatedOn: {
-                            ID: 2,
-                            Name: "OnChange"
-                        },
-                        Temporary: obj.Field.Temporary
-                    },
-                }
+                    Temporary: obj.Field.Temporary
+                },
             }
             return await this.utilities.papiClient.metaData.type(obj.Resource!).types.subtype(obj.AtdID.toString()).fields.upsert(field);
         }
     }
     
-    async removeField(atdId:number, fieldId: string, resource: string) {
+    async delete(atdId:number, fieldId: string, resource: string) {
         return await this.utilities.papiClient.metaData.type(resource).types.subtype(atdId.toString()).fields.delete(fieldId);
     }
     
