@@ -10,6 +10,8 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AtdRelations, UsageMonitorRelations } from './metadata';
+import { FieldsService } from './services/fields.service';
+import { MappingsService } from './services/mappings.service';
 import { UtilitiesService } from './services/utilities.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
@@ -20,7 +22,25 @@ export async function install(client: Client, request: Request): Promise<any> {
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
-    return {success:true,resultObject:{}}
+    try {
+        const mappingService = new MappingsService(client);
+        const fieldsService = new FieldsService(client);
+        const mappings = await mappingService.find({page_size: -1});
+        await Promise.all(mappings.map(async (item) => {
+            await fieldsService.delete(item.AtdID, item.Field.ApiName, item.Resource);
+        }));
+        return {
+            success: true,
+            resultObject: {}
+        }
+    }
+    catch (err) {
+        console.log('could not uninstall UDC. failed deleting TSA fields. error:', err)
+        return {
+            success:false,
+            errorMessage: 'message' in err ? err.message : 'Unknown error occured'
+        }
+    }
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
