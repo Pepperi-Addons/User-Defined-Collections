@@ -28,17 +28,15 @@ export interface MappingField {
 export interface MappingDataSource {
     Collection: string;
     Field: string;
+    Delimiter: string;
 }
-
-export interface MappingFilter {
-    Key: string;
-    Value: string
-}
-
 export interface UdcMapping extends AddonData {
     AtdID: number;
     Field: MappingField;
     DataSource: MappingDataSource;
     Resource: MappingResource;
-    Filter?: MappingFilter[];
+    DocumentKeyMapping?: {
+        Key: string,
+        Value: string
+    }[]
 }

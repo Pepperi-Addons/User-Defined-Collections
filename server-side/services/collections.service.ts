@@ -13,7 +13,7 @@ export class CollectionsService {
     }
 
     
-    async upsertCollection(service: DocumentsService, body: any) {
+    async upsert(service: DocumentsService, body: any) {
         const collectionObj = {
             Type: "meta_data",
             ...body,
@@ -42,11 +42,11 @@ export class CollectionsService {
         return result;
     }
     
-    async getCollection(tableName:string): Promise<Collection> {
+    async findByName(tableName:string): Promise<Collection> {
         return await this.utilities.papiClient.addons.data.schemes.name(tableName).get() as Collection;
     }
     
-    async getAllCollections(options: any = {}): Promise<AddonDataScheme[]> {
+    async find(options: any = {}): Promise<AddonDataScheme[]> {
         let collections = await this.utilities.papiClient.addons.data.schemes.get(options);
         return collections.filter(collection => collection.Name !== UdcMappingsScheme.Name);
     }

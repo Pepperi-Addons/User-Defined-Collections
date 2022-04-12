@@ -13,7 +13,7 @@ export class DocumentsService {
     constructor(private client: Client) {
     }
     
-    async getAllDocumentsInCollection(collectionName: any, options: any): Promise<AddonData[]> {
+    async find(collectionName: any, options: any): Promise<AddonData[]> {
         return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).find(options);
     }
     
@@ -21,9 +21,9 @@ export class DocumentsService {
         return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(key).get();
     }
     
-    async upsertDocument(service: CollectionsService, collectionName: any, body: any): Promise<AddonData> {
+    async upsert(service: CollectionsService, collectionName: any, body: any): Promise<AddonData> {
         const updatingHidden = 'Hidden' in body && body.Hidden;
-        const collectionScheme = await service.getCollection(collectionName);
+        const collectionScheme = await service.findByName(collectionName);
         body.Key = await this.utilities.getItemKey(collectionScheme, body);
         const validationResult = this.validateDocument(collectionScheme, body);
         if (validationResult.valid || updatingHidden) {
@@ -38,7 +38,7 @@ export class DocumentsService {
     async checkHidden(body: any) {
         if ('Hidden' in body && body.Hidden) {
             const collectionName = body.Name;
-            const items = await this.getAllDocumentsInCollection(collectionName, {});
+            const items = await this.find(collectionName, {});
             if (items.length > 0) {
                 throw new Error('Cannot delete collection with documents');
             }
@@ -46,10 +46,10 @@ export class DocumentsService {
     }
 
     async getAllDocumentsCount(collectionsService: CollectionsService): Promise<number> {
-        const collections = await collectionsService.getAllCollections();
+        const collections = await collectionsService.find();
         let count = 0;
         await Promise.all(collections.map(async (collection) => {
-            const documents = await this.getAllDocumentsInCollection(collection.Name, {page_size: -1});
+            const documents = await this.find(collection.Name, {page_size: -1});
             count += documents.length;
         }));
 
@@ -58,7 +58,6 @@ export class DocumentsService {
 
     validateDocument(collection: Collection, body: any) {
         const schema = this.createSchema(collection);
-        console.log('document schema:', schema);
         const validator = new Validator();
         const result = validator.validate(body, schema);
         return result;

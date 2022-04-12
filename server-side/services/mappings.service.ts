@@ -11,15 +11,21 @@ export class MappingsService {
     fieldsService: FieldsService = new FieldsService(this.client);
     
     constructor(private client: Client) {
-    }
+    } 
     
-    async getMappings(params: FindOptions) {
-        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(UdcMappingsScheme.Name).find(params);
+    async find(params: FindOptions, atdID: number = -1) {
+        const mappings = await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(UdcMappingsScheme.Name).find(params);
+        if (atdID > 0) {
+            return mappings.filter(mapping => mapping.AtdID === atdID);
+        }
+        else {
+            return mappings;
+        }
     }
 
-    async upsertMapping(obj: UdcMapping) {
+    async upsert(obj: UdcMapping) {
+        await this.fieldsService.upsert(obj);
         let retVal = await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(UdcMappingsScheme.Name).upsert(obj);
-        await this.fieldsService.upsertField(obj);
         return retVal;
     }
 }

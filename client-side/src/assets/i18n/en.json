@@ -51,5 +51,17 @@
     "FieldType_ComboBox": "Dropdown",
     "FieldType_RichTextHTML": "HTML formatted text",
     "Mapping_SaveFailed_Title": "{{Operation}} field failed",
-    "Mapping_SaveFailed_Content": "Could not {{Operation}} field {{Field}}. Please try again later"
+    "Mapping_SaveFailed_Content": "Could not {{Operation}} field {{Field}}. Please try again later",
+    "Mapping_Form_Title": "{{mode}} {{field}} Field",
+    "MappingForm_Name_Title": "Field name",
+    "MappingForm_Description_Title": "Field description",
+    "MappingForm_ApiName_Title": "Field API Name",
+    "MappingForm_Temporary_Title": "Temporary",
+    "MappingForm_Type_Title": "Type",
+    "MappingForm_Resource_Title": "Resource",
+    "MappingForm_DateSource_Title": "Data source",
+    "MappingForm_Collection_Title": "Collection",
+    "MappingForm_CollectionField_Title": "Collection field",
+    "MappingForm_Filter_Title": "Filter",
+    "MappingForm_FilterField_Title": "{{field_name}}"
 }
