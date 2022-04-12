@@ -22,8 +22,6 @@ export class MappingFormComponent implements OnInit {
     item: MappingFormItem;
     atdFields;
 
-    //dataSource: IPepGenericFormDataSource
-
     temporaryOptions = [{
         key: true,
         value: "True"
@@ -186,51 +184,6 @@ export class MappingFormComponent implements OnInit {
             Value: value
         }
     }
-
-    // async onValueChanged(event: IPepGenericFormValueChange) {
-    //     let changeDataSource: boolean = false;
-    //     let changeDataView: boolean = false;
-    //     switch (event.apiName) {
-    //         case 'Title': {
-    //             if (this.incoming.Mode === 'Add') {
-    //               let fieldID = event.value.replace(/\s/g, '');
-    //               this.item.ApiName = ('TSA' + fieldID).replace(/[^a-zA-Z 0-9]+/g, '');
-    //               changeDataSource = true;
-    //             }
-    //             this.item.Title = event.value;
-    //             break;
-    //         }
-    //         case 'ApiName': {
-    //             let fieldID = event.value.replace(/\s/g, '');
-    //             let name = fieldID.replace(/[^a-zA-Z 0-9]+/g, '');
-                
-    //             if (name.substring(0,3) != 'TSA'){
-    //                 this.item.ApiName = ('TSA' + name);
-    //                 changeDataSource = true;
-    //             }
-    //             else {
-    //                 this.item.ApiName = name;
-    //             }
-    //             break;
-    //         }
-    //         case 'Type': {
-    //             changeDataView = true;
-    //             break;
-    //         }
-    //         case 'Collection': {
-    //             changeDataView = true;
-    //             break;
-    //         }
-    //     }
-    //     if (changeDataView) {
-    //         this.incoming.DataView = await this.mappingService.createDataView(this.incoming.Mode, this.item);
-    //         console.log(this.incoming.DataView)
-    //         this.genericFormService.setUiControl(this.incoming.DataView);
-    //     }
-             
-    //     changeDataSource ? this.genericFormService.setDataSource(this.item as any) : null;
-    // }
-
 }
 
 export interface MappingFormData {

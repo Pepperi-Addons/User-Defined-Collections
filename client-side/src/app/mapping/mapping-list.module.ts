@@ -59,21 +59,6 @@ export const routes: Routes = [
         PepDialogModule,
         PepGenericFormModule,
         PepSeparatorModule,
-        // TranslateModule.forChild({
-        //     loader: {
-        //         provide: TranslateLoader,
-        //         useFactory: PepAddonService.createMultiTranslateLoader,
-        //         deps: [PepAddonService]
-        //     }, isolate: false
-        // }),
-        // TranslateModule.forChild({
-        //     loader: {
-        //         provide: TranslateLoader,
-        //         useFactory: (http: HttpClient, fileService: PepFileService, addonService: PepAddonService) => 
-        //             PepAddonService.createDefaultMultiTranslateLoader(http, fileService, addonService, "122c0e9d-c240-4865-b446-f37ece866c22"),
-        //         deps: [HttpClient, PepFileService, PepAddonService],
-        //     }, isolate: false
-        // }),
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
