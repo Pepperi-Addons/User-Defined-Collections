@@ -9,11 +9,9 @@ export const documentKeySchema: Schema = {
     properties: {
         Type: {
             enum: DocumentKeyTypes.filter(type => true),
-            required: true,
         },
         Delimiter: {
             type: "string",
-            required: false,
         },
         Fields: {
             type: "array",
@@ -22,9 +20,9 @@ export const documentKeySchema: Schema = {
             },
             uniqueItems: true,
             minItems: 0,
-            required: false,
         },
     },
+    required: ['Type'],
     if: {
         properties: {
             Type: {
@@ -36,7 +34,6 @@ export const documentKeySchema: Schema = {
         properties: {
             Delimiter: {
                 type: "string",
-                required: true,
             },
             Fields: {
                 type: "array",
@@ -45,9 +42,9 @@ export const documentKeySchema: Schema = {
                 },
                 uniqueItems: true,
                 minItems: 1,
-                required: true,
             },
         },
+        required: ['Delimiter', 'Fields'],
     },
     additionalProperties: false,
 }
@@ -81,21 +78,20 @@ export const dataViewSchema: Schema = {
             items: {
                 type: "object",
                 properties: {
+                    FieldID: {
+                        type: "string"
+                    },
                     Type: {
                         enum: Object.keys(DataViewFieldTypes),
-                        required: true,
                     },
                     Title: {
                         type: "string",
-                        required: true,
                     },
                     Mandatory: {
                         type: "boolean",
-                        required: true,
                     },
                     ReadOnly: {
                         type: "boolean",
-                        required: true,
                     },
                     Layout: {
                         type:"object",
@@ -112,6 +108,7 @@ export const dataViewSchema: Schema = {
                                         type: "number",
                                     },
                                 },
+                                required: ['X', 'Y']
                             },
                             Size: {
                                 type: "object",
@@ -125,6 +122,7 @@ export const dataViewSchema: Schema = {
                                         required: true,
                                     },
                                 },
+                                required: ['Width', 'Height']
                             },
                         }
                     },
@@ -136,20 +134,19 @@ export const dataViewSchema: Schema = {
                                 properties: {
                                     Horizontal: {
                                         enum: Object.keys(HorizontalAlignments),
-                                        required: true,
                                     },
                                     Vertical: {
                                         enum: Object.keys(VerticalAlignments),
-                                        required: true,
                                     },
                                 },
-                                required: true,
+                                required: ['Horizontal', 'Vertical'],
                             },
                         },
+                        required: ['Alignment']
                     }
                 },
+                required: ['FieldID', 'Type', 'Title', 'Mandatory', 'ReadOnly']
             },
-            required: true,
             minItems: 1
         },
         Columns: {
@@ -161,14 +158,14 @@ export const dataViewSchema: Schema = {
                         type: "number",
                         exclusiveMinimum: 0,
                         exclusiveMaximum: 100,
-                        required: true,
                     },
                 },
+                required: ['Width']
             },
-            required: true,
             minItems: 1
         }
-    }
+    },
+    required: ['Fields', 'Columns']
 }
 
 export const fieldsSchema: Schema = {
@@ -196,6 +193,7 @@ export const fieldsSchema: Schema = {
                     }
                 }
             },
+            required: ['Type', 'Mandatory'],
             if: {
                 properties: {
                     Type: {
@@ -213,9 +211,10 @@ export const fieldsSchema: Schema = {
                                 required: true,
                             }
                         },
-                        required: true,
+                        required: ['Type'],
                     }
                 },
+                required: ['Items'],
             }
         }
     },
@@ -261,4 +260,5 @@ export const collectionSchema: Schema = {
             format: "date-time",
         },
     },
+    required: ['Name', 'DocumentKey', 'Fields', 'ListView']
 }
