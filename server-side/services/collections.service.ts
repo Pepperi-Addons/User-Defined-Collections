@@ -18,8 +18,14 @@ export class CollectionsService {
             Type: "meta_data",
             ...body,
         }
+        if (!collectionObj.DocumentKey || !collectionObj.DocumentKey.Type) {
+            collectionObj.DocumentKey = {
+                Type: 'Key'
+            }
+        }
         const updatingHidden = 'Hidden' in body && body.Hidden;
-        const validResult = this.validateScheme(body);
+        const validResult = this.validateScheme(collectionObj);
+        console.log(validResult);
         if (validResult.valid || updatingHidden) {
             await service.checkHidden(body);
             const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
@@ -35,6 +41,7 @@ export class CollectionsService {
     validateScheme(collection: Collection): ValidatorResult {
         const validator = new Validator();
         documentKeySchema.properties!['Fields'].items!['enum'] = Object.keys(collection.Fields || {});
+        dataViewSchema.properties!['Fields'].items!['properties']['FieldID']['enum'] = Object.keys(collection.Fields || {});
         validator.addSchema(documentKeySchema, "/DocumentKey");
         validator.addSchema(fieldsSchema, "/Fields");
         validator.addSchema(dataViewSchema, "/DataView");
