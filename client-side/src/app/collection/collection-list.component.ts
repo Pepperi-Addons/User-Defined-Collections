@@ -9,6 +9,7 @@ import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
+import { Collection } from "@pepperi-addons/papi-sdk";
 
 @Component({
     selector: 'collection-list',
@@ -27,6 +28,8 @@ export class CollectionListComponent implements OnInit {
     pager: IPepGenericListPager = {
         type: 'scroll',
     };
+
+    collections: Collection[] = []
     
     EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
 
@@ -78,7 +81,7 @@ export class CollectionListComponent implements OnInit {
         const noDataMessageKey = this.recycleBin ? 'RecycleBin_NoDataFound' : 'Collection_List_NoDataFound'
         return {
             init: async(params:any) => {
-                let collections = await this.collectionsService.getCollections(this.recycleBin, params);
+                this.collections = await this.collectionsService.getCollections(this.recycleBin, params);
                 return Promise.resolve({
                     dataView: {
                         Context: {
@@ -116,8 +119,8 @@ export class CollectionListComponent implements OnInit {
                         FrozenColumnsCount: 0,
                         MinimumColumnWidth: 0
                     },
-                    totalCount: collections.length,
-                    items: collections
+                    totalCount: this.collections.length,
+                    items: this.collections
                 });
             },
             inputs: () => {
@@ -140,13 +143,22 @@ export class CollectionListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Restore'),
                         handler: async (objs) => {
-                            // await this.collectionsService.restoreCollection(objs.rows[0]);
-                            await this.collectionsService.upsertCollection({
-                                Name: objs.rows[0],
-                                Hidden: false,
-                            });
-    
-                            this.dataSource = this.getDataSource();
+                            let collection = this.collections.find(item => item.Name === objs.rows[0])
+                            if(collection) {
+                                try {
+                                    collection.Hidden = false;
+                                    await this.collectionsService.upsertCollection(collection);
+                                    this.dataSource = this.getDataSource();
+                                }
+                                catch (error) {
+                                    const dataMsg = new PepDialogData({
+                                        title: this.translate.instant('Collection_RestoreDialogTitle'),
+                                        actionsType: 'close',
+                                        content: this.translate.instant('Collection_RestoreDialogError')
+                                    });
+                                    this.dialogService.openDefaultDialog(dataMsg);
+                                }
+                            }
                         }
                     })
                 }

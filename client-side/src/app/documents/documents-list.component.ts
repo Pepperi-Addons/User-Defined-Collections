@@ -33,6 +33,7 @@ export class DocumentsListComponent implements OnInit {
     collectionName: string;
     recycleBin: boolean = false;
     collectionData: Collection;
+    documents: AddonData[] = [];
     
     screenSize: PepScreenSizeType;
     
@@ -48,13 +49,23 @@ export class DocumentsListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Restore'),
                         handler: async (objs) => {
-                            // await this.collectionsService.restoreCollection(objs.rows[0]);
-                            await this.documentsService.upsertDocument(this.collectionName, {
-                                Key: objs.rows[0],
-                                Hidden: false,
-                            });
+                            let document = this.documents.find(doc => doc.Key === objs.rows[0]);
+                            if(document) {
+                                try {
+                                    document.Hidden = false;
+                                    await this.documentsService.upsertDocument(this.collectionName, document);
+                                    this.dataSource = this.getDataSource();
+                                }
+                                catch (error) {
+                                    const dataMsg = new PepDialogData({
+                                        title: this.translate.instant('Documents_RestoreDialogTitle'),
+                                        actionsType: 'close',
+                                        content: this.translate.instant('Documents_RestoreDialogError')
+                                    });
+                                    this.dialogService.openDefaultDialog(dataMsg);
+                                }
+                            }
     
-                            this.dataSource = this.getDataSource();
                         }
                     })
                 }
@@ -107,7 +118,7 @@ export class DocumentsListComponent implements OnInit {
         return {
             init: async (params:any) => {
                 const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String');
-                let documents: AddonData[] = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
+                this.documents = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
                 return Promise.resolve({
                     dataView: {
                         Context: {
@@ -144,8 +155,8 @@ export class DocumentsListComponent implements OnInit {
                         FrozenColumnsCount: 0,
                         MinimumColumnWidth: 0
                     },
-                    totalCount: documents.length,
-                    items: documents
+                    totalCount: this.documents.length,
+                    items: this.documents
                 });
             },
             inputs: () => {
