@@ -132,6 +132,21 @@ export async function total_documents(client: Client, request: Request) {
     }
 }
 
+export async function documents_per_collection(client: Client, request: Request) {
+    const collectionsService = new CollectionsService(client);
+    const documentsService = new DocumentsService(client);
+    const collections = await collectionsService.find({page_size: -1});
+    const documentsPerCollection = await documentsService.getDocumentsCountForCollection(collections);
+    
+    return {
+        Title: "Collections",
+        Resources: documentsPerCollection,
+        ReportingPeriod: "Weekly",
+        AggregationFunction: "LAST"
+    }
+    
+}
+
 export async function mappings(client: Client, request: Request) {
     const service = new MappingsService(client);
 

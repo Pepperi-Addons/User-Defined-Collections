@@ -1,6 +1,5 @@
-import { PapiClient, InstalledAddon, AddonDataScheme, AddonData, Collection, SchemeFieldType } from '@pepperi-addons/papi-sdk'
+import { AddonData, AddonDataScheme, Collection, SchemeFieldType } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { DimxRelations } from '../metadata';
 import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
 import { DocumentSchema } from '../jsonSchemes/documents';
@@ -49,11 +48,31 @@ export class DocumentsService {
         const collections = await collectionsService.find();
         let count = 0;
         await Promise.all(collections.map(async (collection) => {
-            const documents = await this.find(collection.Name, {page_size: -1});
+            const documents = await this.utilities.papiClient.userDefinedCollections.documents(collection.Name).iter().toArray()
             count += documents.length;
         }));
 
         return count;
+    }
+
+    async getDocumentsCountForCollection(collections: AddonDataScheme[]) {
+        const retVal: any[] = []
+        await Promise.all(collections.map(async (item) => {
+            try {
+                const documents = await this.utilities.papiClient.userDefinedCollections.documents(item.Name).iter().toArray();
+                if (documents) {
+                    retVal.push ({
+                        Data: item.Name,
+                        Description: `Number of documents in ${item.Name}`,
+                        Size: documents.length,
+                    })
+                }
+            }
+            catch (err) {
+                console.log(`could not get documents for collection ${item.Name}. error: ${err}`)
+            }
+        }))
+        return retVal;
     }
 
     validateDocument(collection: Collection, body: any) {
