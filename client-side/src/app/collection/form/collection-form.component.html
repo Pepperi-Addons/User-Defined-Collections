@@ -40,7 +40,7 @@
                 [label]="'Offline' | translate"
                 type="checkbox"
                 [mandatory]="false"
-                [disabled]="mode === 'Edit' || !emptyCollection"
+                [disabled]="mode === 'Edit'"
                 (valueChange)="offlineFieldChanged($event)"
             ></pep-checkbox>
         </div>
