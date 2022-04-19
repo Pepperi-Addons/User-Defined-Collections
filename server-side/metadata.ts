@@ -36,7 +36,7 @@ export const DimxRelations: Relation[] = [{
 
 export const UsageMonitorRelations: Relation[] = [{
     AddonUUID: config.AddonUUID,
-    Name: 'UDCRelations',
+    Name: 'Collections',
     RelationName: 'UsageMonitor',
     Type: 'AddonAPI',
     AddonRelativeURL: '/api/collections_number',
@@ -44,11 +44,19 @@ export const UsageMonitorRelations: Relation[] = [{
 },
 {
     AddonUUID: config.AddonUUID,
-    Name: 'UDCRelations',
+    Name: 'TotalDocuments',
     RelationName: 'UsageMonitor',
     Type: 'AddonAPI',
     AddonRelativeURL: '/api/total_documents',
     Description: 'relation for "Data" tab in usage monitor to display total number of documents in all the collections',
+},
+{
+    AddonUUID: config.AddonUUID,
+    Name: 'DocumentsPerCollection',
+    RelationName: 'UsageMonitor',
+    Type: 'AddonAPI',
+    AddonRelativeURL: '/api/documents_per_collection',
+    Description: 'relation for "Collection" tab in usage monitor to display number of documents per collection',
 }]
 
 export const AtdRelations: Relation[] = [{
