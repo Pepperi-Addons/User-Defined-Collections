@@ -52,6 +52,9 @@ export class MappingFormComponent implements OnInit {
     chosenCollection: Collection = undefined;
     collectionFields: any = [];
     filterOptions: any = {};
+    isFieldValid: boolean = false;
+    isCollectionValid: boolean = false;
+    isMappingValid: boolean = false;
 
 
     constructor (private dialogRef: MatDialogRef<MappingFormComponent>,
@@ -65,6 +68,9 @@ export class MappingFormComponent implements OnInit {
         
     ngOnInit(): void {
         this.item = this.incoming.Item;
+        this.isFieldValid = this.item.ApiName != '' && this.item.Title != '';
+        this.isCollectionValid = this.item.Collection != '' && this.item.CollectionField != '';
+        
         this.collectionsService.getMappingsCollections().then((items: Collection[]) => {
             this.collections = items;
             this.collectionsOptions = items.map(item => {
@@ -122,6 +128,7 @@ export class MappingFormComponent implements OnInit {
                 break;
             }
         }
+        this.isFieldValid = this.item.ApiName != '' && this.item.Title != '';
     }
 
     typeChanged(value) {
@@ -142,7 +149,9 @@ export class MappingFormComponent implements OnInit {
             this.updateCollectionFields(this.chosenCollection, this.item.Type);
             clearFilter ? this.item.DocumentKeyMapping = [] : null;
             this.getFilterOptions();
+            this.isMappingValid = this.item.DocumentKeyMapping.length === this.chosenCollection.DocumentKey.Fields.length;
         });
+        this.isCollectionValid = this.item.Collection != '' && this.item.CollectionField != '';
     }
 
     getFilterOptions() {
@@ -175,7 +184,10 @@ export class MappingFormComponent implements OnInit {
         else {
             this.collectionFields = []
         }
-
+    }
+    
+    CollectionFieldChanged(value) {
+        this.isCollectionValid = this.item.Collection != '' && this.item.CollectionField != '';
     }
 
     documentKeyMappingChanged(value, field, index) {
@@ -183,6 +195,8 @@ export class MappingFormComponent implements OnInit {
             Key: field,
             Value: value
         }
+
+        this.isMappingValid = this.item.DocumentKeyMapping.length === this.chosenCollection.DocumentKey.Fields.length;
     }
 }
 

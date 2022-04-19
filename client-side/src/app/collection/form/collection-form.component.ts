@@ -24,6 +24,9 @@ export class CollectionFormComponent implements OnInit {
     emptyCollection: boolean = true;
     EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
     isOffline: boolean = false;
+    fieldsValid: boolean = false;
+    documentKeyValid: boolean = false;
+    nameValid: boolean = false;
 
     fieldsDataSource: IPepGenericListDataSource;
 
@@ -93,8 +96,7 @@ export class CollectionFormComponent implements OnInit {
         this.utilitiesService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
         this.mode = this.router['form_mode'] ? this.router['form_mode'] : this.collectionName === EMPTY_OBJECT_NAME ? 'Add' : 'Edit';
-        const filteredKeyTypes = DocumentKeyTypes.filter(type=> type!== 'Key');
-        this.documentKeyOptions = filteredKeyTypes.map(type => {
+        this.documentKeyOptions = DocumentKeyTypes.filter(type => type !== 'Key').map(type => {
             return {
                 key: type,
                 value: this.translate.instant(`DocumentKey_Options_${type}`),
@@ -110,6 +112,9 @@ export class CollectionFormComponent implements OnInit {
                 this.emptyCollection = documents.length == 0;
             }
             this.isOffline = this.collection.Type == 'cpi_meta_data'
+            this.nameValid = this.collection.Name != '';
+            this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
+            this.fieldsValid = this.collection.ListView.Fields.length > 0;
         });
     }
 
@@ -125,6 +130,7 @@ export class CollectionFormComponent implements OnInit {
                         Mandatory: this.collection.Fields[obj.FieldID].Mandatory,
                     };
                 });
+                this.fieldsValid = this.collection.ListView.Fields.length > 0;
                 return Promise.resolve({
                     dataView: {
                         Context: {
@@ -191,6 +197,7 @@ export class CollectionFormComponent implements OnInit {
     getUIDFieldsDataSource() {
         return {
             init: async(params:any) => {
+                this.documentKeyValid = this.collection.DocumentKey?.Fields?.length > 0 || false;
                 let uidFields = this.collection.DocumentKey.Fields.map(obj => {
                     return {
                         Key: obj,
@@ -461,13 +468,22 @@ export class CollectionFormComponent implements OnInit {
     }
 
     documentKeyTypeChanged(value: DocumentKeyType) {
+        this.documentKeyValid = value !== 'Composite' || (this.collection.DocumentKey.Fields?.length > 0 || false)
         if (value != 'Composite') {
             this.collection.DocumentKey.Fields = [];
             this.collection.DocumentKey.Delimiter = '@';
+        }
+        else {
+            this.collection.DocumentKey.Fields = this.collection.DocumentKey?.Fields || [];
+            this.collection.DocumentKey.Delimiter = this.collection.DocumentKey?.Delimiter || '@';
         }
     }
 
     offlineFieldChanged(value: boolean) {
         this.collection.Type = value ? 'cpi_meta_data' : 'meta_data';
+    }
+    
+    nameChanged(value: string) {
+        this.nameValid = value != '';
     }
 }

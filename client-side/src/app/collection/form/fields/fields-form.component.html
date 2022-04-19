@@ -70,6 +70,7 @@
                 [value]="(dialogData.Mode === 'Edit' ? 'Update' : 'Save') | translate" 
                 [styleType]="'strong'" 
                 (buttonClick)="saveField()"
+                [disabled]="dialogData.FieldName === ''"
             ></pep-button>
         </div>
     </ng-container>
