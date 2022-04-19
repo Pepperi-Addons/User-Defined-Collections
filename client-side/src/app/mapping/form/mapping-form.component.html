@@ -82,6 +82,7 @@
                 [disabled]="false"
                 [emptyOption]="false"
                 [options]="collectionFields"
+                (valueChange)="CollectionFieldChanged($event)"
             ></pep-select>
         </div>
         <pep-separator 
@@ -116,6 +117,7 @@
                 [value]="'Save' | translate" 
                 [styleType]="'strong'" 
                 (buttonClick)="save()"
+                [disabled]="!isFieldValid || !isCollectionValid || !isMappingValid"
             ></pep-button>
         </div>
     </ng-container>

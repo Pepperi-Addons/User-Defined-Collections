@@ -11,6 +11,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
   export class SortingFormComponent implements OnInit {
 
     fieldSort: number;
+    isValid: boolean = true
 
     constructor(               
         private dialogRef: MatDialogRef<SortingFormComponent>,
@@ -27,6 +28,10 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
     close() { 
         this.dialogRef.close();
+    }
+
+    sortChanged(value) {
+        this.isValid = value >= 0 && value <= this.incoming.MaxValue
     }
 
   }  

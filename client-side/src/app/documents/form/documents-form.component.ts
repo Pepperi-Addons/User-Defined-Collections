@@ -18,6 +18,7 @@ export class DocumentsFormComponent implements OnInit {
     documentJSON:string = '{}';
     item: AddonData = {};
     error: string;
+    isValid: boolean;
     
     constructor(               
         private dialogRef: MatDialogRef<DocumentsFormComponent>,
@@ -29,6 +30,7 @@ export class DocumentsFormComponent implements OnInit {
 
     ngOnInit(): void {
         this.item = this.incoming.Item;
+        this.isValid = this.incoming.Mode === 'Edit';
     }
 
     async saveDocument() {

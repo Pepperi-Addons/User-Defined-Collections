@@ -1,6 +1,6 @@
 <pep-dialog [title]="'Documents_Form_Title' | translate">
     <ng-container pep-dialog-content>
-        <pep-generic-form [dataSource]="item" [dataView]="incoming.DataView" (valueChange)="onValueChanged($event)">
+        <pep-generic-form [dataSource]="item" [dataView]="incoming.DataView" (valueChange)="onValueChanged($event)" (formValidationChange)="isValid = $event">
 
         </pep-generic-form>
         <p class="error">{{error}}</p>
@@ -20,6 +20,7 @@
                 [value]="'Save' | translate" 
                 [styleType]="'strong'" 
                 (buttonClick)="saveDocument()"
+                [disabled]="!isValid"
             ></pep-button>
         </div>
     </ng-container>

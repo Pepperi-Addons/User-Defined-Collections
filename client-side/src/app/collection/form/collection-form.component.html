@@ -7,7 +7,13 @@
             </div>
             <div header-end-content>
                 <pep-button class="pep-spacing-element" [value]="'Back_to_list' | translate" (buttonClick)="goBack()"></pep-button> 
-                <pep-button class="pep-spacing-element" [value]="mode == 'Add' ? ('Save' | translate) : ('Update' | translate)" [styleType]="'strong'" (buttonClick)="saveClicked()"></pep-button>
+                <pep-button 
+                    class="pep-spacing-element" 
+                    [value]="mode == 'Add' ? ('Save' | translate) : ('Update' | translate)" 
+                    [styleType]="'strong'" 
+                    [disabled]="!nameValid || !fieldsValid || !documentKeyValid"
+                    (buttonClick)="saveClicked()"
+                ></pep-button>
             </div>
         </pep-top-bar>
     </ng-container>
@@ -18,8 +24,9 @@
                 [(value)]="collection.Name"
                 [label]="'Key' | translate"
                 type="text"
-                [mandatory]="false"
+                [mandatory]="true"
                 [disabled]="!emptyCollection"
+                (valueChange)="nameChanged($event)"
             ></pep-textbox>
             <pep-textbox
                 [(value)]="collection.Description"
@@ -33,7 +40,7 @@
                 [label]="'Offline' | translate"
                 type="checkbox"
                 [mandatory]="false"
-                [disabled]="mode === 'Edit'"
+                [disabled]="mode === 'Edit' || !emptyCollection"
                 (valueChange)="offlineFieldChanged($event)"
             ></pep-checkbox>
         </div>
@@ -119,13 +126,21 @@
             ></pep-select>
         </ng-container>
         <ng-container pep-dialog-actions>
-            <div class="pep-spacing-element-negative">         
+            <div class="pep-spacing-element-negative" style="display: flex;">  
+                <pep-button 
+                    class="pep-spacing-element"
+                    [sizeType]="'md'" 
+                    [value]="'Cancel' | translate" 
+                    [styleType]="'weak'" 
+                    (buttonClick)="dialogRef.close()"
+                ></pep-button>       
                 <pep-button 
                     class="pep-spacing-element"
                     [sizeType]="'md'" 
                     [value]="'Save' | translate" 
                     [styleType]="'strong'" 
                     (buttonClick)="saveField()"
+                    [disabled]="!fieldKey"
                 ></pep-button>
             </div>
         </ng-container>

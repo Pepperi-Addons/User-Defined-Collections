@@ -7,6 +7,7 @@
             [minValue]="0"
             [maxValue]="incoming.MaxValue"
             [mandatory]="false"
+            (valueChange)="sortChanged($event)"
         ></pep-textbox>
     </ng-container>
     <ng-container pep-dialog-actions>
@@ -24,6 +25,7 @@
                 [value]="'Save' | translate" 
                 [styleType]="'strong'" 
                 (buttonClick)="saveSorting()"
+                [disabled]="!isValid"
             ></pep-button>
         </div>
     </ng-container>
