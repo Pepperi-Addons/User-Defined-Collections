@@ -291,9 +291,9 @@ export class MappingsService {
         return dv;
     }
 
-    async getFields(atdId: number): Promise<any> {
+    async getFields(atdUUID: string): Promise<any> {
         return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('fields').get({
-            atd_id: atdId
+            atd_uuid: atdUUID
         });
     }
 
@@ -327,7 +327,7 @@ export class MappingsService {
     }
 
     async getFilterDataView(item: MappingFormItem, collection: Collection): Promise<BaseFormDataViewField[]> {
-        const tsaFields = await this.getFields(item.Atd.InternalID);
+        const tsaFields = await this.getFields(item.Atd.UUID);
         const filterDVFields = await Promise.all(collection.DocumentKey?.Fields.map(async (field, index, arr): Promise<BaseFormDataViewField> => {
             const fieldType = collection.Fields[field].Type !== 'Array' ? collection.Fields[field].Type : collection.Fields[field].Items.Type;
             const intrest = index % 2;
@@ -476,12 +476,18 @@ export class MappingsService {
 
     getFilterOptions(tsaFields, fieldType, itemResource) {
         const transactionPrefix = itemResource === 'transaction_lines' ? 'Transaction.' : '';
-        const tranactionsFieldsOptions = this.filterFieldsByType(tsaFields.Transactions, fieldType).map(field => {
+        const tranactionsFieldsOptions = itemResource != 'activities' ? this.filterFieldsByType(tsaFields.Transactions, fieldType).map(field => {
             return {
                 Key: `${transactionPrefix}${field.FieldID}`,
                 Value: `${transactionPrefix}${field.Label}`
             }
-        });
+        }) : [];
+        const activitiesFieldsOptions = itemResource === 'activities' ? this.filterFieldsByType(tsaFields.Activities, fieldType).map(field => {
+            return {
+                Key: `${field.FieldID}`,
+                Value: `${field.Label}`
+            }
+        }) : [];
         const itemsFieldsOptions = itemResource === 'transaction_lines' ? this.filterFieldsByType(tsaFields.Items, fieldType).map(field => {
             return {
                 Key: `Item.${field.FieldID}`,
@@ -494,7 +500,7 @@ export class MappingsService {
                 Value: `Account.${field.Label}`
             }
         });
-        const linesFieldsOptions = itemResource === 'transaction_lines' ? this.filterFieldsByType(tsaFields.Transactions, fieldType).map(field => {
+        const linesFieldsOptions = itemResource === 'transaction_lines' ? this.filterFieldsByType(tsaFields.TransactionLines, fieldType).map(field => {
             return {
                 Key: field.FieldID,
                 Value: field.Label
@@ -503,6 +509,7 @@ export class MappingsService {
         
         return [
             ...tranactionsFieldsOptions,
+            ...activitiesFieldsOptions,
             ...itemsFieldsOptions,
             ...accountsFieldsOptions,
             ...linesFieldsOptions

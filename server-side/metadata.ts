@@ -85,6 +85,17 @@ export const AtdRelations: Relation[] = [{
     ComponentName: "MappingListComponent",
     Type:"NgComponent",
     AddonRelativeURL:"mappings"
+},
+{   //meta data for realtion of type NgComponent
+    RelationName: "ActivityTypeListTabs",
+    AddonUUID: config.AddonUUID,
+    Name:"UDCRelations",
+    Description:"Collections",
+    SubType: "NG11",
+    ModuleName: "MappingsModule",
+    ComponentName: "MappingListComponent",
+    Type:"NgComponent",
+    AddonRelativeURL:"mappings"
 }]
 
 export const UdcMappingsScheme: AddonDataScheme = {

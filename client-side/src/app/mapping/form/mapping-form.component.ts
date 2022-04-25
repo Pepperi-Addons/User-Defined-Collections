@@ -38,15 +38,6 @@ export class MappingFormComponent implements OnInit {
         }
     })
 
-    resourceOptions = [{
-        key: 'transactions',
-        value: 'Transactions'
-    },
-    {
-        key: 'transaction_lines',
-        value: 'Transaction Lines'
-    }]
-
     collections: Collection[] = [];
     collectionsOptions: any = [];
     chosenCollection: Collection = undefined;
@@ -136,13 +127,8 @@ export class MappingFormComponent implements OnInit {
         this.updateCollectionFields(this.chosenCollection, value)
     }
 
-    resourceChanged(value) {
-        this.item.DocumentKeyMapping = [];
-        this.getFilterOptions();
-    }
-    
     collectionChanged(value, clearFilter = true) {
-        this.mappingService.getFields(this.item.Atd.InternalID).then(tsaFields => {
+        this.mappingService.getFields(this.item.Atd.UUID).then(tsaFields => {
             this.atdFields = tsaFields;
             this.chosenCollection = this.collections.find(collection => collection.Name === value);
             this.item.CollectionDelimiter = this.chosenCollection.DocumentKey?.Delimiter;

@@ -9,7 +9,7 @@
     </ng-container> -->
 
     <ng-container pep-main-area>
-        <pep-generic-list class="generic-list"
+        <pep-generic-list #documentsList class="generic-list"
             [title] = "'Documents_List_Title' | translate: {collection_name: collectionName}"
             [showTopBar]="true" 
             [dataSource]="dataSource" 
@@ -49,7 +49,7 @@
             </ng-container>
         </pep-generic-list>
 
-        <pep-dimx #dimx [DIMXAddonUUID]="utilitiesService.addonUUID" [DIMXResource]="collectionName"></pep-dimx>
+        <!-- <pep-dimx #dimx [DIMXAddonUUID]="utilitiesService.addonUUID" [DIMXResource]="collectionName"></pep-dimx> -->
     
     </ng-container>
 </pep-page-layout>

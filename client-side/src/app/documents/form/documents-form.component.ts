@@ -56,9 +56,6 @@ export class DocumentsFormComponent implements OnInit {
         this.dialogRef.close();
     }
 
-    onValueChanged(event: IPepGenericFormValueChange) {
-    }
-
     convertMultiChoiceValues() {
 
         this.incoming.DataView.Fields?.filter(field => field.Type === 'MultiTickBox').forEach(field => {
