@@ -257,12 +257,12 @@ export class CollectionFormComponent implements OnInit {
     }   
 
     openFieldForm(name: string) {
-        const emptyField: CollectionField = {
-            Description: '',
-            Mandatory: false,
-            Type: 'String',
-            OptionalValues: [],
-            Items: {
+        const collectionField: CollectionField = {
+            Description: this.collection.Fields[name]?.Description || '',
+            Mandatory: this.collection.Fields[name]?.Mandatory || false,
+            Type: this.collection.Fields[name]?.Type || 'String',
+            OptionalValues: this.collection.Fields[name]?.OptionalValues || [],
+            Items: this.collection.Fields[name]?.Items || {
                 Type:"String"
             }
         }
@@ -272,7 +272,7 @@ export class CollectionFormComponent implements OnInit {
             Mode: name == EMPTY_OBJECT_NAME ? 'Add' : 'Edit',
             FieldName: name == EMPTY_OBJECT_NAME ? '' : name,
             InUidFields: this.collection.DocumentKey.Fields?.includes(name) || false,
-            Field: this.collection.Fields[name] || emptyField,
+            Field: collectionField,
         }
         dialogConfig.data = new PepDialogData({
             content: FieldsFormComponent,
