@@ -22,23 +22,24 @@
                 type="select"
                 [options]="fieldTypes"
                 [emptyOption]="false"
-            ></pep-select>
-            <pep-select
+                (valueChange)="fieldTypeChanged($event)"
+                ></pep-select>
+                <pep-select
                 [(value)]="fieldSubType"
                 [label]="'Items Type' | translate"
                 type="select"
                 [options]="fieldSubTypes"
                 [emptyOption]="false"
                 [visible]="dialogData.Field.Type === 'Array'"
+                (valueChange)="fieldTypeChanged($event)"
             ></pep-select>
         </div>
         <div class="form-row">
             <pep-textarea
-                *ngIf="dialogData.Field.Type === 'String' || dialogData.Field.Items?.Type === 'String'"
                 [value]='dialogData.Field?.OptionalValues?.join("\n")'
                 [label]="'Optional Values' | translate"
                 [mandatory]="false"
-                [disabled]="false"
+                [disabled]="hasOptionalValues == false"
                 xAlignment="left"
                 [rowSpan]="3"
                 (valueChange)=saveOptionalValues($event)
@@ -51,7 +52,7 @@
                 type="select"
                 [options]="[{key:true, value:'True'},{key:false, value:'False'}]"
                 [emptyOption]="false"
-                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode !== 'Add'"
+                [disabled]="!dialogData.EmptyCollection || dialogData.InUidFields"
             ></pep-select>
         </div>
     </ng-container>
