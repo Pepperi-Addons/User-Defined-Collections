@@ -94,7 +94,7 @@ export const dataViewSchema: Schema = {
                         type: "boolean",
                     },
                     Layout: {
-                        type:"object",
+                        type: "object",
                         properties: {
                             Origin: {
                                 type: "object",
@@ -127,7 +127,7 @@ export const dataViewSchema: Schema = {
                         }
                     },
                     Style: {
-                        type:"object",
+                        type: "object",
                         properties: {
                             Alignment: {
                                 type: "object",
@@ -169,17 +169,17 @@ export const dataViewSchema: Schema = {
 }
 
 export const fieldsSchema: Schema = {
-    $id:"/Fields",
+    $id: "/Fields",
     type: "object",
     patternProperties: {
         "^([a-zA-Z0-9_-])+$": {
-            type: "object",                    
+            type: "object",
             properties: {
                 Description: {
                     type: "string"
                 },
                 Type: {
-                    enum: SchemeFieldTypes.filter(type => type !== 'MultipleStringValues'),
+                    enum: SchemeFieldTypes.filter(type => ['MultipleStringValues', 'Object'].includes(type) === false),
                     required: true,
                 },
                 Mandatory: {
@@ -191,31 +191,106 @@ export const fieldsSchema: Schema = {
                     items: {
                         type: "string"
                     }
+                },
+                Items: {
+                    type: "object",
+                    properties: {
+                        Type: {
+                            enum: SchemeFieldTypes.filter(type => ['MultipleStringValues', 'Object', 'Array', 'Bool', 'DateTime'].includes(type) === false),
+                        }
+                    },
                 }
             },
             required: ['Type', 'Mandatory'],
-            if: {
-                properties: {
-                    Type: {
-                        const: "Array",
-                    }
-                }
-            },
-            then: {
-                properties: {
-                    Items: {
-                        type: "object",
-                        properties: {
-                            Type: {
-                                enum: SchemeFieldTypes.filter(type => type !== 'Array' && type !== 'MultipleStringValues'),
-                                required: true,
-                            }
-                        },
-                        required: ['Type'],
+            allOf: [{
+                if: {
+                    properties: {
+                        Type: {
+                            const: "Array",
+                        }
                     }
                 },
-                required: ['Items'],
-            }
+                then: {
+                    properties: {
+                        Items: {
+                            type: "object",
+                            properties: {
+                                Type: {
+                                    enum: SchemeFieldTypes.filter(type => ['MultipleStringValues', 'Object', 'Array', 'Bool', 'DateTime'].includes(type) === false),
+                                    required: true,
+                                }
+                            },
+                            required: ['Type'],
+                        }
+                    },
+                    required: ['Items'],
+                }
+            },
+            {
+                if: {
+                    anyOf: [{
+                        properties: {
+                            Type: {
+                                const: 'Array',
+                            },
+                            Items: {
+                                properties: {
+                                    Type: {
+                                        const: 'Integer'
+                                    }
+                                }
+                            }
+                        }
+                    }, {
+                        properties: {
+                            Type: {
+                                const: 'Array',
+                            },
+                            Items: {
+                                properties: {
+                                    Type: {
+                                        const: 'Double'
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        properties: {
+                            Type: {
+                                const: 'Bool',
+                            },
+                        }
+                    },
+                    {
+                        properties: {
+                            Type: {
+                                const: 'Integer',
+                            },
+                        }
+                    },
+                    {
+                        properties: {
+                            Type: {
+                                const: 'Double',
+                            },
+                        }
+                    },
+                    {
+                        properties: {
+                            Type: {
+                                const: 'DateTime',
+                            },
+                        }
+                    }]
+                },
+                then: {
+                    not:{
+                        required: ["OptionalValues"]
+                    }
+                }
+            }],
+            additionalProperties: false
         }
     },
     minProperties: 1
