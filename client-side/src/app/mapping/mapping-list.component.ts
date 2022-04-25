@@ -1,16 +1,16 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-import { IPepGenericListActions, IPepGenericListDataSource, PepGenericListService } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
-import { BaseFormDataViewField, FormDataView, Type } from '@pepperi-addons/papi-sdk';
+import { Type } from '@pepperi-addons/papi-sdk';
 
 import { FormMode, UtilitiesService } from '../services/utilities.service';
 import { MappingFormItem, MappingsService } from '../services/mappings.service';
 import { CollectionsService } from '../services/collections.service';
 import { MappingFormComponent, MappingFormData } from './form/mapping-form.component';
-import { MappingFieldTypes, UdcMapping } from '../../../../server-side/entities';
+import { MappingResource, UdcMapping } from '../../../../server-side/entities';
 
 @Component({
   selector: 'app-mapping-list',
@@ -23,35 +23,19 @@ export class MappingListComponent implements OnInit {
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
     
 
-    dataSource:IPepGenericListDataSource;
+    activitiesDataSource:IPepGenericListDataSource;
+    transactionsDataSource:IPepGenericListDataSource;
+    linesDataSource:IPepGenericListDataSource;
 
     mappings: UdcMapping[];
     atd:Type;
 
-    actions:IPepGenericListActions = {
-        get: async (data: PepSelectionData) => {
-            const actions = []
-            if (data && data.rows.length == 1) {
-                actions.push({
-                    title: this.translate.instant('Edit'),
-                    handler: async (objs) => {
-                        this.openForm('Edit', objs.rows[0]);
-                    }
-                })
-                actions.push({
-                    title: this.translate.instant('Delete'),
-                    handler: async (objs) => {
-                        this.showDeleteDialog(objs.rows[0]);
-                    }
-                })
-            }
-            return actions;
-        }
-    }
+    activitiesActions:IPepGenericListActions = this.getActions('activities');
+    transactionsActions:IPepGenericListActions = this.getActions('transactions');
+    linesActions:IPepGenericListActions = this.getActions('transaction_lines');
 
     constructor (private translate: TranslateService,
         private mappingsService: MappingsService,
-        private collectionsService: CollectionsService,
         private utilitiesService: UtilitiesService,
         private dialogService: PepDialogService) { }
 
@@ -59,14 +43,17 @@ export class MappingListComponent implements OnInit {
         this.utilitiesService.addonUUID = this.hostObject.options.addonId;
         this.mappingsService.getAtd(this.hostObject.objectList[0]).then(value => {
             this.atd = value;
-            this.dataSource = this.getDataSource();
+            this.activitiesDataSource = this.getDataSource('activities');
+            this.transactionsDataSource = this.getDataSource('transactions');
+            this.linesDataSource = this.getDataSource('transaction_lines');
         });
     }
 
-    getDataSource(): IPepGenericListDataSource {
+    getDataSource(resource: MappingResource): IPepGenericListDataSource {
         return {
             init: async(params:any) => {
                 this.mappings = await this.mappingsService.getMappings(this.atd.InternalID);
+                const items = this.mappings.filter(item=> item.Resource === resource);
                 return Promise.resolve({
                     dataView: {
                         Context: {
@@ -134,8 +121,8 @@ export class MappingListComponent implements OnInit {
                         FrozenColumnsCount: 0,
                         MinimumColumnWidth: 0
                     },
-                    totalCount: this.mappings.length,
-                    items: this.mappings.map(mapping => {
+                    totalCount: items.length,
+                    items: items.map(mapping => {
                         mapping['valueSource'] = `${mapping.DataSource.Collection}.${mapping.DataSource.Field}`;
                         mapping['Title'] = mapping.Field.Title;
                         mapping['ApiName'] = mapping.Field.ApiName;
@@ -156,7 +143,29 @@ export class MappingListComponent implements OnInit {
         } as IPepGenericListDataSource
     }
 
-    async openForm(mode: FormMode, selectedKey: string = undefined) {
+    getActions(resource:MappingResource): IPepGenericListActions {
+        return {
+            get: async (data: PepSelectionData) => {
+                const actions = []
+                if (data && data.rows.length == 1) {
+                    actions.push({
+                        title: this.translate.instant('Edit'),
+                        handler: async (objs) => {
+                            this.openForm('Edit', objs.rows[0], resource);
+                        }
+                    })
+                    actions.push({
+                        title: this.translate.instant('Delete'),
+                        handler: async (objs) => {
+                            this.showDeleteDialog(objs.rows[0], resource);
+                        }
+                    })
+                }
+                return actions;
+            }
+        }
+    }
+    async openForm(mode: FormMode, selectedKey: string = undefined, resource: MappingResource) {
         const item = this.mappings.find(mapping=> mapping.Key === selectedKey);
         const formItem: MappingFormItem = {
             Key: selectedKey,
@@ -165,7 +174,7 @@ export class MappingListComponent implements OnInit {
             CollectionField: item?.DataSource.Field || '',
             CollectionDelimiter: item?.DataSource.Delimiter || '',
             DocumentKeyMapping: item?.DocumentKeyMapping || [],
-            Resource: item?.Resource || this.atd.Type === 2 ? 'transactions': 'activities',
+            Resource: item?.Resource || resource,
             Temporary: item?.Field.Temporary || false,
             ApiName: item?.Field.ApiName || '',
             Type: item?.Field.Type || 'TextBox',
@@ -183,24 +192,24 @@ export class MappingListComponent implements OnInit {
         })
         this.dialogService.openDialog(MappingFormComponent, formData, config).afterClosed().subscribe((value) => {
             if (value) {
-                this.dataSource = this.getDataSource();
+                this.setGenericListDataSource(resource);
             }
         });
     }
-
-    showDeleteDialog(selectedKey: string) {
+    
+    showDeleteDialog(selectedKey: string, resource: MappingResource) {
+        const item = this.mappings.find(mapping=> mapping.Key === selectedKey);
         const dataMsg = new PepDialogData({
             title: this.translate.instant('Mapping_DeleteDialog_Title'),
             actionsType: 'cancel-delete',
-            content: this.translate.instant('Mapping_DeleteDialog_Content')
+            content: this.translate.instant('Mapping_DeleteDialog_Content', {ApiName: item?.Field.ApiName})
         });
         this.dialogService.openDefaultDialog(dataMsg).afterClosed()
             .subscribe(async (isDeletePressed) => {
                 if (isDeletePressed) {
                     try {
-                        const item = this.mappings.find(mapping=> mapping.Key === selectedKey);
                         await this.mappingsService.deleteMapping(item);
-                        this.dataSource = this.getDataSource();
+                        this.setGenericListDataSource(resource);
                     }
                     catch (err) {
                         const errorMsg = new PepDialogData({
@@ -214,6 +223,21 @@ export class MappingListComponent implements OnInit {
         });
     }
 
-    
+    setGenericListDataSource(resource: MappingResource) {
+        switch (resource) {
+            case 'activities': {
+                this.activitiesDataSource = this.getDataSource('activities');
+                break;
+            }
+            case 'transactions': {
+                this.transactionsDataSource = this.getDataSource('transactions');
+                break;
+            }
+            case 'transaction_lines': {
+                this.linesDataSource = this.getDataSource('transaction_lines');
+                break;
+            }
+        }
+    }
 
 }

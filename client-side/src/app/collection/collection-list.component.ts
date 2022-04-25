@@ -4,7 +4,7 @@ import { TranslateService } from '@ngx-translate/core';
 
 import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from "../services/utilities.service";
 import { CollectionsService } from "../services/collections.service";
-import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from "@pepperi-addons/ngx-composite-lib/generic-list";
+import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router";
@@ -41,7 +41,6 @@ export class CollectionListComponent implements OnInit {
         public collectionsService: CollectionsService,
         public layoutService: PepLayoutService,
         public translate: TranslateService,
-        public genericListService: PepGenericListService,
         public activateRoute: ActivatedRoute,
         public dialogService: PepDialogService,
         private router: Router,

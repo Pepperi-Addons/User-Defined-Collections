@@ -1,15 +1,15 @@
 import { PepMenuItem } from '@pepperi-addons/ngx-lib/menu';
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
-import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { TranslateService } from '@ngx-translate/core';
 
-import { KeyValuePair, ObjectsDataRow, ObjectsDataRowCell, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
+import { ObjectsDataRowCell, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
-import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager, PepGenericListService } from "@pepperi-addons/ngx-composite-lib/generic-list";
+import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { DIMXComponent } from '@pepperi-addons/ngx-composite-lib/dimx-export';
 
-import { AddonData, Collection, FormDataView, GridDataViewColumn } from "@pepperi-addons/papi-sdk";
+import { AddonData, Collection, FormDataView } from "@pepperi-addons/papi-sdk";
 
 import { DocumentsService } from "../services/documents.service";
 import { FormMode } from "../services/utilities.service";
@@ -28,7 +28,8 @@ export class DocumentsListComponent implements OnInit {
     
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
 
-    @ViewChild('dimx') dimx:DIMXComponent | undefined;
+    // @ViewChild('dimx') dimx: DIMXComponent | undefined;
+    @ViewChild('documentsList') documentsList: GenericListComponent | undefined;
     
     collectionName: string;
     recycleBin: boolean = false;
@@ -95,8 +96,7 @@ export class DocumentsListComponent implements OnInit {
         public utilitiesService: UtilitiesService,
         private router: Router,
         private dialogService: PepDialogService,
-        private layoutService: PepLayoutService,
-        private genericListService: PepGenericListService
+        private layoutService: PepLayoutService
     ) {
         this.layoutService.onResize$.subscribe(size => {
             this.screenSize = size;
@@ -215,29 +215,29 @@ export class DocumentsListComponent implements OnInit {
                 break;
             }
             case 'Import': {
-              this.dimx?.uploadFile({
-                OverwriteOBject: true,
-                Delimiter: ",",
-                OwnerID: this.utilitiesService.addonUUID
-              });
+            //   this.dimx?.uploadFile({
+            //     OverwriteOBject: true,
+            //     Delimiter: ",",
+            //     OwnerID: this.utilitiesService.addonUUID
+            //   });
               //this.dataSource = this.getDataSource();
               break
             }
             case 'Export': {
-              this.dimx?.DIMXExportRun({
-                DIMXExportFormat: "csv",
-                DIMXExportIncludeDeleted: false,
-                DIMXExportFileName: this.collectionName,
-                DIMXExportFields: this.collectionData.ListView.Fields.map(field => field.FieldID).join(),
-                DIMXExportDelimiter: ","
-            });
+            //   this.dimx?.DIMXExportRun({
+            //     DIMXExportFormat: "csv",
+            //     DIMXExportIncludeDeleted: false,
+            //     DIMXExportFileName: this.collectionName,
+            //     DIMXExportFields: this.collectionData.ListView.Fields.map(field => field.FieldID).join(),
+            //     DIMXExportDelimiter: ","
+            // });
               break
             }
           }
     }
     
     navigateToDocumentsForm(formMode: FormMode, documentKey: string) {
-        const listItem = this.genericListService.getItemById(documentKey);
+        const listItem = this.documentsList.getItemById(documentKey);
         let item = {};
         if (formMode == 'Edit') {
             item['Key'] = documentKey;

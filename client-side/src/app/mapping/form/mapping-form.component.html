@@ -10,16 +10,16 @@
                 type="text"
                 [mandatory]="true"
                 (valueChange)="nameChanged('Title', $event)"
-                ></pep-textbox>
-                <pep-textbox
+            ></pep-textbox>
+            <pep-textbox
                 [(value)]="item.Description"
                 [label]="'MappingForm_Description_Title' | translate"
                 type="text"
                 [mandatory]="false"
-                ></pep-textbox>
-            </div>
-            <div class="form-row">
-                <pep-textbox
+            ></pep-textbox>
+        </div>
+        <div class="form-row">
+            <pep-textbox
                 [(value)]="item.ApiName"
                 [label]="'MappingForm_ApiName_Title' | translate"
                 type="text"
@@ -27,17 +27,6 @@
                 [disabled]="incoming.Mode === 'Edit'"
                 (valueChange)="nameChanged('ApiName', $event)"
             ></pep-textbox>
-            <pep-select
-                [(value)]="item.Temporary"
-                [label]="'MappingForm_Temporary_Title' | translate"
-                type="select"
-                [mandatory]="false"
-                [disabled]="incoming.Mode === 'Edit'"
-                [emptyOption]="false"
-                [options]="temporaryOptions"
-            ></pep-select>
-        </div>
-        <div class="form-row">
             <pep-select
                 [(value)]="item.Type"
                 [label]="'MappingForm_Type_Title' | translate"
@@ -48,18 +37,17 @@
                 [options]="fieldTypes"
                 (valueChange)="typeChanged($event)"
             ></pep-select>
-            <pep-select
-                *ngIf='item.Resource != "activities"'
-                [(value)]="item.Resource"
-                [label]="'MappingForm_Resource_Title' | translate"
-                type="select"
-                [mandatory]="false"
-                [disabled]="incoming.Mode === 'Edit'"
-                [emptyOption]="false"
-                [options]="resourceOptions"
-                (valueChange)="resourceChanged($event)"
-            ></pep-select>
         </div>
+        <pep-select
+            [(value)]="item.Temporary"
+            [label]="'MappingForm_Temporary_Title' | translate"
+            type="select"
+            [mandatory]="false"
+            [disabled]="incoming.Mode === 'Edit'"
+            [emptyOption]="false"
+            [options]="temporaryOptions"
+            style="width:15vw"
+        ></pep-select>
         <pep-separator 
             [label]="'MappingForm_DateSource_Title' | translate"
         ></pep-separator>

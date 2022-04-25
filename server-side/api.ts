@@ -199,16 +199,19 @@ export async function fields(client: Client, request: Request) {
         Transactions: [],
         Items: [],
         Accounts: [],
+        Activities: [],
         TransactionLines: []
     }
     
     switch (request.method) {
         case 'GET': {
-            const atd_id = request.query.atd_id;
-            result.Transactions = await service.getFields(atd_id, "transactions");
-            result.Items = await service.getFields(atd_id, "items");
-            result.Accounts = await service.getFields(atd_id, "accounts");
-            result.TransactionLines = await service.getFields(atd_id, "transaction_lines");
+            const atd_uuid = request.query.atd_uuid;
+            const atd = await service.utilities.getAtd(atd_uuid);
+            result.Transactions = atd.Type === 2 ? await service.getFields(atd.InternalID, "transactions") : [];
+            result.Items = await service.getFields(atd.InternalID, "items");
+            result.Accounts = await service.getFields(atd.InternalID, "accounts");
+            result.Activities = atd.Type === 99 ? await service.getFields(atd.InternalID, "activities") : [];
+            result.TransactionLines = atd.Type === 2 ? await service.getFields(atd.InternalID, "transaction_lines") : [];
             break;
         }
         default: {
@@ -308,5 +311,6 @@ type FieldsResult = {
     Transactions: ApiFieldObject[],
     Items: ApiFieldObject[],
     Accounts: ApiFieldObject[],
+    Activities: ApiFieldObject[],
     TransactionLines: ApiFieldObject[]
 }
