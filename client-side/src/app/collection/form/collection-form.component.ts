@@ -164,13 +164,13 @@ export class CollectionFormComponent implements OnInit {
                         ],
                         Columns: [
                             {
-                                Width: 33
+                                Width: 20
                             },
                             {
-                                Width: 33
+                                Width: 50
                             },
                             {
-                                Width: 33
+                                Width: 30
                             }
                         ],
           
