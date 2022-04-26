@@ -261,7 +261,9 @@ export class DocumentsListComponent implements OnInit {
             DataView: this.getFormDataView(),
             CollectionName: this.collectionName
         }
-        const config = this.dialogService.getDialogConfig({}, 'inline');
+        const config = this.dialogService.getDialogConfig({
+
+        }, 'large');
         config.data = new PepDialogData({
             content: DocumentsFormComponent
         })
