@@ -37,5 +37,9 @@ export class CollectionsService {
     
     async upsertCollection(obj: Collection) {
         return await this.utilities.papiClient.userDefinedCollections.schemes.upsert(obj);
+    }
+
+    async createCollection(obj: Collection) {
+        return await this.utilities.papiClient.addons.api.uuid(this.utilities.addonUUID).file('api').func('create_if_not_exist').post(undefined, obj);
     }       
 }

@@ -6,7 +6,8 @@ import { CollectionsService } from './services/collections.service'
 import { DocumentsService } from './services/documents.service';
 import { MappingsService } from './services/mappings.service';
 import { UtilitiesService } from './services/utilities.service';
-import { UdcMapping } from './entities';
+import { existingCollectionErrorMessage, UdcMapping } from './entities';
+
 
 export async function schemes(client: Client, request: Request) {
     
@@ -304,6 +305,54 @@ export async function import_udc_mappings(client: Client, request: Request) {
             err.code = 405;
             throw err;
         }        
+    }
+}
+
+export async function create_if_not_exist(client: Client, request: Request) {
+    const service = new CollectionsService(client);
+    const documentsService = new DocumentsService(client);
+    switch (request.method) {
+        case 'POST': {
+            try {
+                const collectionName = request.body?.Name;
+                try {
+                    const collection = await service.findByName(collectionName);
+                    if (collection.Hidden == true) {
+                        request.body.Hidden = false;
+                        const result = await service.upsert(documentsService, request.body)
+                        return result;
+                    }
+                    else {
+                        throw new Error(existingCollectionErrorMessage);
+                    }
+                }
+                catch (error) {
+                    if (error?.message?.indexOf('Object ID does not exist') >= 0) {
+                        const result = await service.upsert(documentsService, request.body)
+                        return result;
+                    }
+                    throw error;
+                }
+            }
+            catch (err) {
+                if (err?.message?.indexOf(existingCollectionErrorMessage) >= 0) {
+                    throw err;
+                }
+                else {
+                    console.log('error creating collection.', err);
+                    return {
+                        success: false,
+                        errorMessage: 'message' in err ? err.message : 'unknown error occured'
+                    }
+                }
+            }
+        }
+        default: {
+            let err: any = new Error(`Method ${request.method} not allowed`);
+            err.code = 405;
+            throw err;
+
+        }
     }
 }
 

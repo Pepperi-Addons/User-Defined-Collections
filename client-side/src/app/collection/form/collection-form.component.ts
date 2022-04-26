@@ -5,11 +5,12 @@ import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
-import { Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk/dist/entities';
+import { Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk';
 import { CollectionsService } from '../../services/collections.service';
 import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { SortingFormComponent, SortingFormData } from './sorting/sorting-form.component';
+import { existingCollectionErrorMessage } from '../../../../../server-side/entities';
 
 @Component({
   selector: 'collection-form',
@@ -314,22 +315,36 @@ export class CollectionFormComponent implements OnInit {
 
     async saveClicked() {
         try {
-            // we cannot change the collection name, so we need first to delete the "old" one
-            if (this.collectionName != EMPTY_OBJECT_NAME && this.collection.Name != this.collectionName) { 
-                await this.collectionsService.upsertCollection({
-                    Name: this.collectionName,
-                    Hidden: true
-                });
+            if(this.mode === 'Add') {
+                try {
+                    await this.collectionsService.createCollection(this.collection);
+                    this.showSuccessMessage();
+                }
+                catch (err) {
+                    if (err.message.indexOf(existingCollectionErrorMessage) >= 0) {
+                        const dataMsg = new PepDialogData({
+                            title: this.translate.instant('Collection_UpdateFailed_Title'),
+                            actionsType: 'close',
+                            content: this.translate.instant('Collection_ExistingCollectionError_Content', {collectionName: this.collection.Name})
+                        });
+                        this.dialogService.openDefaultDialog(dataMsg);
+                    }
+                    else {
+                        throw err;
+                    }
+                }
             }
-            await this.collectionsService.upsertCollection(this.collection);
-            const dataMsg = new PepDialogData({
-                title: this.translate.instant('Collection_UpdateSuccess_Title'),
-                actionsType: 'close',
-                content: this.translate.instant('Collection_UpdateSuccess_Content')
-            });
-            this.dialogService.openDefaultDialog(dataMsg).afterClosed().subscribe(() => {
-                this.goBack();
-            });
+            else {
+                // we cannot change the collection name, so we need first to delete the "old" one
+                if (this.collectionName != EMPTY_OBJECT_NAME && this.collection.Name != this.collectionName) { 
+                    await this.collectionsService.upsertCollection({
+                        Name: this.collectionName,
+                        Hidden: true
+                    });
+                }
+                await this.collectionsService.upsertCollection(this.collection);
+                this.showSuccessMessage();
+            }
         }
         catch (error) {
             const errors = this.utilitiesService.getErrors(error.message);
@@ -342,6 +357,17 @@ export class CollectionFormComponent implements OnInit {
         }
     }
     
+    showSuccessMessage() {
+        const dataMsg = new PepDialogData({
+            title: this.translate.instant('Collection_UpdateSuccess_Title'),
+            actionsType: 'close',
+            content: this.translate.instant('Collection_UpdateSuccess_Content')
+        });
+        this.dialogService.openDefaultDialog(dataMsg).afterClosed().subscribe(() => {
+            this.goBack();
+        });
+    }
+
     showDeleteDialog(fieldName: string) {
         const data = new PepDialogData({
             title: this.translate.instant('DeleteField_DialogTitle'),
