@@ -19,6 +19,7 @@
     "UID_Fields_Title": "Unique document identifier fields",
     "Collection_UpdateFailed_Title": "Error saving collection",
     "Collection_UpdateFailed_Content": "Failed saving collection. fix the following errors and try again: <br /> <ul>{{error}}</ul>",
+    "Collection_ExistingCollectionError_Content": "Collection with name {{collectionName}} already exist. <br /> Please change the name or edit the existing collection",
     "Collection_UpdateSuccess_Title": "Collection saved",
     "Collection_UpdateSuccess_Content": "Collection saved successfuly",
     "FormField_Title_Edit": "Edit - {{field_name}}",
