@@ -20,10 +20,15 @@ export class CollectionsService {
         };
         if (hidden) {
             options.include_deleted = true;
-            options.where ='Hidden = true';
+            if (params.searchString) {
+                options.where = `Hidden = true And Name LIKE "%${params.searchString}%"`;
+            }
+            else {
+                options.where = `Hidden = true`;
+            }
         }
-        if (params.searchString) {
-            options.where = `Name LIKE ${params.searchString} OR Description LIKE ${params.searchString}`;
+        else if (params.searchString) {
+            options.where = `Name LIKE "%${params.searchString}%"`;
         }
         return await this.utilities.papiClient.userDefinedCollections.schemes.find(options);
     }
