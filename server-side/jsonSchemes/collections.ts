@@ -189,7 +189,8 @@ export const fieldsSchema: Schema = {
                 OptionalValues: {
                     type: "array",
                     items: {
-                        type: "string"
+                        type: "string",
+                        uniqueItems: true
                     }
                 },
                 Items: {
@@ -285,8 +286,14 @@ export const fieldsSchema: Schema = {
                     }]
                 },
                 then: {
-                    not:{
-                        required: ["OptionalValues"]
+                    properties: {
+                        OptionalValues:{
+                            type: "array",
+                            items: {
+                                type: "string",
+                                maxLength: 0,
+                            } 
+                        }
                     }
                 }
             }],
