@@ -33,7 +33,6 @@ export class CollectionsService {
             return collection;
         }
         else {
-            debugger;
             const errors = validResult.errors.map(error => {
                 if (error.name === 'additionalProperties' && error.instance === 'instance.Fields') {
                     return `Field ${error.argument} contains forbidden characters`;
