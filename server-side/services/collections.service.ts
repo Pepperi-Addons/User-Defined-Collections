@@ -33,6 +33,7 @@ export class CollectionsService {
             return collection;
         }
         else {
+            debugger;
             const errors = validResult.errors.map(error => error.stack.replace("instance.", ""));
             throw new Error(errors.join("\n"));
         }

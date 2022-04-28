@@ -172,7 +172,7 @@ export const fieldsSchema: Schema = {
     $id: "/Fields",
     type: "object",
     patternProperties: {
-        "^([a-zA-Z0-9_-])+$": {
+        "^([\Sa-zA-Z0-9_-])+$": {
             type: "object",
             properties: {
                 Description: {
@@ -300,7 +300,8 @@ export const fieldsSchema: Schema = {
             additionalProperties: false
         }
     },
-    minProperties: 1
+    minProperties: 1,
+    additionalProperties:false
 }
 export const collectionSchema: Schema = {
     $schema: "https://json-schema.org/draft/2020-12/schema",
