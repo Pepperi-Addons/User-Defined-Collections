@@ -38,6 +38,7 @@ export class DocumentsFormComponent implements OnInit {
             this.convertMultiChoiceValues();
             this.convertNumbers();
             this.convertTextArea();
+            this.convertBoolean();
             await this.documentsService.upsertDocument(this.incoming.CollectionName, this.item);
             this.dialogRef.close(true);
         }
@@ -81,6 +82,12 @@ export class DocumentsFormComponent implements OnInit {
     convertNumbers() {
         this.incoming.DataView.Fields?.filter(field => field.Type === 'NumberInteger' || field.Type === 'NumberReal').forEach(field => {
             this.item[field.FieldID] = Number(this.item[field.FieldID]);
+        })
+    }
+
+    convertBoolean() {
+        this.incoming.DataView.Fields?.filter(field => field.Type === 'Boolean').forEach(field => {
+            this.item[field.FieldID] = Boolean(this.item[field.FieldID]);
         })
     }
 }
