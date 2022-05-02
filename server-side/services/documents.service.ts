@@ -144,12 +144,12 @@ export class DocumentsService {
     //DIMX
     // for the AddonRelativeURL of the relation
     async importDataSource(body) {
-        console.log("importing data")
+        console.log(`importing documents: ${JSON.stringify(body)}`);
         return body;
     }
 
     async exportDataSource(body) {
-        console.log("exporting data")
+        console.log(`exporting documents: ${JSON.stringify(body)}`);
         return body;
      }
 }

@@ -54,6 +54,8 @@
                 [addPadding]="false"
                 [showSearch]="false"
                 [uuidMapping]="'Key'"
+                [selectionType]="'single'"
+                [noDataFoundMsg]="'Collection_Fields_NoDataFound' | translate"
                 >
                 <ng-container right-buttons>
                     <pep-button 
@@ -89,7 +91,7 @@
             ></pep-textbox>
         </div>
         <div class="genericListContainer" *ngIf="collection.DocumentKey.Type === 'Composite'">
-            <pep-generic-list class="generic-list"
+            <pep-generic-list #uidList class="generic-list"
                 [title] = "'UID_Fields_Title' | translate"
                 [showTopBar]="true" 
                 [dataSource]="uidFieldsDataSource" 
@@ -98,6 +100,8 @@
                 [addPadding]="false"
                 [showSearch]="false"
                 [uuidMapping]="'Key'"
+                [selectionType]="emptyCollection ? 'single': 'none'"
+                [noDataFoundMsg]="'UidFields_NoDataFound' | translate"
                 >
                 <ng-container right-buttons>
                     <pep-button 

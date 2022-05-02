@@ -28,7 +28,7 @@ export class DocumentsListComponent implements OnInit {
     
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
 
-    // @ViewChild('dimx') dimx: DIMXComponent | undefined;
+    @ViewChild('dimx') dimx: DIMXComponent | undefined;
     @ViewChild('documentsList') documentsList: GenericListComponent | undefined;
     
     collectionName: string;
@@ -215,27 +215,31 @@ export class DocumentsListComponent implements OnInit {
                 break;
             }
             case 'Import': {
-            //   this.dimx?.uploadFile({
-            //     OverwriteOBject: true,
-            //     Delimiter: ",",
-            //     OwnerID: this.utilitiesService.addonUUID
-            //   });
-              //this.dataSource = this.getDataSource();
+              this.dimx?.uploadFile({
+                OverwriteOBject: true,
+                Delimiter: ",",
+                OwnerID: this.utilitiesService.addonUUID
+              });
+              this.dataSource = this.getDataSource();
               break
             }
             case 'Export': {
-            //   this.dimx?.DIMXExportRun({
-            //     DIMXExportFormat: "csv",
-            //     DIMXExportIncludeDeleted: false,
-            //     DIMXExportFileName: this.collectionName,
-            //     DIMXExportFields: this.collectionData.ListView.Fields.map(field => field.FieldID).join(),
-            //     DIMXExportDelimiter: ","
-            // });
+              this.dimx?.DIMXExportRun({
+                DIMXExportFormat: "csv",
+                DIMXExportIncludeDeleted: false,
+                DIMXExportFileName: this.collectionName,
+                DIMXExportFields: this.collectionData.ListView.Fields.map(field => field.FieldID).concat(['Key']).join(),
+                DIMXExportDelimiter: ","
+            });
               break
             }
           }
     }
     
+    onDIMXProcessDone(event){
+        this.dataSource = this.getDataSource();
+    }
+
     navigateToDocumentsForm(formMode: FormMode, documentKey: string) {
         const listItem = this.documentsList.getItemById(documentKey);
         let item = {};
