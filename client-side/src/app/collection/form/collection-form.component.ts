@@ -1,8 +1,8 @@
 import { FieldsFormComponent, FieldsFormDialogData } from './fields/fields-form.component';
-import { Component, OnInit, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, Component, OnInit, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
-import { IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
+import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
 import { Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk';
@@ -84,6 +84,7 @@ export class CollectionFormComponent implements OnInit {
 
     @ViewChild('UidFieldForm', { read: TemplateRef }) UidFieldsTemplate: TemplateRef<any>;
     @ViewChild('SortingForm', { read: TemplateRef }) SortingForm: TemplateRef<any>;
+    @ViewChild('uidList', {read: GenericListComponent}) uidList: GenericListComponent;
 
     constructor(private activateRoute: ActivatedRoute,
                 private router: Router,
@@ -105,11 +106,14 @@ export class CollectionFormComponent implements OnInit {
         this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
             this.collection = value;
             this.fieldsDataSource = this.getFieldsDataSource();
-            this.uidFieldsDataSource = this.getUIDFieldsDataSource();
             this.collectionLoaded = true;
             if (this.mode === 'Edit') {
                 const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
                 this.emptyCollection = documents.length == 0;
+                if (this.uidList) {
+                    this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
+                    this.uidFieldsDataSource = this.getUIDFieldsDataSource();
+                }
             }
             this.isOffline = this.collection.Type == 'cpi_meta_data'
             this.nameValid = this.collection.Name != '';

@@ -49,7 +49,7 @@
             </ng-container>
         </pep-generic-list>
 
-        <!-- <pep-dimx #dimx [DIMXAddonUUID]="utilitiesService.addonUUID" [DIMXResource]="collectionName"></pep-dimx> -->
+        <pep-dimx #dimx [DIMXAddonUUID]="utilitiesService.addonUUID" [DIMXResource]="collectionName" (DIMXProcessDone)="onDIMXProcessDone($event);"></pep-dimx>
     
     </ng-container>
 </pep-page-layout>

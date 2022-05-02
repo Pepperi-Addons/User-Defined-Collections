@@ -27,7 +27,7 @@
     "DeleteField_DialogTitle": "Delete Field",
     "DeleteField_DialogContent": "Are you sure you want to delete '{{field_name}}' field?",
     "UidFields_NoDataFound": "Click Add to define the document identifier fields",
-    "UidFields_SelectLabel": "Choose field to add",
+    "UidFields_SelectLabel": "Choose field to add (field must be defined as mandatory)",
     "SortForm_Label": "Field index",
     "Documents_List_Title": "{{collection_name}}'s Documents",
     "Documents_DeleteDialogTitle": "Delete Document",
