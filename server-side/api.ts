@@ -356,6 +356,31 @@ export async function create_if_not_exist(client: Client, request: Request) {
     }
 }
 
+export async function hard_delete(client: Client, request: Request) {
+    const service = new DocumentsService(client);
+
+    switch (request.method) {
+        case 'POST': {
+            const collectionName = request.query.collection_name || '';
+            const key = request.query.key || '';
+            if (collectionName) {
+                if (key) {
+                    return service.hardDelete(collectionName, key);
+                }
+                throw new Error(`key is mandatory`);
+            }
+            else {
+                throw new Error(`collection_name is mandatory`);
+            }
+        }
+        default: {
+            let err: any = new Error(`Method ${request.method} not allowed`);
+            err.code = 405;
+            throw err;
+        }
+    }
+}
+
 type FieldsResult = {
     Transactions: ApiFieldObject[],
     Items: ApiFieldObject[],

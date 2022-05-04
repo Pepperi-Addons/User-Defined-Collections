@@ -152,4 +152,8 @@ export class DocumentsService {
         console.log(`exporting documents: ${JSON.stringify(body)}`);
         return body;
      }
+
+    async hardDelete(collection:string, key: string) {
+        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collection).key(key).hardDelete(false);
+    }
 }
