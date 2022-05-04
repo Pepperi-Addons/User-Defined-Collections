@@ -1,5 +1,5 @@
 import { UtilitiesService } from './utilities.service';
-import { AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk'
+import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { DimxRelations, UdcMappingsScheme} from '../metadata';
 import { DocumentsService } from './documents.service';
@@ -60,7 +60,7 @@ export class CollectionsService {
         return await this.utilities.papiClient.addons.data.schemes.name(tableName).get() as Collection;
     }
     
-    async find(options: any = {}): Promise<AddonDataScheme[]> {
+    async find(options: FindOptions = {}): Promise<AddonDataScheme[]> {
         let collections = await this.utilities.papiClient.addons.data.schemes.get(options);
         return collections.filter(collection => collection.Name !== UdcMappingsScheme.Name);
     }
@@ -71,6 +71,16 @@ export class CollectionsService {
             singleRelation.Name = collectionName;
             await this.utilities.papiClient.addons.data.relations.upsert(singleRelation);
         }));
+    }
+
+    async purge(collectionName: string) {
+        const collection = await this.findByName(collectionName);
+        if (collection.Type !== 'cpi_meta_data') {
+            return await this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/purge`);
+        }
+        else {
+            throw new Error('Cannot delete offline collections');
+        }
     }
 }
 

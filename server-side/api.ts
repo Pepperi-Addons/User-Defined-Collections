@@ -351,7 +351,28 @@ export async function create_if_not_exist(client: Client, request: Request) {
             let err: any = new Error(`Method ${request.method} not allowed`);
             err.code = 405;
             throw err;
+            
+        }
+    }
+}
 
+export async function purge(client: Client, request: Request) {
+    const service = new CollectionsService(client);
+    
+    switch (request.method) {
+        case 'POST': {
+            const collectionName = request.query.collection_name || '';
+            if (collectionName) {
+                return await service.purge(collectionName);
+            }
+            else {
+                throw new Error('collection_name is required');
+            }
+        }
+        default: {
+            let err: any = new Error(`Method ${request.method} not allowed`);
+            err.code = 405;
+            throw err;
         }
     }
 }
