@@ -18,4 +18,10 @@ export class DocumentsService {
     async upsertDocument(collectionName: string, obj: AddonData) {
         await this.UtilitiesService.papiClient.userDefinedCollections.documents(collectionName).upsert(obj);
     }
+
+    async createCollection(collectionName: string, obj: AddonData) {
+        return await this.UtilitiesService.papiClient.addons.api.uuid(this.UtilitiesService.addonUUID).file('api').func('create').post({
+            collection_name: collectionName
+        }, obj);
+    }  
 }

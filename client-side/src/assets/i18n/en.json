@@ -40,6 +40,8 @@
     "Documents_NoDataFound": "Click Add to add data",
     "Documents_UpdateFailed_Title": "Error saving collection",
     "Documents_UpdateFailed_Content": "Failed saving document. fix the following errors and try again: <br /> <ul>{{error}}</ul>",
+    "Documents_ExistingError_Content": "Document with this data already exist. <br /> Please change the name or edit the existing collection",
+    "Documents_ExistingRecycleBinError_Content": "Document with this data exist in recycle bin. <br /> Please restore and edit the existing collection",
     "RecycleBin_NoDataFound": "Recycle bin is empty",
     "Mappings_ActivitiesList_Title": "Activity fields",
     "Mappings_TransactionsList_Title": "Transaction fields",
