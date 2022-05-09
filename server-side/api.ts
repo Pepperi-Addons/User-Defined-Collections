@@ -339,7 +339,7 @@ export async function hard_delete(client: Client, request: Request) {
             const collectionName = request.query.collection_name || '';
             const force = request.body?.Force || false;
             if (collectionName) {
-                return await service.hard_delete(collectionName, force);
+                return await service.hardDelete(collectionName, force);
             }
             else {
                 throw new Error('collection_name is required');
