@@ -4,6 +4,7 @@ import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
 import { DocumentSchema } from '../jsonSchemes/documents';
 import { Schema, Validator } from 'jsonschema';
+import { existingErrorMessage, existingInRecycleBinErrorMessage } from '../entities';
 
 export class DocumentsService {
     
@@ -152,4 +153,25 @@ export class DocumentsService {
         console.log(`exporting documents: ${JSON.stringify(body)}`);
         return body;
      }
+
+    async create(collectionsService: CollectionsService, collectionName: string, body: any) {
+        try {
+            const collection = await collectionsService.findByName(collectionName);
+            const itemKey = this.utilities.getItemKey(collection, body);
+            const document = await this.getDocumentByKey(collectionName, itemKey);
+            if (document.Hidden) {
+                throw new Error(existingInRecycleBinErrorMessage)
+            }
+            else {
+                throw new Error(existingErrorMessage);
+            }
+        }
+        catch (error) {
+            if (error?.message?.indexOf('Object ID does not exist') >= 0) {
+                const result = await this.upsert(collectionsService, collectionName, body)
+                return result;
+            }
+            throw error;
+        }
+    }
 }

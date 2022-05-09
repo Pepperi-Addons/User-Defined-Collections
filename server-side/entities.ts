@@ -41,4 +41,5 @@ export interface UdcMapping extends AddonData {
     }[]
 }
 
-export const existingCollectionErrorMessage = 'Collection already Exist, please edit the existing collection';
+export const existingErrorMessage = 'Object already Exist';
+export const existingInRecycleBinErrorMessage = 'Object already Exist in recycle bin';

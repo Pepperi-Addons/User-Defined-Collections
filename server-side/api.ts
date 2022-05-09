@@ -6,7 +6,7 @@ import { CollectionsService } from './services/collections.service'
 import { DocumentsService } from './services/documents.service';
 import { MappingsService } from './services/mappings.service';
 import { UtilitiesService } from './services/utilities.service';
-import { existingCollectionErrorMessage, UdcMapping } from './entities';
+import { existingErrorMessage, UdcMapping } from './entities';
 
 
 export async function schemes(client: Client, request: Request) {
@@ -308,43 +308,18 @@ export async function import_udc_mappings(client: Client, request: Request) {
     }
 }
 
-export async function create_if_not_exist(client: Client, request: Request) {
-    const service = new CollectionsService(client);
+export async function create(client: Client, request: Request) {
+    const collectionsService = new CollectionsService(client);
     const documentsService = new DocumentsService(client);
     switch (request.method) {
         case 'POST': {
-            try {
-                const collectionName = request.body?.Name;
-                try {
-                    const collection = await service.findByName(collectionName);
-                    if (collection.Hidden == true) {
-                        request.body.Hidden = false;
-                        const result = await service.upsert(documentsService, request.body)
-                        return result;
-                    }
-                    else {
-                        throw new Error(existingCollectionErrorMessage);
-                    }
-                }
-                catch (error) {
-                    if (error?.message?.indexOf('Object ID does not exist') >= 0) {
-                        const result = await service.upsert(documentsService, request.body)
-                        return result;
-                    }
-                    throw error;
-                }
+            let collectionName = request.query.collection_name || '';
+            if(collectionName) {
+                return await documentsService.create(collectionsService, collectionName, request.body)
             }
-            catch (err) {
-                if (err?.message?.indexOf(existingCollectionErrorMessage) >= 0) {
-                    throw err;
-                }
-                else {
-                    console.log('error creating collection.', err);
-                    return {
-                        success: false,
-                        errorMessage: 'message' in err ? err.message : 'unknown error occured'
-                    }
-                }
+            else {
+                collectionName = request.body?.Name || undefined;
+                return await collectionsService.create(documentsService, collectionName, request.body);
             }
         }
         default: {
