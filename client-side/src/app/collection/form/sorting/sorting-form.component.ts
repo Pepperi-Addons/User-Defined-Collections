@@ -31,12 +31,11 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
     }
 
     sortChanged(value) {
-        this.isValid = value >= 0 && value <= this.incoming.MaxValue
+        this.isValid = value >= 0;
     }
 
   }  
 
   export type SortingFormData = {
-      FieldName: string,
-      MaxValue: number,
+      FieldName: string;
   }

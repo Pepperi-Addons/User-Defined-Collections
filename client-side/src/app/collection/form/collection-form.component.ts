@@ -487,7 +487,6 @@ export class CollectionFormComponent implements OnInit {
         const config = this.dialogService.getDialogConfig({});
         const data: SortingFormData = {
             FieldName: fieldName,
-            MaxValue: this.collection.ListView.Fields.length - 1
         }
         this.dialogService.openDialog(SortingFormComponent, data, config).afterClosed().subscribe((fieldSort) => {
             if (fieldSort) {
