@@ -7,6 +7,7 @@ import { IPepGenericFormValueChange } from '@pepperi-addons/ngx-composite-lib/ge
 import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
 import { FormMode } from 'src/app/services/utilities.service';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
+import { existingInRecycleBinErrorMessage, existingErrorMessage } from '../../../../../server-side/entities';
 
 @Component({
   selector: 'documents-form',
@@ -39,15 +40,41 @@ export class DocumentsFormComponent implements OnInit {
             this.convertNumbers();
             this.convertTextArea();
             this.convertBoolean();
-            await this.documentsService.upsertDocument(this.incoming.CollectionName, this.item);
-            this.dialogRef.close(true);
+            if(this.incoming.Mode === 'Add') {
+                try {
+                    await this.documentsService.createCollection(this.incoming.CollectionName, this.item);
+                    this.dialogRef.close(true);
+                }
+                catch (err) {
+                    let contentKey = '';
+                    if (err.message.indexOf(existingInRecycleBinErrorMessage) >= 0) {
+                        contentKey = 'Documents_ExistingRecycleBinError_Content'
+                    }
+                    else if(err.message.indexOf(existingErrorMessage) >= 0){
+                        contentKey = 'Documents_ExistingError_Content'
+                    }
+                    else {
+                        throw err;
+                    }
+                    const dataMsg = new PepDialogData({
+                        title: this.translate.instant('Documents_UpdateFailed_Title'),
+                        actionsType: 'close',
+                        content: this.translate.instant(contentKey, {collectionName: this.incoming.CollectionName})
+                    });
+                    this.dialogService.openDefaultDialog(dataMsg);
+                }
+            }
+            else {
+                await this.documentsService.upsertDocument(this.incoming.CollectionName, this.item);
+                this.dialogRef.close(true);
+            }
         }
         catch(error) {
             const errors = this.utilitiesService.getErrors(error.message);
             const dataMsg = new PepDialogData({
-                title: this.translate.instant('Collection_UpdateFailed_Title'),
+                title: this.translate.instant('Documents_UpdateFailed_Title'),
                 actionsType: 'close',
-                content: this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
+                content: this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
             });
             this.dialogService.openDefaultDialog(dataMsg);
         }
