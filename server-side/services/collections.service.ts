@@ -73,10 +73,15 @@ export class CollectionsService {
         }));
     }
 
-    async purge(collectionName: string) {
+    async hard_delete(collectionName: string, force: boolean) {
         const collection = await this.findByName(collectionName);
         if (collection.Type !== 'cpi_meta_data') {
-            return await this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/purge`);
+            if (force || collection.Hidden) {
+                return await this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/purge`);
+            }
+            else {
+                throw new Error('Cannot delete non hidden collection.')
+            }
         }
         else {
             throw new Error('Cannot delete offline collections');

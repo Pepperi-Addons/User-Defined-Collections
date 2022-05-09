@@ -356,14 +356,15 @@ export async function create_if_not_exist(client: Client, request: Request) {
     }
 }
 
-export async function purge(client: Client, request: Request) {
+export async function hard_delete(client: Client, request: Request) {
     const service = new CollectionsService(client);
     
     switch (request.method) {
         case 'POST': {
             const collectionName = request.query.collection_name || '';
+            const force = request.body?.Force || false;
             if (collectionName) {
-                return await service.purge(collectionName);
+                return await service.hard_delete(collectionName, force);
             }
             else {
                 throw new Error('collection_name is required');
