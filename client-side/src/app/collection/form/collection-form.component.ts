@@ -10,7 +10,7 @@ import { CollectionsService } from '../../services/collections.service';
 import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { SortingFormComponent, SortingFormData } from './sorting/sorting-form.component';
-import { existingCollectionErrorMessage } from '../../../../../server-side/entities';
+import { existingErrorMessage, existingInRecycleBinErrorMessage } from '../../../../../server-side/entities';
 
 @Component({
   selector: 'collection-form',
@@ -325,17 +325,22 @@ export class CollectionFormComponent implements OnInit {
                     this.showSuccessMessage();
                 }
                 catch (err) {
-                    if (err.message.indexOf(existingCollectionErrorMessage) >= 0) {
-                        const dataMsg = new PepDialogData({
-                            title: this.translate.instant('Collection_UpdateFailed_Title'),
-                            actionsType: 'close',
-                            content: this.translate.instant('Collection_ExistingCollectionError_Content', {collectionName: this.collection.Name})
-                        });
-                        this.dialogService.openDefaultDialog(dataMsg);
+                    let contentKey = '';
+                    if (err.message.indexOf(existingInRecycleBinErrorMessage) >= 0) {
+                        contentKey = 'Collection_ExistingRecycleBinError_Content'
+                    }
+                    else if(err.message.indexOf(existingErrorMessage) >= 0){
+                        contentKey = 'Collection_ExistingError_Content'
                     }
                     else {
                         throw err;
                     }
+                    const dataMsg = new PepDialogData({
+                        title: this.translate.instant('Collection_UpdateFailed_Title'),
+                        actionsType: 'close',
+                        content: this.translate.instant(contentKey, {collectionName: this.collection.Name})
+                    });
+                    this.dialogService.openDefaultDialog(dataMsg);
                 }
             }
             else {
