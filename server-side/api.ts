@@ -326,7 +326,29 @@ export async function create(client: Client, request: Request) {
             let err: any = new Error(`Method ${request.method} not allowed`);
             err.code = 405;
             throw err;
+            
+        }
+    }
+}
 
+export async function hard_delete(client: Client, request: Request) {
+    const service = new CollectionsService(client);
+    
+    switch (request.method) {
+        case 'POST': {
+            const collectionName = request.query.collection_name || '';
+            const force = request.body?.Force || false;
+            if (collectionName) {
+                return await service.hardDelete(collectionName, force);
+            }
+            else {
+                throw new Error('collection_name is required');
+            }
+        }
+        default: {
+            let err: any = new Error(`Method ${request.method} not allowed`);
+            err.code = 405;
+            throw err;
         }
     }
 }
