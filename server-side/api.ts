@@ -332,29 +332,8 @@ export async function create(client: Client, request: Request) {
 }
 
 export async function hard_delete(client: Client, request: Request) {
-    const service = new CollectionsService(client);
-    
-    switch (request.method) {
-        case 'POST': {
-            const collectionName = request.query.collection_name || '';
-            const force = request.body?.Force || false;
-            if (collectionName) {
-                return await service.hardDelete(collectionName, force);
-            }
-            else {
-                throw new Error('collection_name is required');
-            }
-        }
-        default: {
-            let err: any = new Error(`Method ${request.method} not allowed`);
-            err.code = 405;
-            throw err;
-        }
-    }
-}
-
-export async function hard_delete(client: Client, request: Request) {
-    const service = new DocumentsService(client);
+    const documentsService = new DocumentsService(client);
+    const collectionsService = new CollectionsService(client);
 
     switch (request.method) {
         case 'POST': {
@@ -363,9 +342,11 @@ export async function hard_delete(client: Client, request: Request) {
             const force = request.body.Force || false;
             if (collectionName) {
                 if (key) {
-                    return service.hardDelete(collectionName, key, force);
+                    return await documentsService.hardDelete(collectionName, key, force);
                 }
-                throw new Error(`key is mandatory`);
+                else {
+                    return await collectionsService.hardDelete(collectionName, force);
+                }
             }
             else {
                 throw new Error(`collection_name is mandatory`);
