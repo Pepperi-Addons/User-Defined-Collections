@@ -154,6 +154,10 @@ export class DocumentsService {
         return body;
      }
 
+    async hardDelete(collection:string, key: string, force: boolean) {
+        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collection).key(key).hardDelete(force);
+    }
+
     async create(collectionsService: CollectionsService, collectionName: string, body: any) {
         try {
             const collection = await collectionsService.findByName(collectionName);
