@@ -9,7 +9,7 @@ import { Collection, CollectionField, DataViewFieldType, DocumentKeyType, Docume
 import { CollectionsService } from '../../services/collections.service';
 import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
-import { SortingFormComponent, SortingFormData } from './sorting/sorting-form.component';
+import { SortingFormComponent } from './sorting/sorting-form.component';
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from '../../../../../server-side/entities';
 
 @Component({
@@ -485,11 +485,7 @@ export class CollectionFormComponent implements OnInit {
 
     openSortingForm(fieldName) {
         const config = this.dialogService.getDialogConfig({});
-        const data: SortingFormData = {
-            FieldName: fieldName,
-            MaxValue: this.collection.ListView.Fields.length - 1
-        }
-        this.dialogService.openDialog(SortingFormComponent, data, config).afterClosed().subscribe((fieldSort) => {
+        this.dialogService.openDialog(SortingFormComponent, fieldName, config).afterClosed().subscribe((fieldSort) => {
             if (fieldSort) {
                 const index = this.collection.ListView.Fields.findIndex(field => field.FieldID === fieldName);
                 if (index > -1) {

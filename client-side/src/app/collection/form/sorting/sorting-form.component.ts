@@ -16,7 +16,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
     constructor(               
         private dialogRef: MatDialogRef<SortingFormComponent>,
         private translate: TranslateService,
-        @Inject(MAT_DIALOG_DATA) public incoming: SortingFormData) {          
+        @Inject(MAT_DIALOG_DATA) public incoming: string) {          
     }
 
     ngOnInit() {
@@ -31,12 +31,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
     }
 
     sortChanged(value) {
-        this.isValid = value >= 0 && value <= this.incoming.MaxValue
+        this.isValid = value >= 0;
     }
 
   }  
-
-  export type SortingFormData = {
-      FieldName: string,
-      MaxValue: number,
-  }
