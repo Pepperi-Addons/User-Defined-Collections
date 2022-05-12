@@ -5,7 +5,10 @@ const share = mf.share;
 const singleSpaAngularWebpack = require('single-spa-angular/lib/webpack').default;
 const { merge } = require('webpack-merge');
 
+const addonConfig = require('../addon.config.json');
+
 const filename = 'mappings'; // addon
+const fieldsBlockFileName = `file_${addonConfig.AddonUUID.replace(/-/g, '_').toLowerCase()}`
 
 const sharedMappings = new mf.SharedMappings();
 sharedMappings.register(
@@ -36,6 +39,22 @@ module.exports = (config, options, env) => {
                 exposes: {
                   './MappingListComponent': './src/app/mapping/index.ts',
                   './MappingsModule': './src/app/mapping/index.ts'
+                },
+                shared: share({
+                    "@angular/core": { eager: true, singleton: true, strictVersion: true, requiredVersion: 'auto' },
+                    "@angular/common": { eager: true, singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
+                    "@angular/common/http": { eager: true, singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
+                    "@angular/router": { eager: true, singleton: true, strictVersion: true, requiredVersion: 'auto' },
+                    
+                    ...sharedMappings.getDescriptors()
+                })
+            }),
+            new ModuleFederationPlugin({
+                name: `${fieldsBlockFileName}`,
+                filename: `${fieldsBlockFileName}.js`,
+                exposes: {
+                  './FieldsBlockComponent': './src/app/fields-block/index.ts',
+                  './FieldsBlockModule': './src/app/fields-block/index.ts'
                 },
                 shared: share({
                     "@angular/core": { eager: true, singleton: true, strictVersion: true, requiredVersion: 'auto' },

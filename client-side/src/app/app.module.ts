@@ -12,6 +12,7 @@ import { AppComponent } from './app.component';
 import { CollectionListModule } from './collection';
 import { DocumentsListModule } from './documents';
 import { MappingsModule } from './mapping';
+import { FieldsBlockModule } from './fields-block';
 
 @NgModule({
     declarations: [
@@ -24,6 +25,7 @@ import { MappingsModule } from './mapping';
         CollectionListModule,
         DocumentsListModule,
         MappingsModule,
+        FieldsBlockModule,
         AppRoutingModule,
         TranslateModule.forRoot({
             loader: {

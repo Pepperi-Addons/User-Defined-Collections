@@ -1,6 +1,10 @@
 import config from '../addon.config.json';
 import { AddonDataScheme, Relation } from "@pepperi-addons/papi-sdk";
 
+const blockName = 'Fields';
+const filename = `file_${config.AddonUUID.replace(/-/g, '_').toLowerCase()}`
+
+
 export const DimxRelations: Relation[] = [{
 //     AddonUUID: config.AddonUUID,
 //     Name: 'importCollection',
@@ -97,6 +101,18 @@ export const AtdRelations: Relation[] = [{
     Type:"NgComponent",
     AddonRelativeURL:"mappings"
 }]
+
+export const BlockRelation: Relation = {
+    RelationName: "AddonBlock",
+    Name: blockName,
+    Description: `${blockName} addon block`,
+    Type: "NgComponent",
+    SubType: "NG11",
+    AddonUUID: config.AddonUUID,
+    AddonRelativeURL: filename,
+    ComponentName: `${blockName}BlockComponent`,
+    ModuleName: `${blockName}BlockModule`,
+}
 
 export const UdcMappingsScheme: AddonDataScheme = {
     Name: 'UdcMappings',

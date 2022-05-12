@@ -9,7 +9,7 @@ The error Message is importent! it will be written in the audit log and help the
 */
 
 import { Client, Request } from '@pepperi-addons/debug-server'
-import { AtdRelations, UsageMonitorRelations } from './metadata';
+import { AtdRelations, BlockRelation, UsageMonitorRelations } from './metadata';
 import { FieldsService } from './services/fields.service';
 import { MappingsService } from './services/mappings.service';
 import { UtilitiesService } from './services/utilities.service';
@@ -56,6 +56,7 @@ async function createObjects(client: Client) {
         const service = new UtilitiesService(client);
         await service.createRelations(UsageMonitorRelations);
         await service.createRelations(AtdRelations);
+        await service.createRelations([BlockRelation]);
         await service.createADALSchemes();
         return {
             success:true,

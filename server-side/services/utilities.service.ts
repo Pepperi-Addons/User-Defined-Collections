@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { Collection, PapiClient } from '@pepperi-addons/papi-sdk';
+import { Collection, PapiClient, Relation } from '@pepperi-addons/papi-sdk';
 import { UdcMappingsScheme } from '../metadata';
 import { Client } from '@pepperi-addons/debug-server';
 
@@ -41,7 +41,7 @@ export class UtilitiesService {
         return key
     }
 
-    async createRelations(relations) {
+    async createRelations(relations:Relation[]) {
         await Promise.all(relations.map(async (singleRelation) => {
             await this.papiClient.addons.data.relations.upsert(singleRelation);
         }));

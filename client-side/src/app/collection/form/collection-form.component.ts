@@ -1,4 +1,4 @@
-import { FieldsFormComponent, FieldsFormDialogData } from './fields/fields-form.component';
+import { FieldsFormComponent, FieldsFormDialogData } from '../../fields-block/fields/fields-form.component';
 import { AfterViewInit, Component, OnInit, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
@@ -9,7 +9,7 @@ import { Collection, CollectionField, DataViewFieldType, DocumentKeyType, Docume
 import { CollectionsService } from '../../services/collections.service';
 import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
-import { SortingFormComponent } from './sorting/sorting-form.component';
+import { SortingFormComponent } from '../../fields-block/sorting/sorting-form.component';
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from '../../../../../server-side/entities';
 
 @Component({

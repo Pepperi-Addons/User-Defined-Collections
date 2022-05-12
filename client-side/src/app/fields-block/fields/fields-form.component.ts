@@ -1,4 +1,4 @@
-import { FormMode } from '../../../services/utilities.service';
+import { FormMode } from '../../services/utilities.service';
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { CollectionField, SchemeFieldType, SchemeFieldTypes } from '@pepperi-addons/papi-sdk'
@@ -23,7 +23,7 @@ import { TranslateService } from '@ngx-translate/core';
         @Inject(MAT_DIALOG_DATA) public incoming: FieldsFormDialogData) {          
             this.dialogData = incoming;
             this.dialogTitle = this.dialogData.Mode == 'Edit' ? translate.instant('FormField_Title_Edit', {field_name: this.dialogData.FieldName}) : translate.instant('FormField_Title_Add');
-            this.fieldTypes = SchemeFieldTypes.filter(type => ['MultipleStringValues', 'Object'].includes(type) === false).map(type => {
+            this.fieldTypes = this.dialogData.AllowedTypes.map(type => {
                 return {
                     key: type,
                     value: type,
@@ -80,4 +80,5 @@ import { TranslateService } from '@ngx-translate/core';
     Mode: FormMode;
     EmptyCollection: boolean;
     InUidFields: boolean;
+    AllowedTypes: SchemeFieldType[];
 }

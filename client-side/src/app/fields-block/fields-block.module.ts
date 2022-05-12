@@ -20,11 +20,8 @@ import { PepTextareaModule } from '@pepperi-addons/ngx-lib/textarea';
 import { PepDialogModule } from '@pepperi-addons/ngx-lib/dialog';
 
 import { CollectionsService } from '../services/collections.service';
-import { CollectionListComponent } from './index';
-import { SortingFormComponent } from '../fields-block/sorting/sorting-form.component';
-import { FieldsFormComponent } from '../fields-block/fields/fields-form.component';
-import { CollectionFormComponent } from './form/collection-form.component';
-import { UtilitiesService } from './../services/utilities.service'
+import { FieldsBlockComponent } from './index';
+import { UtilitiesService } from '../services/utilities.service'
 import { PepCheckboxModule } from '@pepperi-addons/ngx-lib/checkbox';
 
 const pepIcons = [
@@ -34,16 +31,13 @@ const pepIcons = [
 export const routes: Routes = [
     {
         path: '',
-        component: CollectionListComponent
+        component: FieldsBlockComponent
     }
 ];
 
 @NgModule({
     declarations: [
-        CollectionListComponent,
-        CollectionFormComponent,
-        FieldsFormComponent,
-        SortingFormComponent
+        FieldsBlockComponent,
     ],
     imports: [
         CommonModule,
@@ -69,7 +63,7 @@ export const routes: Routes = [
         }),
         RouterModule.forChild(routes)
     ],
-    exports:[CollectionListComponent],
+    exports:[FieldsBlockComponent],
     providers: [
         TranslateStore,
         // When loading this module from route we need to add this here (because only this module is loading).
@@ -77,7 +71,8 @@ export const routes: Routes = [
         UtilitiesService
     ]
 })
-export class CollectionListModule {
+
+export class FieldsBlockModule {
     constructor(
         translate: TranslateService,
         private pepIconRegistry: PepIconRegistry,
