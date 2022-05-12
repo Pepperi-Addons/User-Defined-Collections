@@ -262,7 +262,7 @@ export class DocumentsListComponent implements OnInit {
         const formData: DocumentsFormData = {
             Item: item,
             Mode: formMode,
-            DataView: this.getFormDataView(),
+            DataView: this.getFormDataView(formMode),
             CollectionName: this.collectionName
         }
         const config = this.dialogService.getDialogConfig({
@@ -313,7 +313,7 @@ export class DocumentsListComponent implements OnInit {
         })
     }
 
-    getFormDataView(): FormDataView {
+    getFormDataView(formMode: string): FormDataView {
         let dataView: FormDataView = {
             Type:"Form",
             Fields: [],
@@ -330,7 +330,7 @@ export class DocumentsListComponent implements OnInit {
                 Mandatory: field.Mandatory,
                 Type: field.Type,
                 Title: field.Title,
-                ReadOnly: false,
+                ReadOnly: formMode == 'Edit' && this.collectionData.DocumentKey.Fields.includes(field.FieldID),
             }
             const optionalValues = this.collectionData.Fields[field.FieldID].OptionalValues?.map(item => {
                 return {
