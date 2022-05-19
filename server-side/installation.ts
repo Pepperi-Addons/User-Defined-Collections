@@ -36,11 +36,15 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
     }
     catch (err) {
         console.log('could not uninstall UDC. failed deleting TSA fields. error:', err)
+        let errMessage = 'Unknown error occured';
+        if (err instanceof Error) {
+            errMessage = err.message;
+        }
         return {
             success:false,
-            errorMessage: 'message' in err ? err.message : 'Unknown error occured'
+            errorMessage: errMessage
         }
-    }
+   }
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {

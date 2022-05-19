@@ -6,7 +6,7 @@ import { CollectionsService } from './services/collections.service'
 import { DocumentsService } from './services/documents.service';
 import { MappingsService } from './services/mappings.service';
 import { UtilitiesService } from './services/utilities.service';
-import { existingErrorMessage, UdcMapping } from './entities';
+import { UdcMapping, FieldsResult } from 'udc-shared';
 
 
 export async function schemes(client: Client, request: Request) {
@@ -256,9 +256,13 @@ export async function export_udc_mappings(client: Client, request: Request) {
             }
             catch(err) {
                 console.log('export_udc_mappings Failed with error:', err);
+                let errMessage = 'Unknown error occured';
+                if (err instanceof Error) {
+                    errMessage = err.message;
+                }
                 return {
-                    success: false,
-                    errorMessage: 'message' in err ? err.message : 'unknown error occured'
+                    success:false,
+                    errorMessage: errMessage
                 }
             }
         }
@@ -294,9 +298,13 @@ export async function import_udc_mappings(client: Client, request: Request) {
             }
             catch(err) {
                 console.log('import_udc_mappings Failed with error:', err);
+                let errMessage = 'Unknown error occured';
+                if (err instanceof Error) {
+                    errMessage = err.message;
+                }
                 return {
-                    success: false,
-                    errorMessage: 'message' in err ? err.message : 'unknown error occured'
+                    success:false,
+                    errorMessage: errMessage
                 }
             }
         }
@@ -358,12 +366,4 @@ export async function hard_delete(client: Client, request: Request) {
             throw err;
         }
     }
-}
-
-type FieldsResult = {
-    Transactions: ApiFieldObject[],
-    Items: ApiFieldObject[],
-    Accounts: ApiFieldObject[],
-    Activities: ApiFieldObject[],
-    TransactionLines: ApiFieldObject[]
 }

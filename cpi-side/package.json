@@ -15,7 +15,8 @@
   "license": "ISC",
   "dependencies": {
     "@pepperi-addons/cpi-node": "^0.4.4",
-    "rollup-plugin-typescript2": "^0.30.0"
+    "rollup-plugin-typescript2": "^0.30.0",
+    "udc-shared": "file:../shared"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",

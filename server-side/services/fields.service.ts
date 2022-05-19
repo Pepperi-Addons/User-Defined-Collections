@@ -1,6 +1,6 @@
 import { Client } from "@pepperi-addons/debug-server/dist";
 import { ApiFieldObject, DataViewFieldTypes } from "@pepperi-addons/papi-sdk";
-import { MappingFieldType, UdcMapping } from "../entities";
+import { MappingFieldType, UdcMapping } from "udc-shared";
 import { UtilitiesService } from "./utilities.service";
 
 export class FieldsService {

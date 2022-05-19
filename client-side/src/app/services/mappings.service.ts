@@ -4,7 +4,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { KeyValuePair } from '@pepperi-addons/ngx-lib';
 import { AddonData, ApiFieldObject, BaseFormDataViewField, Collection, Type, FormDataView, SchemeFieldType } from '@pepperi-addons/papi-sdk';
 
-import { MappingFieldType, MappingFieldTypes, MappingResource, UdcMapping } from '../../../../server-side/entities';
+import { MappingFieldType, MappingFieldTypes, MappingResource, UdcMapping } from 'udc-shared';
 
 import { FormMode, UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';

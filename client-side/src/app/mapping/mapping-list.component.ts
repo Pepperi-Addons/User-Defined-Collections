@@ -10,7 +10,7 @@ import { FormMode, UtilitiesService } from '../services/utilities.service';
 import { MappingFormItem, MappingsService } from '../services/mappings.service';
 import { CollectionsService } from '../services/collections.service';
 import { MappingFormComponent, MappingFormData } from './form/mapping-form.component';
-import { MappingResource, UdcMapping } from '../../../../server-side/entities';
+import { MappingResource, UdcMapping } from 'udc-shared';
 
 @Component({
   selector: 'app-mapping-list',
