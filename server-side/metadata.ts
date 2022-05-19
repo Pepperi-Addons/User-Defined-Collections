@@ -15,7 +15,7 @@ export const DimxRelations: Relation[] = [{
     RelationName: 'DataImportResource',
     Type: 'AddonAPI',
     Description: 'relation for importing documents to collection',
-    AddonRelativeURL: '/api/import_data_source'
+    AddonRelativeURL: '/api/import_data_source?collection_name={collection_name}'
 },
 // {
 //     AddonUUID: config.AddonUUID,
@@ -31,7 +31,7 @@ export const DimxRelations: Relation[] = [{
     RelationName: 'DataExportResource',
     Type: 'AddonAPI',
     Description: 'relation for exporting documents from collection',
-    AddonRelativeURL: '/api/export_data_source'
+    AddonRelativeURL: '/api/export_data_source?collection_name={collection_name}'
 }]
 
 export const UsageMonitorRelations: Relation[] = [{

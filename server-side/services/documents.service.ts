@@ -24,7 +24,7 @@ export class DocumentsService {
     async upsert(service: CollectionsService, collectionName: any, body: any): Promise<AddonData> {
         const updatingHidden = 'Hidden' in body && body.Hidden;
         const collectionScheme = await service.findByName(collectionName);
-        body.Key = await this.utilities.getItemKey(collectionScheme, body);
+        body.Key = this.utilities.getItemKey(collectionScheme, body);
         const validationResult = this.validateDocument(collectionScheme, body);
         if (validationResult.valid || updatingHidden) {
             return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(body);
@@ -144,12 +144,25 @@ export class DocumentsService {
 
     //DIMX
     // for the AddonRelativeURL of the relation
-    async importDataSource(body) {
+    importDataSource(body, collection: Collection) {
         console.log(`importing documents: ${JSON.stringify(body)}`);
+        body.DIMXObjects = body.DIMXObjects.map(item => {
+            const itemKey = this.utilities.getItemKey(collection, item.Object);
+            item.Object.Key = itemKey;
+            debugger;
+            const validationResult = this.validateDocument(collection, item.Object);
+            if (!validationResult.valid) {
+                const errors = validationResult.errors.map(error => error.stack.replace("instance.", ""));
+                item.Status = 'Error';
+                item.Details = `Document validation failed.\n ${errors.join("\n")}`;
+                item.Key = itemKey;
+            }
+            return item;
+        });
         return body;
     }
 
-    async exportDataSource(body) {
+    exportDataSource(body) {
         console.log(`exporting documents: ${JSON.stringify(body)}`);
         return body;
      }
