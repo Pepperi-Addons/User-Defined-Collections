@@ -78,6 +78,7 @@ export class DocumentsService {
 
     validateDocument(collection: Collection, body: any) {
         const schema = this.createSchema(collection);
+        console.log(`validating document ${JSON.stringify(body)} for collection ${collection.Name}. schema is ${JSON.stringify(schema)}`);
         const validator = new Validator();
         const result = validator.validate(body, schema);
         return result;
@@ -85,6 +86,7 @@ export class DocumentsService {
 
     createSchema(collection: Collection): Schema {
         let schema: Schema = DocumentSchema;
+        
         Object.keys(collection.Fields!).forEach(fieldName => {
             const field = collection.Fields![fieldName];
 
@@ -145,11 +147,11 @@ export class DocumentsService {
     //DIMX
     // for the AddonRelativeURL of the relation
     importDataSource(body, collection: Collection) {
-        console.log(`importing documents: ${JSON.stringify(body)}`);
+        console.log(`@@@@importing documents: ${JSON.stringify(body)}@@@@`);
         body.DIMXObjects = body.DIMXObjects.map(item => {
             const itemKey = this.utilities.getItemKey(collection, item.Object);
             item.Object.Key = itemKey;
-            debugger;
+            console.log(`@@@@item key got from function is ${itemKey}`);
             const validationResult = this.validateDocument(collection, item.Object);
             if (!validationResult.valid) {
                 const errors = validationResult.errors.map(error => error.stack.replace("instance.", ""));
@@ -159,6 +161,7 @@ export class DocumentsService {
             }
             return item;
         });
+        console.log('@@@@returned object is:@@@@', JSON.stringify(body));
         return body;
     }
 
