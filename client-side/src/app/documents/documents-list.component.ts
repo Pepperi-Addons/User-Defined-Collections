@@ -330,7 +330,7 @@ export class DocumentsListComponent implements OnInit {
                 Mandatory: field.Mandatory,
                 Type: field.Type,
                 Title: field.Title,
-                ReadOnly: formMode == 'Edit' && this.collectionData.DocumentKey.Fields.includes(field.FieldID),
+                ReadOnly: formMode == 'Edit' && this.collectionData.DocumentKey?.Fields?.includes(field.FieldID),
             }
             const optionalValues = this.collectionData.Fields[field.FieldID].OptionalValues?.map(item => {
                 return {

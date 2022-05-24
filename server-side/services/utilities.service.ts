@@ -20,7 +20,7 @@ export class UtilitiesService {
     getItemKey(scheme: Collection, body: any): string {
         let key = '';
 
-        if ('Key' in body) {
+        if ('Key' in body && body.Key != '') {
             key = body.Key;
         }
         else if(scheme.DocumentKey?.Type == 'Key'){

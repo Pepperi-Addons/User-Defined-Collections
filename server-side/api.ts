@@ -1,5 +1,5 @@
 import { Client, Request } from '@pepperi-addons/debug-server'
-import { ApiFieldObject } from '@pepperi-addons/papi-sdk';
+import { ApiFieldObject, Collection } from '@pepperi-addons/papi-sdk';
 
 import { FieldsService } from './services/fields.service';
 import { CollectionsService } from './services/collections.service'
@@ -76,7 +76,7 @@ export async function documents(client: Client, request: Request) {
     return result;
 }
 
-export function export_data_source(client: Client, request: Request) {
+export async function export_data_source(client: Client, request: Request) {
     const service = new DocumentsService(client)
     if (request.method == 'POST') {
         return service.exportDataSource(request.body);
@@ -86,10 +86,24 @@ export function export_data_source(client: Client, request: Request) {
     }
 }
 
-export function import_data_source(client: Client, request: Request) {
+export async function import_data_source(client: Client, request: Request) {
     const service = new DocumentsService(client)
+    const collectionsService = new CollectionsService(client)
+    const collectionName = request.query.collection_name || '';
     if (request.method == 'POST') {
-        return service.importDataSource(request.body);
+        try {
+            const collection: Collection = await collectionsService.findByName(collectionName);
+            if (collection.Type != 'cpi_meta_data') {
+                return service.importDataSource(request.body, collection);
+            }
+            else {
+                throw new Error('Cannot import data for offline collection');
+            }
+        }
+        catch (error) {
+            console.log(`import data for collection ${collectionName} failed with error ${JSON.stringify(error)}`);
+            throw error;
+        }
     }
     else if (request.method == 'GET') {
         throw new Error(`Method ${request.method} not supported`);       
