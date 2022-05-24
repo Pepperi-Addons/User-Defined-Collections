@@ -1,4 +1,4 @@
-import { DataViewFieldType, AddonData } from '@pepperi-addons/papi-sdk/';
+import { DataViewFieldType, AddonData, ApiFieldObject } from '@pepperi-addons/papi-sdk/';
 
 export const MappingFieldTypes: DataViewFieldType[] = [ 
     'TextBox',
@@ -39,6 +39,14 @@ export interface UdcMapping extends AddonData {
         Key: string,
         Value: string
     }[]
+}
+
+export interface FieldsResult {
+    Transactions: ApiFieldObject[],
+    Items: ApiFieldObject[],
+    Accounts: ApiFieldObject[],
+    Activities: ApiFieldObject[],
+    TransactionLines: ApiFieldObject[]
 }
 
 export const existingErrorMessage = 'Object already Exist';

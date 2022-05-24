@@ -1,6 +1,6 @@
 import '@pepperi-addons/cpi-node'
 import config from '../addon.config.json';
-import { UdcMapping } from './../server-side/entities';
+import { UdcMapping } from 'udc-shared';
 import { UdcMappingsScheme } from './../server-side/metadata';
 import { DataObject, Transaction } from '@pepperi-addons/cpi-node';
 
@@ -11,7 +11,7 @@ export async function load(configuration: any) {
     })).objects as UdcMapping[];
 
     pepperi.events.intercept('PreLoadTransactionScope', {}, async (data, next, main) => {
-        const atdID = data.DataObject?.typeDefinition?.internalID;
+        const atdID = data.DataObject?.typeDefinition?.internalID;        
         const transaction = data.DataObject as Transaction;
         const atdMappings = mappings.filter(mapping => {
             return mapping.AtdID === atdID;

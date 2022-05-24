@@ -5,7 +5,7 @@ import { DimxRelations, UdcMappingsScheme} from '../metadata';
 import { DocumentsService } from './documents.service';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
-import { existingErrorMessage, existingInRecycleBinErrorMessage } from '../entities';
+import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 export class CollectionsService {
         
     utilities: UtilitiesService = new UtilitiesService(this.client);
@@ -100,9 +100,11 @@ export class CollectionsService {
             }
         }
         catch (error) {
-            if (error?.message?.indexOf('Object ID does not exist') >= 0) {
-                const result = await this.upsert(documentsService, body)
-                return result;
+            if(error instanceof Error) {
+                if (error?.message?.indexOf('Object ID does not exist') >= 0) {
+                    const result = await this.upsert(documentsService, body)
+                    return result;
+                }
             }
             throw error;
         }

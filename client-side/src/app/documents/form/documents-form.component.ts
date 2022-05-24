@@ -7,7 +7,7 @@ import { IPepGenericFormValueChange } from '@pepperi-addons/ngx-composite-lib/ge
 import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
 import { FormMode } from 'src/app/services/utilities.service';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
-import { existingInRecycleBinErrorMessage, existingErrorMessage } from '../../../../../server-side/entities';
+import { existingInRecycleBinErrorMessage, existingErrorMessage } from 'udc-shared';
 
 @Component({
   selector: 'documents-form',

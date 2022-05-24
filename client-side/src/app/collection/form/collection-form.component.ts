@@ -10,7 +10,7 @@ import { CollectionsService } from '../../services/collections.service';
 import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { SortingFormComponent } from './sorting/sorting-form.component';
-import { existingErrorMessage, existingInRecycleBinErrorMessage } from '../../../../../server-side/entities';
+import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 
 @Component({
   selector: 'collection-form',

@@ -4,7 +4,7 @@ import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
 import { DocumentSchema } from '../jsonSchemes/documents';
 import { Schema, Validator } from 'jsonschema';
-import { existingErrorMessage, existingInRecycleBinErrorMessage } from '../entities';
+import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 
 export class DocumentsService {
     
@@ -171,9 +171,11 @@ export class DocumentsService {
             }
         }
         catch (error) {
-            if (error?.message?.indexOf('Object ID does not exist') >= 0) {
-                const result = await this.upsert(collectionsService, collectionName, body)
-                return result;
+            if(error instanceof Error) {
+                if (error?.message?.indexOf('Object ID does not exist') >= 0) {
+                    const result = await this.upsert(collectionsService, collectionName, body)
+                    return result;
+                }
             }
             throw error;
         }
