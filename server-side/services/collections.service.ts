@@ -35,8 +35,11 @@ export class CollectionsService {
         }
         else {
             const errors = validResult.errors.map(error => {
-                if (error.name === 'additionalProperties' && error.instance === 'instance.Fields') {
-                    return `Field ${error.argument} contains forbidden characters`;
+                if (error.name === 'additionalProperties' && error.property === 'instance.Fields') {
+                    return `Field ${error.argument} must start with lowercase letter, and can only contains URL safe characters`;
+                }
+                else if (error.name === 'pattern' && error.property === 'instance.Name') {
+                    return `collection name must begin with capital letter, and can only contains URL safe characters`;
                 }
                 else {
                     return error.stack.replace("instance.", "");
