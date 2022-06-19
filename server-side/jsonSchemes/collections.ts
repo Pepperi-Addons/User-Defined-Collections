@@ -1,7 +1,7 @@
 import { DocumentKeyTypes, SchemeFieldTypes, DataViewFieldTypes, HorizontalAlignments, VerticalAlignments } from "@pepperi-addons/papi-sdk"
 import { Schema } from 'jsonschema';
 
-export const regexPattern: string = "^([a-zA-Z0-9-_])+$"
+export const regexPattern: string = "^([A-Z]){1}([a-zA-Z0-9-_])+$"
 
 export const documentKeySchema: Schema = {
     $id: "/DocumentKey",
