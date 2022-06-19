@@ -114,7 +114,12 @@ export class DocumentsFormComponent implements OnInit {
 
     convertBoolean() {
         this.incoming.DataView.Fields?.filter(field => field.Type === 'Boolean').forEach(field => {
-            this.item[field.FieldID] = Boolean(this.item[field.FieldID]);
+            if(this.item[field.FieldID].toLowerCase() === "true") {
+                this.item[field.FieldID] = true;
+            }
+            else {
+                this.item[field.FieldID] = false;
+            }
         })
     }
 }
