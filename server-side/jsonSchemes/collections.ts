@@ -172,7 +172,7 @@ export const fieldsSchema: Schema = {
     $id: "/Fields",
     type: "object",
     patternProperties: {
-        "^([\Sa-zA-Z0-9_-])+$": {
+        "^([a-z]){1}([\Sa-zA-Z0-9_-])+$": {
             type: "object",
             properties: {
                 Description: {
