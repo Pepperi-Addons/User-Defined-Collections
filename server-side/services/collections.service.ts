@@ -17,6 +17,7 @@ export class CollectionsService {
     async upsert(service: DocumentsService, body: any) {
         const collectionObj = {
             Type: "meta_data",
+            GenericResource: true,
             ...body,
         }
         if (!collectionObj.DocumentKey || !collectionObj.DocumentKey.Type) {
