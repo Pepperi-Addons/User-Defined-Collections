@@ -381,3 +381,25 @@ export async function hard_delete(client: Client, request: Request) {
         }
     }
 }
+
+export function unique(client: Client, request: Request) {
+    const error: any = new Error("this method is not supported by this resource");
+    error.code = 405;
+    throw error;
+}
+
+export async function search(client: Client, request: Request) {
+    const resourceName = request.query.resource_name;
+    const service = new DocumentsService(client);
+
+    switch(request.method) {
+        case 'POST': {
+            return await service.search(resourceName, request.body);
+        }
+        default: {
+            const err: any = new Error(`method ${request.method} is not allowed`);
+            err.code = 405;
+            throw err;
+        }
+    }
+}
