@@ -12,9 +12,9 @@ import { DIMXComponent } from '@pepperi-addons/ngx-composite-lib/dimx-export';
 import { AddonData, Collection, FormDataView } from "@pepperi-addons/papi-sdk";
 
 import { DocumentsService } from "../services/documents.service";
-import { FormMode } from "../services/utilities.service";
 import { UtilitiesService } from "../services/utilities.service";
 import { DocumentsFormComponent, DocumentsFormData } from './form/documents-form.component';
+import { FormMode } from '../entities';
 
 @Component({
     selector: 'documents-list',

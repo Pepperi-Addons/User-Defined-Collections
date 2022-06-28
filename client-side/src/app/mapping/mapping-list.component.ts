@@ -6,11 +6,12 @@ import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog'
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
 import { Type } from '@pepperi-addons/papi-sdk';
 
-import { FormMode, UtilitiesService } from '../services/utilities.service';
+import { UtilitiesService } from '../services/utilities.service';
 import { MappingFormItem, MappingsService } from '../services/mappings.service';
 import { CollectionsService } from '../services/collections.service';
 import { MappingFormComponent, MappingFormData } from './form/mapping-form.component';
 import { MappingResource, UdcMapping } from 'udc-shared';
+import { FormMode } from '../entities';
 
 @Component({
   selector: 'app-mapping-list',

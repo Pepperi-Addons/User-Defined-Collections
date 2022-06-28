@@ -47,6 +47,15 @@
         </div>
         <div class="form-row">
             <pep-select
+                [(value)]="dialogData.Field.Resource"
+                [label]="'Resource' | translate"
+                type="select"
+                [options]="resourcesOptions"
+                [emptyOption]="false"
+                (valueChange)="resourceChanged($event)"
+                *ngIf="dialogData.Field.Type === 'Resource' || fieldSubType === 'Resource'"
+            ></pep-select>
+            <pep-select
                 [(value)]="dialogData.Field.Mandatory"
                 [label]="'Mandatory' | translate"
                 type="select"

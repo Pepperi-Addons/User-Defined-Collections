@@ -1,11 +1,10 @@
 import jwt from 'jwt-decode';
-import { AddonData, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
+import { AddonData, AddonDataScheme, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { EMPTY_OBJECT_NAME, SelectOptions } from '../entities';
 
-export type FormMode = 'Add' | 'Edit';
-export const EMPTY_OBJECT_NAME = 'NewCollection';
 @Injectable({ providedIn: 'root' })
 export class UtilitiesService {
     
@@ -88,5 +87,9 @@ export class UtilitiesService {
         const errors = message.substring(start, end).split("\\n");
         return errors;
     }
-        
+            
+    async getReferenceResources(): Promise<AddonDataScheme[]> {
+        const resources = await this.papiClient.resources.resource('resources').get();
+        return resources as AddonDataScheme[];
+    }
 }

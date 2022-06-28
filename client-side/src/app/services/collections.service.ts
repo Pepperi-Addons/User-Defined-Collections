@@ -3,7 +3,7 @@ import { AddonData, Collection, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
-import { EMPTY_OBJECT_NAME, UtilitiesService } from './utilities.service';
+import { UtilitiesService } from './utilities.service';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
@@ -46,5 +46,5 @@ export class CollectionsService {
 
     async createCollection(obj: Collection) {
         return await this.utilities.papiClient.addons.api.uuid(this.utilities.addonUUID).file('api').func('create').post(undefined, obj);
-    }       
+} 
 }

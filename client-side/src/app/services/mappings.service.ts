@@ -6,8 +6,10 @@ import { AddonData, ApiFieldObject, BaseFormDataViewField, Collection, Type, For
 
 import { MappingFieldType, MappingFieldTypes, MappingResource, UdcMapping } from 'udc-shared';
 
-import { FormMode, UtilitiesService } from './utilities.service';
+import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
+
+import { FormMode } from '../entities';
 
 @Injectable({ providedIn: 'root' })
 export class MappingsService {
