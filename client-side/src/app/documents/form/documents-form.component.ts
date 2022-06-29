@@ -5,9 +5,9 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { IPepGenericFormValueChange } from '@pepperi-addons/ngx-composite-lib/generic-form';
 import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
-import { FormMode } from 'src/app/services/utilities.service';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { existingInRecycleBinErrorMessage, existingErrorMessage } from 'udc-shared';
+import { FormMode } from 'src/app/entities';
 
 @Component({
   selector: 'documents-form',

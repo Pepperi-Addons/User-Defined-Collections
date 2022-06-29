@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angu
 import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { TranslateService } from '@ngx-translate/core';
 
-import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from "../services/utilities.service";
+import { UtilitiesService } from "../services/utilities.service";
 import { CollectionsService } from "../services/collections.service";
 import { IPepGenericListActions, IPepGenericListDataSource, IPepGenericListPager } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
@@ -10,6 +10,7 @@ import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
 import { Collection } from "@pepperi-addons/papi-sdk";
+import { FormMode, EMPTY_OBJECT_NAME } from "../entities";
 
 @Component({
     selector: 'collection-list',

@@ -1,16 +1,17 @@
-import { FieldsFormComponent, FieldsFormDialogData } from './fields/fields-form.component';
+import { FieldsFormComponent } from './fields/fields-form.component';
 import { AfterViewInit, Component, OnInit, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
-import { Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk';
+import { AddonDataScheme, Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk';
 import { CollectionsService } from '../../services/collections.service';
-import { EMPTY_OBJECT_NAME, FormMode, UtilitiesService } from '../../services/utilities.service';
+import { UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { SortingFormComponent } from './sorting/sorting-form.component';
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
+import { EMPTY_OBJECT_NAME, FormMode, FieldsFormDialogData, SelectOptions } from '../../entities';
 
 @Component({
   selector: 'collection-form',
@@ -27,6 +28,7 @@ export class CollectionFormComponent implements OnInit {
     fieldsValid: boolean = false;
     documentKeyValid: boolean = false;
     nameValid: boolean = false;
+    resources: AddonDataScheme[] = [];
 
     fieldsDataSource: IPepGenericListDataSource;
 
@@ -107,6 +109,7 @@ export class CollectionFormComponent implements OnInit {
             this.collection = value;
             this.fieldsDataSource = this.getFieldsDataSource();
             this.collectionLoaded = true;
+            this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
             if (this.mode === 'Edit') {
                 const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
                 this.emptyCollection = documents.length == 0;
@@ -271,13 +274,14 @@ export class CollectionFormComponent implements OnInit {
                 Type:"String"
             }
         }
-        let dialogConfig = this.dialogService.getDialogConfig({}, 'inline')
+        let dialogConfig = this.dialogService.getDialogConfig({}, 'inline');
         const dialogData: FieldsFormDialogData = {
             EmptyCollection: this.emptyCollection,
             Mode: name == EMPTY_OBJECT_NAME ? 'Add' : 'Edit',
             FieldName: name == EMPTY_OBJECT_NAME ? '' : name,
             InUidFields: this.collection.DocumentKey.Fields?.includes(name) || false,
             Field: collectionField,
+            Resources: this.resources
         }
         dialogConfig.data = new PepDialogData({
             content: FieldsFormComponent,
