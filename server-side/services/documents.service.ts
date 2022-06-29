@@ -1,4 +1,4 @@
-import { AddonData, AddonDataScheme, Collection, SchemeFieldType } from '@pepperi-addons/papi-sdk'
+import { AddonData, AddonDataScheme, Collection, FindOptions, SchemeFieldType, SearchBody } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
@@ -195,5 +195,34 @@ export class DocumentsService {
             }
             throw error;
         }
+    }
+
+    async search(collectionName: string, body: SearchBody): Promise<AddonData[]> {
+        let whereClause = '';
+        if(!body.Where) {
+            if (body.KeyList && body.KeyList.length > 0) {
+                whereClause = this.getWhereClaus('Key', body.KeyList);
+            }
+            else if(body.UniqueFieldsList && body.UniqueFieldsList.length > 0) {
+                whereClause = this.getWhereClaus(body.UniqueFieldID, body.UniqueFieldsList);
+            }
+        }
+        else {
+            whereClause = body.Where;
+        }
+        const options: FindOptions = {
+            fields: body.Fields ? body.Fields.split(',') : undefined,
+            where: whereClause,
+            page: body.Page,
+            page_size: body.PageSize,
+        }
+        return await this.find(collectionName, options);
+    }
+
+    getWhereClaus(fieldID: string, fieldValues: string[]): string{
+        return fieldValues.reduce((previous, current, index) => {
+            const clause = `${fieldID} = '${current}'`;
+            return index == 0 ? clause : previous + `OR ${clause}`;
+        })
     }
 }
