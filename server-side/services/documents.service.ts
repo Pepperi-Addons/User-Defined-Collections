@@ -1,9 +1,9 @@
-import { AddonData, AddonDataScheme, Collection, FindOptions, SchemeFieldType, SearchBody } from '@pepperi-addons/papi-sdk'
+import { AddonData, AddonDataScheme, Collection, CollectionField, FindOptions, SchemeFieldType, SearchBody } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
 import { DocumentSchema } from '../jsonSchemes/documents';
-import { Schema, Validator } from 'jsonschema';
+import { Schema, Validator, ValidatorResult } from 'jsonschema';
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 
 export class DocumentsService {
@@ -25,7 +25,7 @@ export class DocumentsService {
         const updatingHidden = 'Hidden' in body && body.Hidden;
         const collectionScheme = await service.findByName(collectionName);
         body.Key = this.utilities.getItemKey(collectionScheme, body);
-        const validationResult = this.validateDocument(collectionScheme, body);
+        const validationResult = await this.validateDocument(collectionScheme, body);
         if (validationResult.valid || updatingHidden) {
             return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(body);
         }
@@ -76,11 +76,17 @@ export class DocumentsService {
         return retVal;
     }
 
-    validateDocument(collection: Collection, body: any) {
+    async validateDocument(collection: Collection, body: any) {
+        const errors = await this.validateReference(collection, body);
         const schema = this.createSchema(collection);
         console.log(`validating document ${JSON.stringify(body)} for collection ${collection.Name}. schema is ${JSON.stringify(schema)}`);
         const validator = new Validator();
         const result = validator.validate(body, schema);
+        if(errors.length > 0) {
+            errors.forEach(error => {
+                result.addError(error);
+            })
+        }
         return result;
     }
 
@@ -146,13 +152,13 @@ export class DocumentsService {
 
     //DIMX
     // for the AddonRelativeURL of the relation
-    importDataSource(body, collection: Collection) {
+    async importDataSource(body, collection: Collection) {
         console.log(`@@@@importing documents: ${JSON.stringify(body)}@@@@`);
-        body.DIMXObjects = body.DIMXObjects.map(item => {
+        body.DIMXObjects = await Promise.all(body.DIMXObjects.map(async (item) => {
             const itemKey = this.utilities.getItemKey(collection, item.Object);
             item.Object.Key = itemKey;
             console.log(`@@@@item key got from function is ${itemKey}`);
-            const validationResult = this.validateDocument(collection, item.Object);
+            const validationResult = await this.validateDocument(collection, item.Object);
             if (!validationResult.valid) {
                 const errors = validationResult.errors.map(error => error.stack.replace("instance.", ""));
                 item.Status = 'Error';
@@ -160,7 +166,7 @@ export class DocumentsService {
                 item.Key = itemKey;
             }
             return item;
-        });
+        }));
         console.log('@@@@returned object is:@@@@', JSON.stringify(body));
         return body;
     }
@@ -211,7 +217,7 @@ export class DocumentsService {
             whereClause = body.Where;
         }
         const options: FindOptions = {
-            fields: body.Fields ? body.Fields.split(',') : undefined,
+            fields: body.Fields ? body.Fields : undefined,
             where: whereClause,
             page: body.Page,
             page_size: body.PageSize,
@@ -224,5 +230,54 @@ export class DocumentsService {
             const clause = `${fieldID} = '${current}'`;
             return index == 0 ? clause : previous + `OR ${clause}`;
         })
+    }
+
+    async validateReference(scheme: Collection, document: AddonData): Promise<string[]> {
+        let valid = true;
+        const errors: string[] = []
+        const schemeFields = scheme.Fields!;
+        await Promise.all(Object.keys(schemeFields).map(async(field) => {
+            if (schemeFields[field].Type === 'Resource') {
+                if (schemeFields[field].Resource) {
+                    if (field in document) {
+                        valid = await this.getReferencedObject(document[field], schemeFields[field].Resource!) != undefined;
+                    }
+                }
+                else {
+                    console.log(`Resource on field ${field} is empty. cannot verify reference`);
+                    valid = false;
+                }
+            }
+            else {
+                if (schemeFields[field].Type === 'Array' && schemeFields[field].Items!.Type === 'Resource') {
+                    if (schemeFields[field].Resource) {
+                        if(field in document && document[field].length > 0) {
+                            for (const item of document[field]) {
+                                valid = await this.getReferencedObject(item, schemeFields[field].Resource!) != undefined;
+                            }
+                        }
+                    }
+                    else {
+                        console.log(`Resource on field ${field} is empty. cannot verify reference`);
+                        valid = false;
+                    }
+                }    
+            }
+            if(!valid) {
+                errors.push(`Field ${field} contains broken reference`);
+            }
+        }))
+        return errors;
+    }
+
+    async getReferencedObject(objKey: string, collectionName: string): Promise<AddonData | undefined> {
+        let item: AddonData | undefined = undefined;
+        try {
+            item = await this.utilities.papiClient.resources.resource(collectionName).key(objKey).get();
+        }
+        catch (err) {
+            console.log(`Could not get item ${objKey} from collection ${collectionName}`);
+        }
+        return item;
     }
 }

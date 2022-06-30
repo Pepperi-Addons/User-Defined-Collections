@@ -94,7 +94,7 @@ export async function import_data_source(client: Client, request: Request) {
         try {
             const collection: Collection = await collectionsService.findByName(collectionName);
             if (collection.Type != 'cpi_meta_data') {
-                return service.importDataSource(request.body, collection);
+                return await service.importDataSource(request.body, collection);
             }
             else {
                 throw new Error('Cannot import data for offline collection');
