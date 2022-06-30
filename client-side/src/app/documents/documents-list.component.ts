@@ -1,5 +1,5 @@
 import { PepMenuItem } from '@pepperi-addons/ngx-lib/menu';
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild, ViewContainerRef } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { TranslateService } from '@ngx-translate/core';
 
@@ -7,7 +7,7 @@ import { ObjectsDataRowCell, PepLayoutService, PepScreenSizeType } from '@pepper
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
 import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from "@pepperi-addons/ngx-composite-lib/generic-list";
-import { DIMXComponent } from '@pepperi-addons/ngx-composite-lib/dimx-export';
+import { DIMXHostObject, PepDIMXHelperService } from '@pepperi-addons/ngx-composite-lib'
 
 import { AddonData, Collection, FormDataView } from "@pepperi-addons/papi-sdk";
 
@@ -28,7 +28,6 @@ export class DocumentsListComponent implements OnInit {
     
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
 
-    @ViewChild('dimx') dimx: DIMXComponent | undefined;
     @ViewChild('documentsList') documentsList: GenericListComponent | undefined;
     
     collectionName: string;
@@ -96,7 +95,9 @@ export class DocumentsListComponent implements OnInit {
         public utilitiesService: UtilitiesService,
         private router: Router,
         private dialogService: PepDialogService,
-        private layoutService: PepLayoutService
+        private layoutService: PepLayoutService,
+        private viewContainer: ViewContainerRef,
+        private dimxService: PepDIMXHelperService,
     ) {
         this.layoutService.onResize$.subscribe(size => {
             this.screenSize = size;
@@ -111,6 +112,13 @@ export class DocumentsListComponent implements OnInit {
             this.dataSource = this.getDataSource();
             this.menuItems = this.getMenuItems();
         });
+        const dimxHostObject: DIMXHostObject = {
+            DIMXAddonUUID: this.utilitiesService.addonUUID,
+            DIMXResource: this.collectionName,
+        }
+        this.dimxService.register(this.viewContainer, dimxHostObject, (dimxEvent) => {
+            this.dataSource = this.getDataSource();
+        })
     }
 
     getDataSource() {
@@ -215,8 +223,8 @@ export class DocumentsListComponent implements OnInit {
                 break;
             }
             case 'Import': {
-              this.dimx?.uploadFile({
-                OverwriteOBject: true,
+              this.dimxService.import({
+                OverwriteObject: true,
                 Delimiter: ",",
                 OwnerID: this.utilitiesService.addonUUID
               });
@@ -224,7 +232,7 @@ export class DocumentsListComponent implements OnInit {
               break
             }
             case 'Export': {
-              this.dimx?.DIMXExportRun({
+              this.dimxService.export({
                 DIMXExportFormat: "csv",
                 DIMXExportIncludeDeleted: false,
                 DIMXExportFileName: this.collectionName,

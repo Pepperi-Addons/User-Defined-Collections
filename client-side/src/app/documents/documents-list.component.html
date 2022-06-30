@@ -47,10 +47,7 @@
                     *ngIf="!recycleBin"
                 ></pep-button>
             </ng-container>
-        </pep-generic-list>
-
-        <pep-dimx #dimx [DIMXAddonUUID]="utilitiesService.addonUUID" [DIMXResource]="collectionName" (DIMXProcessDone)="onDIMXProcessDone($event);"></pep-dimx>
-    
+        </pep-generic-list>    
     </ng-container>
 </pep-page-layout>
 

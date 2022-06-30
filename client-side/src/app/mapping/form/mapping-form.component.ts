@@ -8,8 +8,7 @@ import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog'
 import { MappingFormItem, MappingsService } from 'src/app/services/mappings.service';
 import { UtilitiesService } from './../../services/utilities.service';
 import { MappingFieldTypes, UdcMapping } from 'udc-shared'
-import { IPepGenericFormDataSource, IPepGenericFormValueChange, PepGenericFormService } from '@pepperi-addons/ngx-composite-lib/generic-form';
-import { KeyValuePair } from '@pepperi-addons/ngx-lib';
+import { PepGenericFormService } from '@pepperi-addons/ngx-composite-lib/generic-form';
 import { CollectionsService } from 'src/app/services/collections.service';
 import { FormMode } from 'src/app/entities';
 
