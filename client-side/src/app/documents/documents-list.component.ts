@@ -8,7 +8,6 @@ import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
 import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { DIMXHostObject, PepDIMXHelperService } from '@pepperi-addons/ngx-composite-lib'
-//import { DIMXComponent } from '@pepperi-addons/ngx-composite-lib/dimx-export';
 
 import { AddonData, Collection, FormDataView } from "@pepperi-addons/papi-sdk";
 
@@ -29,7 +28,6 @@ export class DocumentsListComponent implements OnInit {
     
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
 
-    //@ViewChild('dimx') dimx: DIMXComponent | undefined;
     @ViewChild('documentsList') documentsList: GenericListComponent | undefined;
     
     collectionName: string;
