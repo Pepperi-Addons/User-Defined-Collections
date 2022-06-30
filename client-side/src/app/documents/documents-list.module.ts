@@ -21,8 +21,8 @@ import { PepGenericFormModule } from '@pepperi-addons/ngx-composite-lib/generic-
 
 import { DocumentsListComponent } from './documents-list.component';
 import { DocumentsService } from '../services/documents.service';
-import { PepDIMXModule } from '@pepperi-addons/ngx-composite-lib/dimx-export';
 import { DocumentsFormComponent } from './form/documents-form.component';
+import { PepNgxCompositeLibModule } from '@pepperi-addons/ngx-composite-lib';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -54,8 +54,8 @@ export const routes: Routes = [
         PepSelectModule,
         PepTextareaModule,
         PepDialogModule,
-        PepDIMXModule,
         PepGenericFormModule,
+        PepNgxCompositeLibModule,
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
