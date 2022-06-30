@@ -179,8 +179,18 @@ export const fieldsSchema: Schema = {
                     type: "string"
                 },
                 Type: {
-                    enum: SchemeFieldTypes.filter(type => ['MultipleStringValues', 'Object'].includes(type) === false),
+                    enum: SchemeFieldTypes.filter(type => ['DynamicResource', 'ContainedDynamicResource', 'ContainedResource','MultipleStringValues', 'Object'].includes(type) === false),
                     required: true,
+                },
+                IndexedFields: {
+                    type: "object",
+                    $ref: "/Fields",
+                },
+                Resource: {
+                    type: "string"
+                },
+                AddonUUID: {
+                    type: "string"
                 },
                 Mandatory: {
                     type: "boolean",
