@@ -16,7 +16,7 @@
         "start": "tsc -w app.local.ts"
     },
     "devDependencies": {
-        "@rollup/plugin-commonjs": "^12.0.0",
+        "@rollup/plugin-commonjs": "^21.0.0",
         "@rollup/plugin-json": "^4.1.0",
         "@rollup/plugin-node-resolve": "^8.0.0",
         "@types/dotenv": "^8.2.0",
@@ -31,6 +31,8 @@
         "@pepperi-addons/debug-server": "*",
         "@pepperi-addons/papi-sdk": "^1.39.3",
         "jsonschema": "^1.4.0",
+        "semver": "^7.3.7",
+        "@types/semver": "^7.3.10",
         "udc-shared": "file:../shared",
         "uuid": "^8.3.2"
     }

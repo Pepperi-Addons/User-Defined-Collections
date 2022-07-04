@@ -11,7 +11,7 @@ import { UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import { SortingFormComponent } from './sorting/sorting-form.component';
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
-import { EMPTY_OBJECT_NAME, FormMode, FieldsFormDialogData, SelectOptions } from '../../entities';
+import { EMPTY_OBJECT_NAME, FormMode, FieldsFormDialogData, booleanOptions, SyncTypes, SelectOptions, SyncType } from '../../entities';
 
 @Component({
   selector: 'collection-form',
@@ -24,11 +24,12 @@ export class CollectionFormComponent implements OnInit {
     collectionName: string;
     emptyCollection: boolean = true;
     EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
-    isOffline: boolean = false;
     fieldsValid: boolean = false;
     documentKeyValid: boolean = false;
     nameValid: boolean = false;
     resources: AddonDataScheme[] = [];
+    booleanOptions = booleanOptions;
+    syncData: SyncType = 'Offline';
 
     fieldsDataSource: IPepGenericListDataSource;
 
@@ -76,7 +77,8 @@ export class CollectionFormComponent implements OnInit {
         }
     }
 
-    documentKeyOptions = []
+    documentKeyOptions: SelectOptions<string> = [];
+    syncOptions: SelectOptions<string> = [];
     collectionLoaded: boolean = false;
     mode: FormMode;
     collectionFields: { key:string, value: string }[] = [];
@@ -105,10 +107,15 @@ export class CollectionFormComponent implements OnInit {
                 value: this.translate.instant(`DocumentKey_Options_${type}`),
             }
         })
+        this.syncOptions = SyncTypes.map(type => {
+            return {
+                key: type,
+                value: this.translate.instant(`SyncData_Options_${type}`),
+            }
+        })
         this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
             this.collection = value;
             this.fieldsDataSource = this.getFieldsDataSource();
-            this.collectionLoaded = true;
             this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
             if (this.mode === 'Edit') {
                 const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
@@ -118,10 +125,20 @@ export class CollectionFormComponent implements OnInit {
                     this.uidFieldsDataSource = this.getUIDFieldsDataSource();
                 }
             }
-            this.isOffline = this.collection.Type == 'cpi_meta_data'
+            if (this.collection.SyncData) {
+                this.syncData = this.collection.SyncData.Sync ? 'Offline' : 'Online';
+            }
+            else {
+                this.syncData = 'Offline';
+                this.collection.SyncData = {
+                    Sync: true,
+                    SyncFieldLevel: false
+                }
+            }
             this.nameValid = this.collection.Name != '';
             this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
             this.fieldsValid = this.collection.ListView.Fields.length > 0;
+            this.collectionLoaded = true;
         });
     }
 
@@ -510,8 +527,65 @@ export class CollectionFormComponent implements OnInit {
         }
     }
 
-    offlineFieldChanged(value: boolean) {
-        this.collection.Type = value ? 'cpi_meta_data' : 'meta_data';
+    syncFieldChanged(value: SyncType) {
+        if(!this.emptyCollection) {
+            const data: PepDialogData = {
+                title: "",
+                content:this.translate.instant('CollectionForm_SyncData_Message'),
+                actionsType: 'cancel-ok',
+                showClose: true,
+                showFooter: true,
+                showHeader: false,
+                actionButtons: []
+            };
+            const config = this.dialogService.getDialogConfig({}, 'regular');
+            this.dialogService.openDefaultDialog(data, config).afterClosed().subscribe((isOKPressed) => {
+                if(isOKPressed) {
+                    if(value != 'Online') {
+                        this.collection.SyncData = {
+                            Sync: true,
+                            SyncFieldLevel: false,
+                        }
+                    }
+                    else {
+                        if(this.collection.SyncData) {
+                            this.collection.SyncData.Sync = false;
+                        }
+                        else {
+                            this.collection.SyncData = {
+                                Sync: false
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (this.collection.SyncData) {
+                        this.syncData = this.collection.SyncData.Sync ? 'Offline' : 'Online';
+                    }
+                    else {
+                        this.syncData = 'Online';
+                    }
+                }
+            });
+        }
+        else {
+            if(value != 'Online') {
+                this.collection.SyncData = {
+                    Sync: true,
+                    SyncFieldLevel: false,
+                }
+            }
+            else {
+                if(this.collection.SyncData) {
+                    this.collection.SyncData.Sync = false;
+                }
+                else {
+                    this.collection.SyncData = {
+                        Sync: false
+                    }
+                }
+            }
+        }
     }
     
     nameChanged(value: string) {

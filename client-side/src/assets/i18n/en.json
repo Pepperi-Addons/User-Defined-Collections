@@ -73,5 +73,10 @@
     "MappingForm_Collection_Title": "Collection",
     "MappingForm_CollectionField_Title": "Collection field",
     "MappingForm_Filter_Title": "Filter",
-    "MappingForm_FilterField_Title": "{{field_name}}"
+    "MappingForm_FilterField_Title": "{{field_name}}",
+    "SyncData_Options_Online": "Available for online only",
+    "SyncData_Options_Offline": "Available for online and offline",
+    "Sync_Select_Title": "Data storage & sync",
+    "Indexed_Select_Title": "Indexed",
+    "CollectionForm_SyncData_Message": "are you sure you want to change the data availability?"
 }

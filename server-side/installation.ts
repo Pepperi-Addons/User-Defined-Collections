@@ -10,9 +10,8 @@ The error Message is importent! it will be written in the audit log and help the
 
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { AtdRelations, UsageMonitorRelations } from './metadata';
-import { FieldsService } from './services/fields.service';
-import { MappingsService } from './services/mappings.service';
 import { UtilitiesService } from './services/utilities.service';
+import semver from 'semver'
 
 export async function install(client: Client, request: Request): Promise<any> {
     // For page block template uncomment this.
@@ -22,33 +21,16 @@ export async function install(client: Client, request: Request): Promise<any> {
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
-    try {
-        const mappingService = new MappingsService(client);
-        const fieldsService = new FieldsService(client);
-        const mappings = await mappingService.find({page_size: -1});
-        await Promise.all(mappings.map(async (item) => {
-            await fieldsService.delete(item.AtdID, item.Field.ApiName, item.Resource);
-        }));
-        return {
-            success: true,
-            resultObject: {}
-        }
-    }
-    catch (err) {
-        console.log('could not uninstall UDC. failed deleting TSA fields. error:', err)
-        let errMessage = 'Unknown error occured';
-        if (err instanceof Error) {
-            errMessage = err.message;
-        }
-        return {
-            success:false,
-            errorMessage: errMessage
-        }
-   }
+   return {success:true,resultObject:{}}
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
-    return await createObjects(client);
+    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.0.73') < 0) {
+        throw new Error('Upgarding from versions ealier than 0.0.74 is not supported. Please uninstall the addon and install it again.');
+    }
+    else {
+        return {success:true,resultObject:{}}
+    }
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
@@ -60,7 +42,6 @@ async function createObjects(client: Client) {
         const service = new UtilitiesService(client);
         await service.createRelations(UsageMonitorRelations);
         await service.createRelations(AtdRelations);
-        await service.createADALSchemes();
         return {
             success:true,
             resultObject: {}

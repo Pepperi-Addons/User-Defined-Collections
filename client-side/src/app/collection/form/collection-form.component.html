@@ -35,14 +35,27 @@
                 [mandatory]="false"
                 [disabled]="false"
             ></pep-textbox>
-            <pep-checkbox
-                [(value)]="isOffline"
-                [label]="'Offline' | translate"
-                type="checkbox"
-                [mandatory]="false"
-                [disabled]="mode === 'Edit'"
-                (valueChange)="offlineFieldChanged($event)"
-            ></pep-checkbox>
+        </div>
+        <div class="flex">
+            <pep-select
+                [(value)]="syncData"
+                [label]="'Sync_Select_Title' | translate"
+                type="select"
+                [mandatory]="true"
+                [options]="syncOptions"
+                [showTitle]="true"
+                [emptyOption]="false"
+                (valueChange)="syncFieldChanged($event)"
+            ></pep-select>
+            <pep-select
+                [(value)]="collection.Indexed"
+                [label]="'Indexed_Select_Title' | translate"
+                type="select"
+                [options]="booleanOptions"
+                [showTitle]="true"
+                [emptyOption]="false"
+                [visible]="false"
+            ></pep-select>
         </div>
         <div class="genericListContainer">
             <pep-generic-list class="generic-list"
