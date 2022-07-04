@@ -189,14 +189,12 @@ export class CollectionFormComponent implements OnInit {
                     items: fields
                 });
             },
-            inputs: () => {
-                return Promise.resolve({
-                    pager: {
-                        type: 'scroll'
-                    },
-                    selectionType: 'single',
-                    noDataFoundMsg: this.translate.instant('Collection_Fields_NoDataFound')
-                });
+            inputs: {
+                pager: {
+                    type: 'scroll'
+                },
+                selectionType: 'single',
+                noDataFoundMsg: this.translate.instant('Collection_Fields_NoDataFound')
             },
         } as IPepGenericListDataSource
     }
@@ -252,14 +250,13 @@ export class CollectionFormComponent implements OnInit {
                     items: uidFields
                 });
             },
-            inputs: () => {
-                return Promise.resolve({
-                    pager: {
-                        type: 'scroll'
-                    },
-                    selectionType: this.emptyCollection ? 'single': 'none',
-                    noDataFoundMsg: this.translate.instant('UidFields_NoDataFound')
-                });
+            inputs: {
+                pager: {
+                    type: 'scroll'
+                },
+                selectionType: this.emptyCollection ? 'single': 'none',
+                noDataFoundMsg: this.translate.instant('UidFields_NoDataFound')
+            
             },
         } as IPepGenericListDataSource
     }   
