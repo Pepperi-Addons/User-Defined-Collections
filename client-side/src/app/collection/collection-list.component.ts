@@ -123,14 +123,12 @@ export class CollectionListComponent implements OnInit {
                     items: this.collections
                 });
             },
-            inputs: () => {
-                return Promise.resolve({
-                    pager: {
-                        type: 'scroll'
-                    },
-                    selectionType: 'single',
-                    noDataFoundMsg: this.translate.instant(noDataMessageKey)
-                });
+            inputs: {
+                pager: {
+                    type: 'scroll'
+                },
+                selectionType: 'single',
+                noDataFoundMsg: this.translate.instant(noDataMessageKey)
             },
         } as IPepGenericListDataSource
     }

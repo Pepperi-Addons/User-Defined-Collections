@@ -16,7 +16,7 @@ export class CollectionsService {
     
     async upsert(service: DocumentsService, body: any) {
         const collectionObj = {
-            Type: "meta_data",
+            Type: "data",
             GenericResource: true,
             ...body,
         }
@@ -81,16 +81,11 @@ export class CollectionsService {
 
     async hardDelete(collectionName: string, force: boolean) {
         const collection = await this.findByName(collectionName);
-        if (collection.Type !== 'cpi_meta_data') {
-            if (force || collection.Hidden) {
-                return await this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/purge`);
-            }
-            else {
-                throw new Error('Cannot delete non hidden collection.')
-            }
+        if (force || collection.Hidden) {
+            return await this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/purge`);
         }
         else {
-            throw new Error('Cannot delete offline collections');
+            throw new Error('Cannot delete non hidden collection.')
         }
     }
     

@@ -167,14 +167,12 @@ export class DocumentsListComponent implements OnInit {
                     items: this.documents
                 });
             },
-            inputs: () => {
-                return Promise.resolve({
-                    pager: {
-                        type: 'pages'
-                    },
-                    selectionType: 'single',
-                    noDataFoundMsg: this.translate.instant(noDataMessageKey)
-                });
+            inputs: {
+                pager: {
+                    type: 'pages'
+                },
+                selectionType: 'single',
+                noDataFoundMsg: this.translate.instant(noDataMessageKey)
             },
         } as IPepGenericListDataSource
     }

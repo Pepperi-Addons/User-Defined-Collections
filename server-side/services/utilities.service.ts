@@ -46,10 +46,6 @@ export class UtilitiesService {
             await this.papiClient.addons.data.relations.upsert(singleRelation);
         }));
     }
-
-    async createADALSchemes() {
-        return await this.papiClient.addons.data.schemes.post(UdcMappingsScheme);
-    }
         
     async getAtd(uuid: string) {
         return  await this.papiClient.types.find({

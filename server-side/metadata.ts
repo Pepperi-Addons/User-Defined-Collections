@@ -100,5 +100,5 @@ export const AtdRelations: Relation[] = [{
 
 export const UdcMappingsScheme: AddonDataScheme = {
     Name: 'UdcMappings',
-    Type: 'cpi_meta_data',
+    Type: 'meta_data',
 }

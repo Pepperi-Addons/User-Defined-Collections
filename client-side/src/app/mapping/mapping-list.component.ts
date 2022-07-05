@@ -132,14 +132,12 @@ export class MappingListComponent implements OnInit {
                     })
                 });
             },
-            inputs: () => {
-                return Promise.resolve({
-                    pager: {
-                        type: 'pages'
-                    },
-                    selectionType: 'single',
-                    noDataFoundMsg: this.translate.instant('Mappings_List_NoDataFound')
-                });
+            inputs: {
+                pager: {
+                    type: 'pages'
+                },
+                selectionType: 'single',
+                noDataFoundMsg: this.translate.instant('Mappings_List_NoDataFound')
             },
         } as IPepGenericListDataSource
     }

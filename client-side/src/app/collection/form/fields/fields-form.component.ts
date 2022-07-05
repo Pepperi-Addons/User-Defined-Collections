@@ -18,7 +18,7 @@ import { FieldsFormDialogData, SelectOptions } from '../../../entities';
     fieldSubTypes: {key:string, value: string}[] = [];
     fieldSubType: SchemeFieldType;
     hasOptionalValues: boolean = true;
-    resourcesOptions: SelectOptions;
+    resourcesOptions: SelectOptions<string>;
     constructor(               
         private dialogRef: MatDialogRef<FieldsFormComponent>,
         private translate: TranslateService,

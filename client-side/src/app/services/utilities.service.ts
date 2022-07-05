@@ -49,6 +49,11 @@ export class UtilitiesService {
                     Fields: [],
                     Columns: [],
                 },
+                SyncData: {
+                    Sync: true,
+                    SyncFieldLevel: false
+                },
+                GenericResource: true,
             };
         }
     }
