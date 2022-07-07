@@ -4,7 +4,7 @@ import { Client } from '@pepperi-addons/debug-server';
 import { DimxRelations, UdcMappingsScheme} from '../metadata';
 import { DocumentsService } from './documents.service';
 import { Validator, ValidatorResult } from 'jsonschema';
-import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
+import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema, regexPattern } from '../jsonSchemes/collections';
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 export class CollectionsService {
         
@@ -91,12 +91,18 @@ export class CollectionsService {
     
     async create(documentsService: DocumentsService, collectionName: string, body: any) {
         try {
-            const collection = await this.findByName(collectionName);
-            if (collection.Hidden) {
-                throw new Error(existingInRecycleBinErrorMessage);
+            const regex = new RegExp(regexPattern);
+            if(regex.test(collectionName)) {
+                const collection = await this.findByName(collectionName);
+                if (collection.Hidden) {
+                    throw new Error(existingInRecycleBinErrorMessage);
+                }
+                else {
+                    throw new Error(existingErrorMessage);
+                }
             }
             else {
-                throw new Error(existingErrorMessage);
+               throw new Error('collection name must begin with capital letter, and can only contains URL safe characters') 
             }
         }
         catch (error) {
