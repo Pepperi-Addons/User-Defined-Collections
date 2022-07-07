@@ -91,7 +91,14 @@ export class DocumentsService {
     }
 
     createSchema(collection: Collection): Schema {
-        let schema: Schema = DocumentSchema;
+        const schema: Schema = {
+            $id: DocumentSchema.$id,
+            description: DocumentSchema.description,
+            type: 'object',
+            properties: {
+                ...DocumentSchema.properties
+            }
+        };
         
         Object.keys(collection.Fields!).forEach(fieldName => {
             const field = collection.Fields![fieldName];
@@ -210,7 +217,7 @@ export class DocumentsService {
                 whereClause = this.getWhereClaus('Key', body.KeyList);
             }
             else if(body.UniqueFieldsList && body.UniqueFieldsList.length > 0) {
-                whereClause = this.getWhereClaus(body.UniqueFieldID, body.UniqueFieldsList);
+                whereClause = this.getWhereClaus(body.UniqueFieldID!, body.UniqueFieldsList);
             }
         }
         else {
