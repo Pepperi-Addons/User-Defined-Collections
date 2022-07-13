@@ -5,7 +5,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
-import { AddonDataScheme, Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType } from '@pepperi-addons/papi-sdk';
+import { AddonDataScheme, Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType, SchemeFieldTypes } from '@pepperi-addons/papi-sdk';
 import { CollectionsService } from '../../services/collections.service';
 import { UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -286,16 +286,18 @@ export class CollectionFormComponent implements OnInit {
             OptionalValues: this.collection.Fields[name]?.OptionalValues || [],
             Items: this.collection.Fields[name]?.Items || {
                 Type:"String"
-            }
+            },
+            Fields: this.collection.Fields[name]?.Fields || {},
         }
-        let dialogConfig = this.dialogService.getDialogConfig({}, 'inline');
+        let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
         const dialogData: FieldsFormDialogData = {
             EmptyCollection: this.emptyCollection,
             Mode: name == EMPTY_OBJECT_NAME ? 'Add' : 'Edit',
             FieldName: name == EMPTY_OBJECT_NAME ? '' : name,
             InUidFields: this.collection.DocumentKey.Fields?.includes(name) || false,
             Field: collectionField,
-            Resources: this.resources
+            Resources: this.resources,
+            AvailableTypes: SchemeFieldTypes.filter(type => ['ContainedResource', 'DynamicResource', 'ContainedDynamicResource', 'MultipleStringValues'].includes(type) === false),
         }
         dialogConfig.data = new PepDialogData({
             content: FieldsFormComponent,
