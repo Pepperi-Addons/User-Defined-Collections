@@ -3,7 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { SchemeFieldType, SchemeFieldTypes } from '@pepperi-addons/papi-sdk';
 import { TranslateService } from '@ngx-translate/core';
 
-import { FieldsFormDialogData, SelectOptions } from '../../../entities';
+import { FieldsFormDialogData, SelectOptions, booleanOptions } from '../../../entities';
 
 @Component({
     selector: 'fields-form',
@@ -19,26 +19,26 @@ import { FieldsFormDialogData, SelectOptions } from '../../../entities';
     fieldSubType: SchemeFieldType;
     hasOptionalValues: boolean = true;
     resourcesOptions: SelectOptions<string>;
+    booleanOptions = booleanOptions;
+    isArray: boolean = false;
+
     constructor(               
         private dialogRef: MatDialogRef<FieldsFormComponent>,
         private translate: TranslateService,
         @Inject(MAT_DIALOG_DATA) public incoming: FieldsFormDialogData) {          
             this.dialogData = incoming;
             this.dialogTitle = this.dialogData.Mode == 'Edit' ? translate.instant('FormField_Title_Edit', {field_name: this.dialogData.FieldName}) : translate.instant('FormField_Title_Add');
-            this.fieldTypes = SchemeFieldTypes.filter(type => ['ContainedResource', 'DynamicResource', 'ContainedDynamicResource', 'MultipleStringValues', 'Object'].includes(type) === false).map(type => {
+            this.fieldTypes = SchemeFieldTypes.filter(type => ['ContainedResource', 'DynamicResource', 'ContainedDynamicResource', 'MultipleStringValues', 'Object', 'Array'].includes(type) === false).map(type => {
                 return {
                     key: type,
                     value: type,
                 }
             });
-            this.fieldSubTypes = SchemeFieldTypes.filter(type => ['ContainedResource', 'DynamicResource', 'ContainedDynamicResource','MultipleStringValues', 'Object', 'Array', 'Bool', 'DateTime'].includes(type) === false).map(type => {
-                return {
-                    key: type,
-                    value: type,
-                }
-            });
-            this.fieldSubType = this.dialogData.Field.Items?.Type;
-            this.hasOptionalValues = this.dialogData.Field.Type == 'String' || (this.dialogData.Field.Type === 'Array' && this.dialogData.Field.Items?.Type === 'String');
+            if (this.dialogData.Field.Type === 'Array') {
+                this.isArray = true;
+                this.dialogData.Field.Type = this.dialogData.Field.Items.Type;
+            }
+            this.hasOptionalValues = this.dialogData.Field.Type == 'String' || (this.isArray && this.dialogData.Field.Items?.Type === 'String');
             this.resourcesOptions = this.dialogData.Resources.map(item => {
                 return {
                     key: item.Name,
@@ -60,34 +60,38 @@ import { FieldsFormDialogData, SelectOptions } from '../../../entities';
             this.dialogData.Field.AddonUUID = resource ? resource['AddonUUID'] : undefined;
         }
         
-        fieldTypeChanged(type: string) {
-            if(type == 'String' || (type === 'Array' && this.dialogData.Field.Items?.Type === 'String')) {
+        fieldTypeChanged(type: SchemeFieldType) {
+            if(type == 'String' || (this.isArray && this.dialogData.Field.Items?.Type === 'String')) {
                 this.hasOptionalValues = true;
             }
             else {
                 this.hasOptionalValues = false;
                 this.dialogData.Field.OptionalValues = [];
             }
-            if(type == 'Resource' || (type === 'Array' && this.dialogData.Field.Items?.Type === 'Resource')) {
+            if (type == 'Resource') {
                 this.dialogData.Field.IndexedFields = {
                     Key: {
                         Type: 'String'
                     }
                 };
             }
+            if (type == 'Resource' || type == 'DateTime') {
+                this.isArray = false;
+            }
         }
         
         saveField() {
-            if (this.fieldSubType && this.dialogData.Field.Type === 'Array') {
+            if (this.isArray) {
                 this.dialogData.Field.Items = {
-                    Type: this.fieldSubType
+                    Type: this.dialogData.Field.Type
                 };
+                this.dialogData.Field.Type = 'Array';
+            }
+            this.dialogRef.close({
+                fieldName: this.dialogData.FieldName,
+                field: this.dialogData.Field
+            });
         }
-        this.dialogRef.close({
-            fieldName: this.dialogData.FieldName,
-            field: this.dialogData.Field
-        });
-    }
 
     close() {
         this.dialogRef.close();

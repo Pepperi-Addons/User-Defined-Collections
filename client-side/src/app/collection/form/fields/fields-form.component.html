@@ -23,15 +23,33 @@
                 [options]="fieldTypes"
                 [emptyOption]="false"
                 (valueChange)="fieldTypeChanged($event)"
+            ></pep-select>
+            <pep-select
+                [(value)]="dialogData.Field.Resource"
+                [label]="'Resource' | translate"
+                type="select"
+                [options]="resourcesOptions"
+                [emptyOption]="false"
+                (valueChange)="resourceChanged($event)"
+                [disabled]="dialogData.Field.Type !== 'Resource'"
+            ></pep-select>
+        </div>
+        <div class="form-row">
+            <pep-select
+                [(value)]="isArray"
+                [label]="'Fields_Array_Title' | translate"
+                type="select"
+                [options]="booleanOptions"
+                [emptyOption]="false"
+                [disabled]="dialogData.Field.Type === 'Resource' || dialogData.Field.Type === 'DateTime'"
                 ></pep-select>
                 <pep-select
-                [(value)]="fieldSubType"
-                [label]="'Items Type' | translate"
+                [(value)]="dialogData.Field.Mandatory"
+                [label]="'Mandatory' | translate"
                 type="select"
-                [options]="fieldSubTypes"
+                [options]="[{key:true, value:'True'},{key:false, value:'False'}]"
                 [emptyOption]="false"
-                [visible]="dialogData.Field.Type === 'Array'"
-                (valueChange)="fieldTypeChanged($event)"
+                [disabled]="!dialogData.EmptyCollection || dialogData.InUidFields"
             ></pep-select>
         </div>
         <div class="form-row">
@@ -44,25 +62,6 @@
                 [rowSpan]="3"
                 (valueChange)=saveOptionalValues($event)
             ></pep-textarea>
-        </div>
-        <div class="form-row">
-            <pep-select
-                [(value)]="dialogData.Field.Resource"
-                [label]="'Resource' | translate"
-                type="select"
-                [options]="resourcesOptions"
-                [emptyOption]="false"
-                (valueChange)="resourceChanged($event)"
-                *ngIf="dialogData.Field.Type === 'Resource' || fieldSubType === 'Resource'"
-            ></pep-select>
-            <pep-select
-                [(value)]="dialogData.Field.Mandatory"
-                [label]="'Mandatory' | translate"
-                type="select"
-                [options]="[{key:true, value:'True'},{key:false, value:'False'}]"
-                [emptyOption]="false"
-                [disabled]="!dialogData.EmptyCollection || dialogData.InUidFields"
-            ></pep-select>
         </div>
     </ng-container>
     <ng-container pep-dialog-actions>
