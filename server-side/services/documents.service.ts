@@ -92,7 +92,14 @@ export class DocumentsService {
     }
 
     createSchema(collection: Collection): Schema {
-        let schema: Schema = DocumentSchema;
+        const schema: Schema = {
+            $id: DocumentSchema.$id,
+            description: DocumentSchema.description,
+            type: 'object',
+            properties: {
+                ...DocumentSchema.properties
+            }
+        };
         
         Object.keys(collection.Fields!).forEach(fieldName => {
             const field = collection.Fields![fieldName];
