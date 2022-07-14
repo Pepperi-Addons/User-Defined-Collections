@@ -18,7 +18,7 @@ export class DocumentsService {
     }
     
     async getDocumentByKey(collectionName: any, key: any): Promise<AddonData> {
-        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(key).get();
+        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(encodeURIComponent(key)).get();
     }
     
     async upsert(service: CollectionsService, collectionName: any, body: any): Promise<AddonData> {
