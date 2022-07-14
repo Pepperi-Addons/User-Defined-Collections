@@ -85,10 +85,16 @@ export class CollectionFormComponent implements OnInit {
     fieldKey: string;
     fieldSort: number;
     dialogRef: MatDialogRef<CollectionFormComponent>
+    uidList: GenericListComponent
 
     @ViewChild('UidFieldForm', { read: TemplateRef }) UidFieldsTemplate: TemplateRef<any>;
     @ViewChild('SortingForm', { read: TemplateRef }) SortingForm: TemplateRef<any>;
-    @ViewChild('uidList', {read: GenericListComponent}) uidList: GenericListComponent;
+    @ViewChild('uidList', {read: GenericListComponent}) set uidListSetter(list: GenericListComponent) {
+        if (list) {
+            this.uidList = list;
+            this.uidFieldsDataSource = this.getUIDFieldsDataSource();
+        }
+    };
 
     constructor(private activateRoute: ActivatedRoute,
                 private router: Router,
@@ -117,6 +123,7 @@ export class CollectionFormComponent implements OnInit {
             this.collection = value;
             this.fieldsDataSource = this.getFieldsDataSource();
             this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
+            this.collectionLoaded = true;
             if (this.mode === 'Edit') {
                 const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
                 this.emptyCollection = documents.length == 0;
@@ -138,7 +145,6 @@ export class CollectionFormComponent implements OnInit {
             this.nameValid = this.collection.Name != '';
             this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
             this.fieldsValid = this.collection.ListView.Fields.length > 0;
-            this.collectionLoaded = true;
         });
     }
 
