@@ -96,28 +96,45 @@ export class DocumentsService {
             description: DocumentSchema.description,
             type: 'object',
             properties: {
-                ...DocumentSchema.properties
+                ...DocumentSchema.properties,
+                ...this.createObjectScheme(collection.Fields!)
             }
         };
         
-        Object.keys(collection.Fields!).forEach(fieldName => {
-            const field = collection.Fields![fieldName];
-
-            schema.properties![fieldName] = {
-                ...this.getFieldSchemaType(field.Type, field.Items?.Type || 'String'),
-                required: field.Mandatory
-            }
-            if (field.OptionalValues && field.OptionalValues.length > 0) {
-                if (field.Type === 'Array') {
-                    schema.properties![fieldName].items!['enum'] = field.OptionalValues;
+        return schema;
+    }
+    
+    createObjectScheme(fields: { [key: string]:CollectionField}) {
+        const propertiesScheme = {};
+        Object.keys(fields).forEach(fieldName => {
+            const field = fields[fieldName];
+            
+            if (field.Type === 'Object' || (field.Type === 'Array' && field.Items!.Type === 'Object')) {
+                propertiesScheme[fieldName] = {
+                    type: 'object',
+                    required: field.Mandatory,
+                    properties: {
+                        ...this.createObjectScheme(field.Fields!)
+                    }
                 }
-                else {
-                    schema.properties![fieldName].enum = field.OptionalValues;
+            }
+            else {
+                propertiesScheme[fieldName] = {
+                    ...this.getFieldSchemaType(field.Type, field.Items?.Type || 'String'),
+                    required: field.Mandatory
+                }
+                if (field.OptionalValues && field.OptionalValues.length > 0) {
+                    if (field.Type === 'Array') {
+                        propertiesScheme[fieldName].items!['enum'] = field.OptionalValues;
+                    }
+                    else {
+                        propertiesScheme[fieldName].enum = field.OptionalValues;
+                    }
                 }
             }
         })
 
-        return schema;
+        return propertiesScheme;
     }
 
     getFieldSchemaType(type: SchemeFieldType, itemsType: SchemeFieldType = 'String'): Schema {
