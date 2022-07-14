@@ -78,5 +78,8 @@
     "SyncData_Options_Offline": "Available for online and offline",
     "Sync_Select_Title": "Data storage & sync",
     "Indexed_Select_Title": "Indexed",
-    "CollectionForm_SyncData_Message": "are you sure you want to change the data availability?"
+    "CollectionForm_SyncData_Message": "are you sure you want to change the data availability?",
+    "Object_Fields_NoDataFound": "Click Add to define object fields",
+    "Object_Field_Scheme": "Object fields schema",
+    "Fields_Array_Title": "Is array"
 }
