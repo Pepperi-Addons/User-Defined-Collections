@@ -1,4 +1,4 @@
-import { AddonData, AddonDataScheme, Collection, CollectionField, FindOptions, SchemeFieldType, SearchBody } from '@pepperi-addons/papi-sdk'
+import { AddonData, AddonDataScheme, Collection, SchemeField, FindOptions, SchemeFieldType, SearchBody } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
@@ -18,7 +18,7 @@ export class DocumentsService {
     }
     
     async getDocumentByKey(collectionName: any, key: any): Promise<AddonData> {
-        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(key).get();
+        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(encodeURIComponent(key)).get();
     }
     
     async upsert(service: CollectionsService, collectionName: any, body: any): Promise<AddonData> {
@@ -77,7 +77,8 @@ export class DocumentsService {
     }
 
     async validateDocument(collection: Collection, body: any) {
-        const errors = await this.validateReference(collection, body);
+        const {errors, document} = await this.validateReference(collection, body);
+        body = { ...document };
         const schema = this.createSchema(collection);
         console.log(`validating document ${JSON.stringify(body)} for collection ${collection.Name}. schema is ${JSON.stringify(schema)}`);
         const validator = new Validator();
@@ -256,15 +257,20 @@ export class DocumentsService {
         })
     }
 
-    async validateReference(scheme: Collection, document: AddonData): Promise<string[]> {
+    async validateReference(scheme: Collection, document: AddonData): Promise<{errors: string[], document:AddonData}> {
         let valid = true;
         const errors: string[] = []
         const schemeFields = scheme.Fields!;
         await Promise.all(Object.keys(schemeFields).map(async(field) => {
+            const resourceName = schemeFields[field].Resource || ""
             if (schemeFields[field].Type === 'Resource') {
-                if (schemeFields[field].Resource) {
+                if (resourceName != "") {
                     if (field in document) {
-                        valid = await this.getReferencedObject(document[field], schemeFields[field].Resource!) != undefined;
+                        valid = await this.getReferencedObject(field, resourceName) != undefined;
+                    }
+                    else {
+                        document = await this.checkUniqueFields(resourceName, document, field);
+                        valid = document[field] != ""; // if reference field has value than the reference is valid
                     }
                 }
                 else {
@@ -274,11 +280,9 @@ export class DocumentsService {
             }
             else {
                 if (schemeFields[field].Type === 'Array' && schemeFields[field].Items!.Type === 'Resource') {
-                    if (schemeFields[field].Resource) {
+                    if (resourceName != "") {
                         if(field in document && document[field].length > 0) {
-                            for (const item of document[field]) {
-                                valid = await this.getReferencedObject(item, schemeFields[field].Resource!) != undefined;
-                            }
+                            valid = (await this.getReferencedObjects(document[field], resourceName)).length ===  document[field].length;
                         }
                     }
                     else {
@@ -291,7 +295,7 @@ export class DocumentsService {
                 errors.push(`Field ${field} contains broken reference`);
             }
         }))
-        return errors;
+        return {errors, document};
     }
 
     async getReferencedObject(objKey: string, collectionName: string): Promise<AddonData | undefined> {
@@ -303,5 +307,50 @@ export class DocumentsService {
             console.log(`Could not get item ${objKey} from collection ${collectionName}`);
         }
         return item;
+    }
+
+    async getReferencedObjects(objKeys: string[], collectionName: string): Promise<AddonData[]> {
+        let items: AddonData[] = [];
+        try {
+            items = await this.utilities.papiClient.resources.resource(collectionName).search({
+                KeyList: objKeys,
+            });
+        }
+        catch (err) {
+            console.log(`Could not get the following items ${objKeys} from collection ${collectionName}`);
+        }
+        return items;
+    }
+
+    async getReferencedObjectByUniqueField(fieldID: string, fieldValue:string, collectionName: string): Promise<AddonData | undefined> {
+        let item: AddonData | undefined = undefined;
+        try {
+            item = await this.utilities.papiClient.resources.resource(collectionName).unique(fieldID).get(fieldValue);
+        }
+        catch (err) {
+            console.log(`Could not get item ${fieldID} from collection ${collectionName}`);
+        }
+        return item;
+    }
+
+    async checkUniqueFields(resourceName: string, document: AddonData, referenceField: string): Promise<AddonData> {
+        try {
+            const scheme = await this.utilities.papiClient.resources.resource('resources').key(resourceName).get();
+            await Promise.all(Object.keys(scheme.Fields).filter((field: any) => scheme.Fields[field].Unique).map(async (field) => {
+                const fieldID = `${referenceField}.${field}`;
+                if (fieldID in document) {
+                    const item = await this.getReferencedObjectByUniqueField(field, document[fieldID], resourceName);
+                    if (item) {
+                        // if we found the item using the unique field, we need to replace the unique field with the item key
+                        document[referenceField] = item.Key || "";
+                        delete document[fieldID];
+                    }
+                }
+            }));
+        }
+        catch (err) {
+            console.log(`could not get generic scheme with name ${resourceName}, got exception`);
+        }
+        return document;
     }
 }

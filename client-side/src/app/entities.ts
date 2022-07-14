@@ -1,4 +1,4 @@
-import { CollectionField, AddonDataScheme } from '@pepperi-addons/papi-sdk'
+import { CollectionField, AddonDataScheme, SchemeFieldType } from '@pepperi-addons/papi-sdk'
 
 export type FieldsFormDialogData = {
     Field: CollectionField;
@@ -7,6 +7,7 @@ export type FieldsFormDialogData = {
     EmptyCollection: boolean;
     InUidFields: boolean;
     Resources: AddonDataScheme[];
+    AvailableTypes: SchemeFieldType[];
 }
 
 export type FormMode = 'Add' | 'Edit';
