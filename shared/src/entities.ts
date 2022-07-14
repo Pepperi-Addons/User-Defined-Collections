@@ -49,5 +49,10 @@ export interface FieldsResult {
     TransactionLines: ApiFieldObject[]
 }
 
+export interface ReferenceValidationResult {
+    Errors: string[];
+    Document: AddonData;
+}
+
 export const existingErrorMessage = 'Object already Exist';
 export const existingInRecycleBinErrorMessage = 'Object already Exist in recycle bin';

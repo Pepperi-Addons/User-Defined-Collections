@@ -1,10 +1,10 @@
-import { AddonData, AddonDataScheme, Collection, SchemeField, FindOptions, SchemeFieldType, SearchBody } from '@pepperi-addons/papi-sdk'
+import { AddonData, AddonDataScheme, Collection, SchemeField, FindOptions, SchemeFieldType, SearchBody, CollectionField } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
 import { DocumentSchema } from '../jsonSchemes/documents';
 import { Schema, Validator, ValidatorResult } from 'jsonschema';
-import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
+import { existingErrorMessage, existingInRecycleBinErrorMessage, ReferenceValidationResult } from 'udc-shared';
 
 export class DocumentsService {
     
@@ -77,14 +77,14 @@ export class DocumentsService {
     }
 
     async validateDocument(collection: Collection, body: any) {
-        const {errors, document} = await this.validateReference(collection, body);
-        body = { ...document };
+        const referenceResult = await this.validateReference(collection.Fields!, body);
+        body = { ...referenceResult.Document };
         const schema = this.createSchema(collection);
         console.log(`validating document ${JSON.stringify(body)} for collection ${collection.Name}. schema is ${JSON.stringify(schema)}`);
         const validator = new Validator();
         const result = validator.validate(body, schema);
-        if(errors.length > 0) {
-            errors.forEach(error => {
+        if(referenceResult.Errors.length > 0) {
+            referenceResult.Errors.forEach(error => {
                 result.addError(error);
             })
         }
@@ -110,12 +110,24 @@ export class DocumentsService {
         Object.keys(fields).forEach(fieldName => {
             const field = fields[fieldName];
             
-            if (field.Type === 'Object' || (field.Type === 'Array' && field.Items!.Type === 'Object')) {
+            if (field.Type === 'Object') {
                 propertiesScheme[fieldName] = {
                     type: 'object',
                     required: field.Mandatory,
                     properties: {
                         ...this.createObjectScheme(field.Fields!)
+                    }
+                }
+            }
+            else if((field.Type === 'Array' && field.Items!.Type === 'Object')) {
+                propertiesScheme[fieldName] = {
+                    type: 'array',
+                    required: field.Mandatory,
+                    items:{
+                        type: 'object',
+                        properties: {
+                            ...this.createObjectScheme(field.Items!.Fields!)
+                        }
                     }
                 }
             }
@@ -257,16 +269,29 @@ export class DocumentsService {
         })
     }
 
-    async validateReference(scheme: Collection, document: AddonData): Promise<{errors: string[], document:AddonData}> {
+    async validateReference(schemeFields: {[key:string]: CollectionField}, document: AddonData): Promise<ReferenceValidationResult> {
         let valid = true;
-        const errors: string[] = []
-        const schemeFields = scheme.Fields!;
+        const errors: string[] = [];
         await Promise.all(Object.keys(schemeFields).map(async(field) => {
+            if (schemeFields[field].Type === 'Object' && field in document) {
+                const result:ReferenceValidationResult = await this.validateReference(schemeFields[field].Fields!, document[field]);
+                errors.push(...result.Errors);
+                document[field] = result.Document;
+            }
+            else if(schemeFields[field].Type == 'Array' && schemeFields[field].Items?.Type === 'Object' && (field in document && document[field].length > 0)) {
+                let arr = [...document[field]];
+                document[field] = [];
+                for await (let item of arr) {
+                    const result:ReferenceValidationResult = await this.validateReference(schemeFields[field].Items!.Fields!, item);
+                    errors.push(...result.Errors);
+                    document[field].push(result.Document);
+                }
+            }
             const resourceName = schemeFields[field].Resource || ""
             if (schemeFields[field].Type === 'Resource') {
                 if (resourceName != "") {
                     if (field in document) {
-                        valid = await this.getReferencedObject(field, resourceName) != undefined;
+                        valid = await this.getReferencedObject(document[field], resourceName) != undefined;
                     }
                     else {
                         document = await this.checkUniqueFields(resourceName, document, field);
@@ -295,7 +320,10 @@ export class DocumentsService {
                 errors.push(`Field ${field} contains broken reference`);
             }
         }))
-        return {errors, document};
+        return {
+            Errors: errors, 
+            Document: document
+        };
     }
 
     async getReferencedObject(objKey: string, collectionName: string): Promise<AddonData | undefined> {
@@ -336,20 +364,31 @@ export class DocumentsService {
     async checkUniqueFields(resourceName: string, document: AddonData, referenceField: string): Promise<AddonData> {
         try {
             const scheme = await this.utilities.papiClient.resources.resource('resources').key(resourceName).get();
-            await Promise.all(Object.keys(scheme.Fields).filter((field: any) => scheme.Fields[field].Unique).map(async (field) => {
+            const uniqueFields = Object.keys(scheme.Fields).filter((field: string) => scheme.Fields[field].Unique);
+            let fieldsInDocument: string[] = []; // we don't want to have more than one unique field on a document, so we counting.
+            await Promise.all(uniqueFields.map(async (field) => {
                 const fieldID = `${referenceField}.${field}`;
                 if (fieldID in document) {
-                    const item = await this.getReferencedObjectByUniqueField(field, document[fieldID], resourceName);
-                    if (item) {
-                        // if we found the item using the unique field, we need to replace the unique field with the item key
-                        document[referenceField] = item.Key || "";
-                        delete document[fieldID];
+                    fieldsInDocument.push(fieldID);
+                    if(fieldsInDocument.length <= 1) {
+                        const item = await this.getReferencedObjectByUniqueField(field, document[fieldID], resourceName);
+                        if (item) {
+                            // if we found the item using the unique field, we need to replace the unique field with the item key
+                            document[referenceField] = item.Key || "";
+                            delete document[fieldID];
+                        }
+                    }
+                    else {
+                        throw new Error(`Document cannot contain more than 1 unique field, fields: ${fieldsInDocument.join(',')}`)
                     }
                 }
             }));
         }
         catch (err) {
-            console.log(`could not get generic scheme with name ${resourceName}, got exception`);
+            console.log(`could not get generic scheme with name ${resourceName}, got exception ${JSON.stringify(err)}`);
+            if (err instanceof Error && err.message.indexOf('Document cannot contain more than 1 unique field') > -1) {
+                throw err;
+            }
         }
         return document;
     }

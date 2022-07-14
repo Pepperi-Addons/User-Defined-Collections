@@ -285,7 +285,9 @@ export class CollectionFormComponent implements OnInit {
             Type: this.collection.Fields[name]?.Type || 'String',
             OptionalValues: this.collection.Fields[name]?.OptionalValues || [],
             Items: this.collection.Fields[name]?.Items || {
-                Type:"String"
+                Type:"String",
+                Mandatory: false,
+                Description: ''
             },
             Fields: this.collection.Fields[name]?.Fields || {},
         }
