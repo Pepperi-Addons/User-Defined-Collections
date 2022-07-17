@@ -36,6 +36,7 @@ export class DocumentsFormComponent implements OnInit {
 
     async saveDocument() {
         try {
+            this.convertMultiChoiceValues();
             this.convertNumbers();
             this.convertTextArea();
             this.convertBoolean();
@@ -81,6 +82,23 @@ export class DocumentsFormComponent implements OnInit {
 
     close() {
         this.dialogRef.close();
+    }
+
+    convertMultiChoiceValues() {
+
+        this.incoming.DataView.Fields?.filter(field => field.Type === 'MultiTickBox').forEach(field => {
+            try {
+                if (this.item[field.FieldID] != "") {
+                    this.item[field.FieldID] = this.item[field.FieldID].split(";");
+                }
+                else {
+                    this.item[field.FieldID] = [];
+                }
+            }
+            catch (err) {
+                console.log(`could not convert value ${this.item[field.FieldID]}. error got: ${JSON.stringify(err)}`);
+            }
+        })
     }
 
     convertTextArea() {
