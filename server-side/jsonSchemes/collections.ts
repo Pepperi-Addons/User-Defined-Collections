@@ -179,7 +179,7 @@ export const fieldsSchema: Schema = {
                     type: "string"
                 },
                 Type: {
-                    enum: SchemeFieldTypes.filter(type => ['DynamicResource', 'ContainedDynamicResource', 'ContainedResource','MultipleStringValues', 'Object'].includes(type) === false),
+                    enum: SchemeFieldTypes.filter(type => ['DynamicResource', 'ContainedDynamicResource', 'ContainedResource','MultipleStringValues'].includes(type) === false),
                     required: true,
                 },
                 IndexedFields: {
@@ -207,9 +207,13 @@ export const fieldsSchema: Schema = {
                     type: "object",
                     properties: {
                         Type: {
-                            enum: SchemeFieldTypes.filter(type => ['MultipleStringValues', 'Object', 'Array', 'Bool', 'DateTime'].includes(type) === false),
+                            enum: SchemeFieldTypes.filter(type => ['MultipleStringValues', 'Array', 'Bool', 'DateTime'].includes(type) === false),
                         }
                     },
+                },
+                Fields: {
+                    type: "object",
+                    $ref: "/Fields",
                 }
             },
             required: ['Type', 'Mandatory'],
@@ -227,7 +231,7 @@ export const fieldsSchema: Schema = {
                             type: "object",
                             properties: {
                                 Type: {
-                                    enum: SchemeFieldTypes.filter(type => ['MultipleStringValues', 'Object', 'Array', 'Bool', 'DateTime'].includes(type) === false),
+                                    enum: SchemeFieldTypes.filter(type => ['MultipleStringValues', 'Array', 'Bool', 'DateTime'].includes(type) === false),
                                     required: true,
                                 }
                             },
@@ -265,6 +269,19 @@ export const fieldsSchema: Schema = {
                                 }
                             }
                         }
+                    }, {
+                        properties: {
+                            Type: {
+                                const: 'Array',
+                            },
+                            Items: {
+                                properties: {
+                                    Type: {
+                                        const: 'Object'
+                                    }
+                                }
+                            }
+                        }
                     },
                     {
                         properties: {
@@ -284,6 +301,20 @@ export const fieldsSchema: Schema = {
                         properties: {
                             Type: {
                                 const: 'Double',
+                            },
+                        }
+                    },
+                    {
+                        properties: {
+                            Type: {
+                                const: 'Object',
+                            },
+                        }
+                    },
+                    {
+                        properties: {
+                            Type: {
+                                const: 'Resource',
                             },
                         }
                     },

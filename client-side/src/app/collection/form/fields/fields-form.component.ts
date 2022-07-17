@@ -26,6 +26,9 @@ export class FieldsFormComponent implements OnInit {
     objectFieldsDataSource: IPepGenericListDataSource;
     EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
     supportArray: boolean = true;
+    objectFields: {
+        [key:string]: CollectionField;
+    }
 
     objectFieldsActions: IPepGenericListActions = {
         get: async (data: PepSelectionData) => {
@@ -65,6 +68,15 @@ export class FieldsFormComponent implements OnInit {
             this.isArray = true;
             this.dialogData.Field.Type = this.dialogData.Field.Items.Type;
         }
+        if (this.dialogData.Field.Type === 'Object') {
+            if (this.isArray) {
+                this.objectFields = JSON.parse(JSON.stringify(this.dialogData.Field.Items.Fields));
+            }
+            else {
+                this.objectFields = JSON.parse(JSON.stringify(this.dialogData.Field.Fields));
+            }
+            this.objectFieldsDataSource = this.getFieldsDataSource();
+        }
         this.hasOptionalValues = this.dialogData.Field.Type == 'String' || (this.isArray && this.dialogData.Field.Items?.Type === 'String');
         this.resourcesOptions = this.dialogData.Resources.map(item => {
             return {
@@ -72,7 +84,7 @@ export class FieldsFormComponent implements OnInit {
                 value: item.Name,
             }
         })
-        this.objectFieldsValid = this.dialogData.Field.Type !== 'Object' || (this.dialogData.Field.Type === 'Object' && Object.keys(this.dialogData.Field.Fields).length > 0);
+        this.objectFieldsValid = this.dialogData.Field.Type !== 'Object' || (this.dialogData.Field.Type === 'Object' && Object.keys(this.objectFields).length > 0);
         this.supportArray = this.dialogData.AvailableTypes.includes('Array');
     }
 
@@ -118,19 +130,23 @@ export class FieldsFormComponent implements OnInit {
 
     saveField() {
         if (this.isArray) {
-            this.dialogData.Field.Items = {
-                Type: this.dialogData.Field.Type,
-                Mandatory: false,
-                Description: ''
-            };
             if(this.dialogData.Field.Type === 'Resource') { // on resource array, the resource & addonUUID data should be on the Items.
                 this.dialogData.Field.Items.Resource = this.dialogData.Field.Resource;
                 this.dialogData.Field.Items.AddonUUID = this.dialogData.Field.AddonUUID;
             }
+            this.dialogData.Field.Items.Type = this.dialogData.Field.Type;
             this.dialogData.Field.Type = 'Array';
         }
         if (this.dialogData.Field.Type != 'Object') {
-            this.dialogData.Field.Fields = {}; // erase object scheme to avoid saving stale data
+            this.dialogData.Field.Fields = undefined; // erase object scheme to avoid saving stale data
+        }
+        else { // Object field, init the Fields property
+            if(this.isArray) {
+                this.dialogData.Field.Items.Fields = JSON.parse(JSON.stringify(this.objectFields));
+            }
+            else {
+                this.dialogData.Field.Fields = JSON.parse(JSON.stringify(this.objectFields));
+            }
         }
         this.dialogRef.close({
             fieldName: this.dialogData.FieldName,
@@ -146,13 +162,14 @@ export class FieldsFormComponent implements OnInit {
     getFieldsDataSource() {
         return {
             init: async(params:any) => {
-                let fields = Object.keys(this.dialogData.Field.Fields).map(obj => {
-                    const type = this.dialogData.Field.Fields[obj].Type;
+                
+                let fields = Object.keys(this.objectFields).map(obj => {
+                    const type = this.objectFields[obj].Type;
                     return {
                         Key: obj,
-                        Type: type === 'Array' ? `${this.dialogData.Field.Fields[obj].Items.Type} ${type}` : type,
-                        Description: this.dialogData.Field.Fields[obj].Description,
-                        Mandatory: this.dialogData.Field.Fields[obj].Mandatory,
+                        Type: type === 'Array' ? `${this.objectFields[obj].Items.Type} ${type}` : type,
+                        Description: this.objectFields[obj].Description,
+                        Mandatory: this.objectFields[obj].Mandatory,
                     };
                 });
                 this.objectFieldsValid = fields.length > 0;
@@ -248,11 +265,11 @@ export class FieldsFormComponent implements OnInit {
         this.dialogService.openDialog(FieldsFormComponent, dialogData, dialogConfig).afterClosed().subscribe(value => {
             if (value) {
                 const fieldName = value.fieldName;
-                this.dialogData.Field.Fields[fieldName] = value.field;
+                this.objectFields[fieldName] = value.field;
                 const nameChanged = (name != EMPTY_OBJECT_NAME && name != fieldName);
                 // if the field name has changed, delete the old field from the object
                 if (nameChanged) {
-                    delete this.dialogData.Field.Fields[name];
+                    delete this.objectFields[name];
                 }
 
                 this.objectFieldsDataSource = this.getFieldsDataSource();
@@ -269,7 +286,7 @@ export class FieldsFormComponent implements OnInit {
 
         this.dialogService.openDefaultDialog(data).afterClosed().subscribe(isDeletePressed => {
             if(isDeletePressed) {
-                delete this.dialogData.Field.Fields[fieldName];
+                delete this.objectFields[fieldName];
                 this.objectFieldsDataSource = this.getFieldsDataSource();
             }
         });
