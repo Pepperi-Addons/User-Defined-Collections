@@ -291,9 +291,14 @@ export class CollectionFormComponent implements OnInit {
             Type: this.collection.Fields[name]?.Type || 'String',
             OptionalValues: this.collection.Fields[name]?.OptionalValues || [],
             Items: this.collection.Fields[name]?.Items || {
-                Type:"String"
+                Type:"String",
+                Mandatory: false,
+                Description: ''
             },
             Fields: this.collection.Fields[name]?.Fields || {},
+            Resource: this.collection.Fields[name]?.Resource || '',
+            AddonUUID: this.collection.Fields[name]?.AddonUUID || '',
+            Sync: this.collection.Fields[name]?.Sync || false,
         }
         let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
         const dialogData: FieldsFormDialogData = {

@@ -119,8 +119,14 @@ export class FieldsFormComponent implements OnInit {
     saveField() {
         if (this.isArray) {
             this.dialogData.Field.Items = {
-                Type: this.dialogData.Field.Type
+                Type: this.dialogData.Field.Type,
+                Mandatory: false,
+                Description: ''
             };
+            if(this.dialogData.Field.Type === 'Resource') { // on resource array, the resource & addonUUID data should be on the Items.
+                this.dialogData.Field.Items.Resource = this.dialogData.Field.Resource;
+                this.dialogData.Field.Items.AddonUUID = this.dialogData.Field.AddonUUID;
+            }
             this.dialogData.Field.Type = 'Array';
         }
         if (this.dialogData.Field.Type != 'Object') {
@@ -218,8 +224,13 @@ export class FieldsFormComponent implements OnInit {
             Type: this.dialogData.Field.Fields[name]?.Type || 'String',
             OptionalValues: this.dialogData.Field.Fields[name]?.OptionalValues || [],
             Items: this.dialogData.Field.Fields[name]?.Items || {
-                Type:"String"
-            }
+                Type:"String",
+                Mandatory: false,
+                Description: ''
+            },
+            Resource: this.dialogData.Field.Fields[name]?.Resource || '',
+            AddonUUID: this.dialogData.Field.Fields[name]?.AddonUUID || '',
+            Sync: this.dialogData.Field.Fields[name]?.Sync || false,
         }
         let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
         const dialogData: FieldsFormDialogData = {
