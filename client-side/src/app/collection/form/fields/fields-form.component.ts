@@ -129,14 +129,6 @@ export class FieldsFormComponent implements OnInit {
     }
 
     saveField() {
-        if (this.isArray) {
-            if(this.dialogData.Field.Type === 'Resource') { // on resource array, the resource & addonUUID data should be on the Items.
-                this.dialogData.Field.Items.Resource = this.dialogData.Field.Resource;
-                this.dialogData.Field.Items.AddonUUID = this.dialogData.Field.AddonUUID;
-            }
-            this.dialogData.Field.Items.Type = this.dialogData.Field.Type;
-            this.dialogData.Field.Type = 'Array';
-        }
         if (this.dialogData.Field.Type != 'Object') {
             this.dialogData.Field.Fields = undefined; // erase object scheme to avoid saving stale data
         }
@@ -147,6 +139,15 @@ export class FieldsFormComponent implements OnInit {
             else {
                 this.dialogData.Field.Fields = JSON.parse(JSON.stringify(this.objectFields));
             }
+        }
+        if (this.isArray) {
+            if(this.dialogData.Field.Type === 'Resource') { // on resource array, the resource & addonUUID data should be on the Items.
+                this.dialogData.Field.Items.Resource = this.dialogData.Field.Resource;
+                this.dialogData.Field.Items.AddonUUID = this.dialogData.Field.AddonUUID;
+            }
+            this.dialogData.Field.Items.Type = this.dialogData.Field.Type;
+            this.dialogData.Field.Type = 'Array';
+            this.dialogData.Field.Fields = undefined; // if this is an array of objects, the fields should be on the items.
         }
         this.dialogRef.close({
             fieldName: this.dialogData.FieldName,
@@ -236,18 +237,17 @@ export class FieldsFormComponent implements OnInit {
 
     openObjectFieldsForm(name: string) {
         const collectionField: CollectionField = {
-            Description: this.dialogData.Field.Fields[name]?.Description || '',
-            Mandatory: this.dialogData.Field.Fields[name]?.Mandatory || false,
-            Type: this.dialogData.Field.Fields[name]?.Type || 'String',
-            OptionalValues: this.dialogData.Field.Fields[name]?.OptionalValues || [],
-            Items: this.dialogData.Field.Fields[name]?.Items || {
+            Description: this.objectFields[name]?.Description || '',
+            Mandatory: this.objectFields[name]?.Mandatory || false,
+            Type: this.objectFields[name]?.Type || 'String',
+            OptionalValues: this.objectFields[name]?.OptionalValues || [],
+            Items: this.objectFields[name]?.Items || {
                 Type:"String",
                 Mandatory: false,
                 Description: ''
             },
-            Resource: this.dialogData.Field.Fields[name]?.Resource || '',
-            AddonUUID: this.dialogData.Field.Fields[name]?.AddonUUID || '',
-            Sync: this.dialogData.Field.Fields[name]?.Sync || false,
+            Resource: this.objectFields[name]?.Resource || '',
+            AddonUUID: this.objectFields[name]?.AddonUUID || '',
         }
         let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
         const dialogData: FieldsFormDialogData = {
