@@ -296,6 +296,8 @@ export class CollectionFormComponent implements OnInit {
                 Description: ''
             },
             Fields: this.collection.Fields[name]?.Fields || {},
+            Resource: this.collection.Fields[name]?.Resource || '',
+            AddonUUID: this.collection.Fields[name]?.AddonUUID || '',
         }
         let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
         const dialogData: FieldsFormDialogData = {
