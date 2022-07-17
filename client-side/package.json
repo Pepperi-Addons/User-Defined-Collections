@@ -35,7 +35,7 @@
         "@pepperi-addons/data-views": "0.0.2",
         "@pepperi-addons/ngx-composite-lib": "0.0.16-beta.43",
         "@pepperi-addons/ngx-lib": "^0.3.15-beta.56",
-        "@pepperi-addons/papi-sdk": "^1.39.5",
+        "@pepperi-addons/papi-sdk": "^1.39.6",
         "@tweenjs/tween.js": "^17.1.1",
         "disable-scroll": "^0.5.1",
         "file-saver": "^2.0.5",
