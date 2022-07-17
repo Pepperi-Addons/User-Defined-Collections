@@ -222,7 +222,7 @@ export class DocumentsListComponent implements OnInit {
             }
             case 'Import': {
               this.dimxService.import({
-                OverwriteObject: true,
+                OverwriteObject: false,
                 Delimiter: ",",
                 OwnerID: this.utilitiesService.addonUUID
               });
@@ -237,7 +237,7 @@ export class DocumentsListComponent implements OnInit {
                 DIMXExportFields: this.collectionData.ListView.Fields.map(field => field.FieldID).concat(['Key']).join(),
                 DIMXExportDelimiter: ","
             });
-              break
+              break;
             }
           }
     }
