@@ -50,7 +50,7 @@
                 type="select"
                 [options]="[{key:true, value:'True'},{key:false, value:'False'}]"
                 [emptyOption]="false"
-                [disabled]="!dialogData.EmptyCollection || dialogData.InUidFields"
+                [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode === 'Edit'"
             ></pep-select>
         </div>
         <div class="form-row">
