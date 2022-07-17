@@ -85,7 +85,6 @@ export class DocumentsFormComponent implements OnInit {
     }
 
     convertMultiChoiceValues() {
-
         this.incoming.DataView.Fields?.filter(field => field.Type === 'MultiTickBox').forEach(field => {
             try {
                 if (this.item[field.FieldID] != "") {
