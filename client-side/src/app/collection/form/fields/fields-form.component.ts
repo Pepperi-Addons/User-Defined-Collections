@@ -27,7 +27,7 @@ export class FieldsFormComponent implements OnInit {
     EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
     supportArray: boolean = true;
     objectFields: {
-        [ket:string]: CollectionField;
+        [key:string]: CollectionField;
     }
 
     objectFieldsActions: IPepGenericListActions = {
