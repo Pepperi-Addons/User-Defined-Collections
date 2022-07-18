@@ -1,7 +1,7 @@
 import { DocumentKeyTypes, SchemeFieldTypes, DataViewFieldTypes, HorizontalAlignments, VerticalAlignments } from "@pepperi-addons/papi-sdk"
 import { Schema } from 'jsonschema';
 
-export const regexPattern: string = "^([A-Z]){1}([\Sa-zA-Z0-9-_])+$"
+export const regexPattern: string = "^([A-Z]){1}([\Sa-zA-Z0-9-_])*$"
 
 export const documentKeySchema: Schema = {
     $id: "/DocumentKey",
@@ -172,7 +172,7 @@ export const fieldsSchema: Schema = {
     $id: "/Fields",
     type: "object",
     patternProperties: {
-        "^([a-z]){1}([\Sa-zA-Z0-9_-])+$": {
+        "^([a-z]){1}([\Sa-zA-Z0-9_-])*$": {
             type: "object",
             properties: {
                 Description: {
