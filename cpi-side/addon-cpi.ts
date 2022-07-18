@@ -1,12 +1,11 @@
 import '@pepperi-addons/cpi-node'
 import config from '../addon.config.json';
 import { UdcMapping } from 'udc-shared';
-import { UdcMappingsScheme } from './../server-side/metadata';
 import { DataObject, Transaction } from '@pepperi-addons/cpi-node';
 
 export async function load(configuration: any) {
     const mappings = (await pepperi.api.adal.getList({
-        table: UdcMappingsScheme.Name,
+        table: 'UdcMappings',
         addon: config.AddonUUID
     })).objects as UdcMapping[];
 
