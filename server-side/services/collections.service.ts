@@ -1,7 +1,7 @@
 import { UtilitiesService } from './utilities.service';
 import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { DimxRelations, UdcMappingsScheme} from '../metadata';
+import { DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
 import { DocumentsService } from './documents.service';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema, regexPattern } from '../jsonSchemes/collections';
@@ -73,8 +73,9 @@ export class CollectionsService {
     async createDIMXRelations(collectionName: string) {
         await Promise.all(DimxRelations.map(async (singleRelation) => {
             // overide the name with the collectionName
+            const functionName = singleRelation.RelationName == 'DataImportResource' ? IMPORT_FUNCTION_NAME : EXPORT_FUNCTION_NAME;
             singleRelation.Name = collectionName;
-            singleRelation.AddonRelativeURL = singleRelation.AddonRelativeURL?.replace('{collection_name}', collectionName);
+            singleRelation.AddonRelativeURL = `/api/${functionName}?collection_name=${collectionName}`
             await this.utilities.papiClient.addons.data.relations.upsert(singleRelation);
         }));
     }
