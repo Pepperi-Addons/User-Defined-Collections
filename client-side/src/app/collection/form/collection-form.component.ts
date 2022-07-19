@@ -107,44 +107,46 @@ export class CollectionFormComponent implements OnInit {
         this.utilitiesService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
         this.mode = this.router['form_mode'] ? this.router['form_mode'] : this.collectionName === EMPTY_OBJECT_NAME ? 'Add' : 'Edit';
-        this.documentKeyOptions = DocumentKeyTypes.filter(type => type !== 'Key').map(type => {
-            return {
-                key: type,
-                value: this.translate.instant(`DocumentKey_Options_${type}`),
-            }
-        })
-        this.syncOptions = SyncTypes.map(type => {
-            return {
-                key: type,
-                value: this.translate.instant(`SyncData_Options_${type}`),
-            }
-        })
-        this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
-            this.collection = value;
-            this.fieldsDataSource = this.getFieldsDataSource();
-            this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
-            this.collectionLoaded = true;
-            if (this.mode === 'Edit') {
-                const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
-                this.emptyCollection = documents.length == 0;
-                if (this.uidList) {
-                    this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
-                    this.uidFieldsDataSource = this.getUIDFieldsDataSource();
+        this.translate.get(['SyncData_Options_Online', 'SyncData_Options_Offline', 'DocumentKey_Options_AutoGenerate', 'DocumentKey_Options_Composite']).subscribe(translations => {
+            this.documentKeyOptions = DocumentKeyTypes.filter(type => type !== 'Key').map(type => {
+                return {
+                    key: type,
+                    value: translations[`DocumentKey_Options_${type}`],
                 }
-            }
-            if (this.collection.SyncData) {
-                this.syncData = this.collection.SyncData.Sync ? 'Offline' : 'Online';
-            }
-            else {
-                this.syncData = 'Offline';
-                this.collection.SyncData = {
-                    Sync: true,
-                    SyncFieldLevel: false
+            })
+            this.syncOptions = SyncTypes.map(type => {
+                return {
+                    key: type,
+                    value: translations[`SyncData_Options_${type}`],
                 }
-            }
-            this.nameValid = this.collection.Name != '';
-            this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
-            this.fieldsValid = this.collection.ListView.Fields.length > 0;
+            })
+            this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
+                this.collection = value;
+                this.fieldsDataSource = this.getFieldsDataSource();
+                this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
+                this.collectionLoaded = true;
+                if (this.mode === 'Edit') {
+                    const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
+                    this.emptyCollection = documents.length == 0;
+                    if (this.uidList) {
+                        this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
+                        this.uidFieldsDataSource = this.getUIDFieldsDataSource();
+                    }
+                }
+                if (this.collection.SyncData) {
+                    this.syncData = this.collection.SyncData.Sync ? 'Offline' : 'Online';
+                }
+                else {
+                    this.syncData = 'Offline';
+                    this.collection.SyncData = {
+                        Sync: true,
+                        SyncFieldLevel: false
+                    }
+                }
+                this.nameValid = this.collection.Name != '';
+                this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
+                this.fieldsValid = this.collection.ListView.Fields.length > 0;
+            });
         });
     }
 
