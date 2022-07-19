@@ -24,7 +24,7 @@ export class CollectionListComponent implements OnInit {
     
     screenSize: PepScreenSizeType;
 
-    dataSource: IPepGenericListDataSource = this.getDataSource();
+    dataSource: IPepGenericListDataSource;
 
     pager: IPepGenericListPager = {
         type: 'scroll',
@@ -37,6 +37,8 @@ export class CollectionListComponent implements OnInit {
     recycleBin: boolean = false;
 
     deleteError = 'Cannot delete collection with documents';
+
+    listMessages = [];
 
     constructor(
         public collectionsService: CollectionsService,
@@ -57,14 +59,14 @@ export class CollectionListComponent implements OnInit {
         this.utilitiesService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
         this.recycleBin = this.activateRoute.snapshot.queryParams.recycle_bin == 'true' || false;
         this.menuItems = this.getMenuItems();
+        this.translate.get(['RecycleBin_NoDataFound', 'Collection_List_NoDataFound']).subscribe(translations=> {
+            this.listMessages = translations;
+            this.dataSource = this.getDataSource();
+        })
     }
 
     getMenuItems() {
-        return [{
-            key:'Import',
-            text: this.translate.instant('Import'),
-            hidden: this.recycleBin
-        },
+        return [
         {
             key: 'RecycleBin',
             text: this.translate.instant('Recycle Bin'),
@@ -115,7 +117,7 @@ export class CollectionListComponent implements OnInit {
                                 Width: 50
                             }
                         ],
-          
+        
                         FrozenColumnsCount: 0,
                         MinimumColumnWidth: 0
                     },
@@ -128,7 +130,7 @@ export class CollectionListComponent implements OnInit {
                     type: 'scroll'
                 },
                 selectionType: 'single',
-                noDataFoundMsg: this.translate.instant(noDataMessageKey)
+                noDataFoundMsg: this.listMessages[noDataMessageKey]
             },
         } as IPepGenericListDataSource
     }
