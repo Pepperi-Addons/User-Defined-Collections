@@ -14,24 +14,24 @@ export class EmptyRouteComponent {}
 
 const routes: Routes = [
     {
-        path: `settings/:addon_uuid`,
+        path: `:settingsSectionName/:addonUUID/:slugName`,
         children: [
             {
-                path: ':editor',
+                path: '',
                 component: CollectionListComponent
                 // TODO: solve routing
                 // path: '**',
                 // loadChildren: () => import('./addon/addon.module').then(m => m.AddonModule)
             },
             {
-                path: ':editor/:collection_name',
+                path: ':collection_name',
                 component: CollectionFormComponent
                 // TODO: solve routing
                 // path: '**',
                 // loadChildren: () => import('./addon/addon.module').then(m => m.AddonModule)
             },
             {
-                path: ':editor/:collection_name/documents',
+                path: ':collection_name/documents',
                 component: DocumentsListComponent
                 // TODO: solve routing
                 // path: '**',

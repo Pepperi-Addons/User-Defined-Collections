@@ -21,6 +21,7 @@ import { EMPTY_OBJECT_NAME, FormMode, FieldsFormDialogData, booleanOptions, Sync
 export class CollectionFormComponent implements OnInit {
     
     collection: Collection;
+    indexed: boolean = false;
     collectionName: string;
     emptyCollection: boolean = true;
     EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;

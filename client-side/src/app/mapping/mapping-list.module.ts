@@ -26,6 +26,7 @@ import { CollectionsService } from '../services/collections.service';
 import { DocumentsService } from '../services/documents.service';
 import { UtilitiesService } from '../services/utilities.service'
 import { MappingsService } from '../services/mappings.service';
+import { config } from '../addon.config';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -63,7 +64,7 @@ export const routes: Routes = [
             loader: {
                 provide: TranslateLoader,
                 useFactory: (addonService: PepAddonService) =>
-                    PepAddonService.createMultiTranslateLoader(addonService, ['ngx-lib', 'ngx-composite-lib'], "122c0e9d-c240-4865-b446-f37ece866c22"),
+                    PepAddonService.createMultiTranslateLoader(config.AddonUUID, addonService, ['ngx-lib', 'ngx-composite-lib']),
                 deps: [PepAddonService]
             }, isolate: false
         }),

@@ -27,6 +27,8 @@ import { CollectionFormComponent } from './form/collection-form.component';
 import { UtilitiesService } from './../services/utilities.service'
 import { PepCheckboxModule } from '@pepperi-addons/ngx-lib/checkbox';
 
+import { config } from '../addon.config';
+
 const pepIcons = [
     pepIconSystemClose,
 ];
@@ -63,7 +65,8 @@ export const routes: Routes = [
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
-                useFactory: PepAddonService.createMultiTranslateLoader,
+                useFactory: (addonService: PepAddonService) =>
+                    PepAddonService.createMultiTranslateLoader(config.AddonUUID, addonService, ['ngx-lib', 'ngx-composite-lib']),
                 deps: [PepAddonService]
             }, isolate: false
         }),

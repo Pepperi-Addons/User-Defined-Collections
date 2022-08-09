@@ -14,7 +14,7 @@ import { AddonData, Collection, FormDataView } from "@pepperi-addons/papi-sdk";
 import { DocumentsService } from "../services/documents.service";
 import { UtilitiesService } from "../services/utilities.service";
 import { DocumentsFormComponent, DocumentsFormData } from './form/documents-form.component';
-import { FormMode } from '../entities';
+import { EMPTY_OBJECT_NAME, FormMode } from '../entities';
 
 @Component({
     selector: 'documents-list',
@@ -40,6 +40,8 @@ export class DocumentsListComponent implements OnInit {
     dataSource: IPepGenericListDataSource;
 
     menuItems: PepMenuItem[] = [];
+    
+    EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
     
     actions: IPepGenericListActions = {
         get: async (data: PepSelectionData) => {

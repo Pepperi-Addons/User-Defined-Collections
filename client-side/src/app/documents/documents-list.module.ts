@@ -23,6 +23,7 @@ import { DocumentsListComponent } from './documents-list.component';
 import { DocumentsService } from '../services/documents.service';
 import { DocumentsFormComponent } from './form/documents-form.component';
 import { PepNgxCompositeLibModule } from '@pepperi-addons/ngx-composite-lib';
+import { config } from '../addon.config';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -59,7 +60,8 @@ export const routes: Routes = [
         TranslateModule.forChild({
             loader: {
                 provide: TranslateLoader,
-                useFactory: PepAddonService.createMultiTranslateLoader,
+                useFactory: (addonService: PepAddonService) =>
+                    PepAddonService.createMultiTranslateLoader(config.AddonUUID, addonService, ['ngx-lib', 'ngx-composite-lib']),
                 deps: [PepAddonService]
             }, isolate: false
         }),
