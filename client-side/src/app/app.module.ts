@@ -1,4 +1,4 @@
-import { DoBootstrap, Injector, NgModule } from '@angular/core';
+import { DoBootstrap, Injector, NgModule, Type } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -14,6 +14,7 @@ import { DocumentsListModule } from './documents';
 import { MappingsModule } from './mapping';
 import { config } from './addon.config';
 import { createCustomElement } from '@angular/elements';
+import { SettingsComponent } from './settings/settings.component';
 
 @NgModule({
     declarations: [
@@ -53,8 +54,8 @@ export class AppModule implements DoBootstrap {
     ) {
         this.pepAddonService.setDefaultTranslateLang(translate);
     }
-
+    
     ngDoBootstrap() {
-        customElements.define(`collections-element-${config.AddonUUID}`, createCustomElement(CollectionListComponent, {injector: this.injector}));
+        this.pepAddonService.defineCustomElement(`collections-element-${config.AddonUUID}`, SettingsComponent, this.injector);
     }
 }

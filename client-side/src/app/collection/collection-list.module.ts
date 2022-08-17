@@ -62,14 +62,7 @@ export const routes: Routes = [
         PepTextareaModule,
         PepDialogModule,
         PepCheckboxModule,
-        TranslateModule.forChild({
-            loader: {
-                provide: TranslateLoader,
-                useFactory: (addonService: PepAddonService) =>
-                    PepAddonService.createMultiTranslateLoader(config.AddonUUID, addonService, ['ngx-lib', 'ngx-composite-lib']),
-                deps: [PepAddonService]
-            }, isolate: false
-        }),
+        TranslateModule.forChild(),
         RouterModule.forChild(routes)
     ],
     exports:[CollectionListComponent],

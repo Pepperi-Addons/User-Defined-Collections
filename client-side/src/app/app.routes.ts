@@ -14,30 +14,9 @@ export class EmptyRouteComponent {}
 
 const routes: Routes = [
     {
-        path: `:settingsSectionName/:addonUUID/:slugName`,
-        children: [
-            {
-                path: '',
-                component: CollectionListComponent
-                // TODO: solve routing
-                // path: '**',
-                // loadChildren: () => import('./addon/addon.module').then(m => m.AddonModule)
-            },
-            {
-                path: ':collection_name',
-                component: CollectionFormComponent
-                // TODO: solve routing
-                // path: '**',
-                // loadChildren: () => import('./addon/addon.module').then(m => m.AddonModule)
-            },
-            {
-                path: ':collection_name/documents',
-                component: DocumentsListComponent
-                // TODO: solve routing
-                // path: '**',
-                // loadChildren: () => import('./addon/addon.module').then(m => m.AddonModule)
-            }
-        ]
+        path: '',
+        loadChildren: ()=> import('./settings/settings.module').then(m => m.SettingsModule),
+        
     },
     {
         path: '**',
@@ -46,7 +25,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-    imports: [RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' })],
+    imports: [RouterModule.forRoot(routes)],
     exports: [RouterModule]
 })
 export class AppRoutingModule { }

@@ -15,6 +15,7 @@ import { DocumentsService } from "../services/documents.service";
 import { UtilitiesService } from "../services/utilities.service";
 import { DocumentsFormComponent, DocumentsFormData } from './form/documents-form.component';
 import { EMPTY_OBJECT_NAME, FormMode } from '../entities';
+import { config } from '../addon.config';
 
 @Component({
     selector: 'documents-list',
@@ -107,7 +108,8 @@ export class DocumentsListComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.utilitiesService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
+        console.log('inside documents list component');
+        this.utilitiesService.addonUUID = config.AddonUUID;
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
         this.utilitiesService.getCollectionByName(this.collectionName).then(value => {
             this.collectionData = value;

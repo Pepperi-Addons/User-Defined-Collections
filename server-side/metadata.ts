@@ -90,7 +90,7 @@ export const SettingsRelation: Relation[] = [{
     GroupName: 'Configuration',
     SlugName: 'udc',
     Name: relationName,
-    Description: 'New Assets Manager',
+    Description: 'User Defined Collections',
     Type: "NgComponent",
     SubType: "NG14",
     AddonUUID: config.AddonUUID,

@@ -196,6 +196,7 @@ export class CollectionListComponent implements OnInit {
     menuItems:PepMenuItem[] = []
 
     navigateToCollectionForm(mode: FormMode, name: string) {
+        const route: ActivatedRoute = this.getCurrentRoute(this.activateRoute);
         this.router['form_mode'] = mode;
         this.router.navigate([name], {
             relativeTo: this.activateRoute,
@@ -258,9 +259,22 @@ export class CollectionListComponent implements OnInit {
     }
 
     navigateToDocumentsView(collectionName: string) {
+        const route: ActivatedRoute = this.getCurrentRoute(this.activateRoute);
+
         this.router.navigate([`${collectionName}/documents`], {
-            relativeTo: this.activateRoute
+            relativeTo: this.activateRoute,
+            queryParamsHandling: 'merge'
         });
     }
 
+    private getCurrentRoute(route: ActivatedRoute) {
+        return {
+            ...route,
+            ...route.children.reduce((acc, child) =>
+                ({ ...this.getCurrentRoute(child), ...acc }), {}) 
+        };
+    }
+    
+    
+    
 }
