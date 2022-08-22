@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { EMPTY_OBJECT_NAME, SelectOptions } from '../entities';
+import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
 export class UtilitiesService {
@@ -26,6 +27,7 @@ export class UtilitiesService {
         public session:  PepSessionService,
         private pepHttp: PepHttpService
     ) {
+        this.addonUUID = config.AddonUUID;
         const accessToken = this.session.getIdpToken();
         this.parsedToken = jwt(accessToken);
         this.papiBaseURL = this.parsedToken["pepperi.baseurl"];
