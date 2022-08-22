@@ -11,6 +11,7 @@ import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router"
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
 import { Collection } from "@pepperi-addons/papi-sdk";
 import { FormMode, EMPTY_OBJECT_NAME } from "../entities";
+import { config } from "../addon.config";
 
 @Component({
     selector: 'collection-list',
@@ -56,7 +57,6 @@ export class CollectionListComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.utilitiesService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
         this.recycleBin = this.activateRoute.snapshot.queryParams.recycle_bin == 'true' || false;
         this.menuItems = this.getMenuItems();
         this.translate.get(['RecycleBin_NoDataFound', 'Collection_List_NoDataFound']).subscribe(translations=> {

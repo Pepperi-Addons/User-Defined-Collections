@@ -105,7 +105,6 @@ export class CollectionFormComponent implements OnInit {
                 private utilitiesService: UtilitiesService) { }
 
     ngOnInit(): void {
-        this.utilitiesService.addonUUID = this.activateRoute.snapshot.params.addon_uuid;
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
         this.mode = this.router['form_mode'] ? this.router['form_mode'] : this.collectionName === EMPTY_OBJECT_NAME ? 'Add' : 'Edit';
         this.translate.get(['SyncData_Options_Online', 'SyncData_Options_Offline', 'DocumentKey_Options_AutoGenerate', 'DocumentKey_Options_Composite']).subscribe(translations => {

@@ -41,7 +41,6 @@ export class MappingListComponent implements OnInit {
         private dialogService: PepDialogService) { }
 
     ngOnInit(): void {
-        this.utilitiesService.addonUUID = this.hostObject.options.addonId;
         this.mappingsService.getAtd(this.hostObject.objectList[0]).then(value => {
             this.atd = value;
             this.activitiesDataSource = this.getDataSource('activities');

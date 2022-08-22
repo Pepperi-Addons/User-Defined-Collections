@@ -108,8 +108,6 @@ export class DocumentsListComponent implements OnInit {
     }
 
     ngOnInit() {
-        console.log('inside documents list component');
-        this.utilitiesService.addonUUID = config.AddonUUID;
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
         this.utilitiesService.getCollectionByName(this.collectionName).then(value => {
             this.collectionData = value;
