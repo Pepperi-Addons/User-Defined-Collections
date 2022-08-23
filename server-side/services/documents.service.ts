@@ -60,7 +60,7 @@ export class DocumentsService {
         const retVal: any[] = []
         await Promise.all(collections.map(async (item) => {
             try {
-                const documents = await this.utilities.papiClient.userDefinedCollections.documents(item.Name).iter().toArray();
+                const documents = await this.utilities.papiClient.userDefinedCollections.documents(item.Name).find({fields: ['Hidden'], page_size: -1});
                 if (documents) {
                     retVal.push ({
                         Data: item.Name,
