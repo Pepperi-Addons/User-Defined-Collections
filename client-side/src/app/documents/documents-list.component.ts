@@ -9,7 +9,7 @@ import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog"
 import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { DIMXHostObject, PepDIMXHelperService } from '@pepperi-addons/ngx-composite-lib'
 
-import { AddonData, Collection, FormDataView } from "@pepperi-addons/papi-sdk";
+import { AddonData, Collection, FormDataView, SchemeField } from "@pepperi-addons/papi-sdk";
 
 import { DocumentsService } from "../services/documents.service";
 import { UtilitiesService } from "../services/utilities.service";
@@ -249,16 +249,19 @@ export class DocumentsListComponent implements OnInit {
     }
 
     navigateToDocumentsForm(formMode: FormMode, documentKey: string) {
-        const listItem = this.documentsList.getItemById(documentKey);
-        let item = {};
+        const listItem = this.documents.find(x => x.Key === documentKey);
+        let item = listItem;
         if (formMode == 'Edit') {
-            item['Key'] = documentKey;
-            listItem?.Fields.forEach((rowItem: ObjectsDataRowCell) => {
-                if (this.collectionData.Fields[rowItem.ApiName]?.Type === 'Array') {
-                    item[rowItem.ApiName] = rowItem.Value.split(",").join(";");
+            // item['Key'] = documentKey;
+            Object.keys(listItem).forEach((fieldID) => {
+                let fieldType = this.collectionData.Fields[fieldID]?.Type;
+                // if the field is of type Array or Object, convert to string for editing
+                if (fieldType === 'Object' || fieldType === 'Array') {
+                    item[fieldID] = JSON.stringify(listItem[fieldID]);
                 }
-                else {
-                    item[rowItem.ApiName] = rowItem.Value;
+                // if the field is array and has optional values, convert to string seperated by comma
+                if (this.collectionData.Fields[fieldID]?.Items?.OptionalValues?.length > 0) {
+                    item[fieldID] = listItem[fieldID].join(';');
                 }
             });
         }
