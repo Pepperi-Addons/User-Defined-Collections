@@ -15,7 +15,7 @@ export class CollectionsService {
 
     
     async upsert(service: DocumentsService, body: any) {
-        const collectionObj = {
+        const collectionObj: Collection = {
             Type: "data",
             GenericResource: true,
             ...body,
@@ -27,27 +27,35 @@ export class CollectionsService {
         }
         const updatingHidden = 'Hidden' in body && body.Hidden;
         const validResult = this.validateScheme(collectionObj);
-        console.log(validResult);
+        const errors: string[] = []
         if (validResult.valid || updatingHidden) {
             await service.checkHidden(body);
-            const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
-            await this.createDIMXRelations(collection.Name);
-            return collection;
+            const fieldsValid = await this.validateFieldsType(collectionObj);
+            if (fieldsValid.size === 0) {
+                const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
+                await this.createDIMXRelations(collection.Name);
+                return collection;
+            }
+            else {
+                for (const [key, value] of fieldsValid) {
+                    errors.push(`field ${key} already exist with different type on the following collections: ${value.join(',')}. Please change the field's type.`);
+                }
+            }
         }
         else {
-            const errors = validResult.errors.map(error => {
+            validResult.errors.forEach(error => {
                 if (error.name === 'additionalProperties' && error.property === 'instance.Fields') {
-                    return `Field ${error.argument} must start with lowercase letter, and can only contains URL safe characters`;
+                    errors.push(`Field ${error.argument} must start with lowercase letter, and can only contains URL safe characters`);
                 }
                 else if (error.name === 'pattern' && error.property === 'instance.Name') {
-                    return `collection name must begin with capital letter, and can only contains URL safe characters`;
+                    errors.push(`collection name must begin with capital letter, and can only contains URL safe characters`);
                 }
                 else {
-                    return error.stack.replace("instance.", "");
+                    errors.push(error.stack.replace("instance.", ""));
                 }
             });
-            throw new Error(errors.join("\n"));
         }
+        throw new Error(errors.join("\n"));
     }
 
     validateScheme(collection: Collection): ValidatorResult {
@@ -114,6 +122,35 @@ export class CollectionsService {
                 }
             }
             throw error;
+        }
+    }
+
+    async validateFieldsType(collectionObj: Collection) {
+        let validMap = new Map();
+        const collections = await this.find({ include_deleted: true, where: `Name != ${collectionObj.Name}` });
+        for (const fieldID of Object.keys(collectionObj.Fields!)) {
+            collections.forEach((collection => {
+                if (collection.Fields && collection.Fields[fieldID]) {
+                    // if one of the collection has a field with the same ID, check to see if it's the same type.
+                    if (collectionObj.Fields![fieldID].Type != collection.Fields![fieldID].Type) { 
+                        this.addFieldToMap(validMap, fieldID, collection.Name);
+                    }
+                    // If they both of type 'Array' check their item's type.
+                    else if (collectionObj.Fields![fieldID].Type === 'Array' && collectionObj.Fields![fieldID].Items!.Type != collection.Fields![fieldID].Items!.Type) {
+                        this.addFieldToMap(validMap, fieldID, collection.Name);                    
+                    }
+                }
+            }));
+        }
+        return validMap;
+    }
+    
+    addFieldToMap(map, fieldID, collectionName) {
+        const list = map.get(fieldID);
+        if (!list) {
+            map.set(fieldID, [collectionName]);
+        } else {
+            list.push(collectionName);
         }
     }
 }
