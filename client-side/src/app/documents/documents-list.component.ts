@@ -127,8 +127,14 @@ export class DocumentsListComponent implements OnInit {
         const noDataMessageKey = this.recycleBin ? 'RecycleBin_NoDataFound' : 'Documents_NoDataFound'
         return {
             init: async (params:any) => {
-                const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String');
-                this.documents = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
+                try {
+                    const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String');
+                    this.documents = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
+                }
+                catch (err) {
+                    this.documents = [];
+                    this.showMessageInDialog('Documents_LoadingErrorDialog_Title', 'Documents_LoadingErrorDialog_Message');
+                }
                 return Promise.resolve({
                     dataView: {
                         Context: {
@@ -354,5 +360,14 @@ export class DocumentsListComponent implements OnInit {
         })
 
         return dataView;
+    }
+
+    showMessageInDialog(titleTranslationKey: string, messageTranslationKey: string) {
+        const dataMsg = new PepDialogData({
+            title: this.translate.instant(titleTranslationKey),
+            actionsType: 'close',
+            content: this.translate.instant(messageTranslationKey)
+        });
+        this.dialogService.openDefaultDialog(dataMsg);
     }
 }
