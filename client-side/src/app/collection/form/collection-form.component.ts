@@ -194,16 +194,26 @@ export class CollectionFormComponent implements OnInit {
                                 Mandatory: false,
                                 ReadOnly: true
                             },
+                            {
+                                FieldID: 'Mandatory',
+                                Type: 'Boolean',
+                                Title: this.translate.instant('Mandatory'),
+                                Mandatory: false,
+                                ReadOnly: true
+                            },
                         ],
                         Columns: [
                             {
                                 Width: 20
                             },
                             {
-                                Width: 50
+                                Width: 40
                             },
                             {
                                 Width: 30
+                            },
+                            {
+                                Width: 10
                             }
                         ],
           
