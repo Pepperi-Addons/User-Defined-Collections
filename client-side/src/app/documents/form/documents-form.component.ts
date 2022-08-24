@@ -20,6 +20,7 @@ export class DocumentsFormComponent implements OnInit {
     item: AddonData = {};
     error: string;
     isValid: boolean;
+    loaded: boolean = false;
     
     constructor(               
         private dialogRef: MatDialogRef<DocumentsFormComponent>,
@@ -31,6 +32,7 @@ export class DocumentsFormComponent implements OnInit {
 
     ngOnInit(): void {
         this.item = this.incoming.Item;
+        console.log(this.item);
         this.isValid = this.incoming.Mode === 'Edit';
     }
 
@@ -38,7 +40,7 @@ export class DocumentsFormComponent implements OnInit {
         try {
             this.convertMultiChoiceValues();
             this.convertNumbers();
-            this.convertTextArea();
+            this.convertObjectsAndArrays();
             this.convertBoolean();
             if(this.incoming.Mode === 'Add') {
                 try {
@@ -100,8 +102,8 @@ export class DocumentsFormComponent implements OnInit {
         })
     }
 
-    convertTextArea() {
-        this.incoming.DataView.Fields?.filter(field => field.Type === 'TextArea').forEach(field => {
+    convertObjectsAndArrays() {
+        this.incoming.DataView.Fields?.filter(field => field.Type === 'TextBox').forEach(field => {
             try {
                 this.item[field.FieldID] = JSON.parse(this.item[field.FieldID])
             }
@@ -118,7 +120,7 @@ export class DocumentsFormComponent implements OnInit {
 
     convertBoolean() {
         this.incoming.DataView.Fields?.filter(field => field.Type === 'Boolean').forEach(field => {
-            if(this.item[field.FieldID].toLowerCase() === "true") {
+            if(this.item[field.FieldID]) {
                 this.item[field.FieldID] = true;
             }
             else {

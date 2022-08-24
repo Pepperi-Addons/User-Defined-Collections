@@ -500,7 +500,7 @@ export class CollectionFormComponent implements OnInit {
                     type = 'MultiTickBox';
                 }
                 else {
-                    type = 'TextArea'
+                    type = 'TextBox'
                 }
                 break;
             }
