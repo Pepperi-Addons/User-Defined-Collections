@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
-import { PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
+import { IPepFieldClickEvent, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { TranslateService } from '@ngx-translate/core';
 
 import { UtilitiesService } from "../services/utilities.service";
@@ -96,7 +96,7 @@ export class CollectionListComponent implements OnInit {
                         Fields: [
                             {
                                 FieldID: 'Name',
-                                Type: 'TextBox',
+                                Type: 'Link',
                                 Title: this.translate.instant('Name'),
                                 Mandatory: false,
                                 ReadOnly: true
@@ -275,6 +275,9 @@ export class CollectionListComponent implements OnInit {
         };
     }
     
+    onFieldClick(event: IPepFieldClickEvent) {
+        this.navigateToDocumentsView(event.value);
+    }
     
     
 }
