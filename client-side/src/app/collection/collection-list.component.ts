@@ -181,12 +181,15 @@ export class CollectionListComponent implements OnInit {
                     //         this.exportCollectionScheme(objs.rows[0]);
                     //     }
                     // })
-                    actions.push({
-                        title: this.translate.instant('Edit data'),
-                        handler: async (objs) => {
-                            this.navigateToDocumentsView(objs.rows[0]);
-                        }
-                    })
+                    const selectedCollection = this.collections.find(x=>x.Name === data.rows[0]);
+                    if (selectedCollection && selectedCollection.Type != 'contained') {
+                        actions.push({
+                            title: this.translate.instant('Edit data'),
+                            handler: async (objs) => {
+                                this.navigateToDocumentsView(objs.rows[0]);
+                            },
+                        })
+                    }
                 }
             }
             return actions;

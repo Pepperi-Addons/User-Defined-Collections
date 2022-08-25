@@ -76,6 +76,7 @@
     "MappingForm_FilterField_Title": "{{field_name}}",
     "SyncData_Options_Online": "Available for online only",
     "SyncData_Options_Offline": "Available for online and offline",
+    "SyncData_Options_OnlyScheme": "Scheme only",
     "Sync_Select_Title": "Data storage & sync",
     "Indexed_Select_Title": "Indexed",
     "CollectionForm_SyncData_Message": "are you sure you want to change the data availability?",

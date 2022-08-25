@@ -7,6 +7,7 @@ export type FieldsFormDialogData = {
     EmptyCollection: boolean;
     InUidFields: boolean;
     Resources: AddonDataScheme[];
+    ContainedResources: AddonDataScheme[];
     AvailableTypes: SchemeFieldType[];
 }
 
@@ -29,6 +30,6 @@ export const booleanOptions: SelectOptions<boolean> = [{
     value: "False"
 }]
 
-export const SyncTypes = ['Online', 'Offline'] as const;
+export const SyncTypes = ['Online', 'Offline', 'OnlyScheme'] as const;
 
 export type SyncType = typeof SyncTypes[number];

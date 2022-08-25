@@ -29,6 +29,7 @@ export class CollectionFormComponent implements OnInit {
     documentKeyValid: boolean = false;
     nameValid: boolean = false;
     resources: AddonDataScheme[] = [];
+    containedResources: AddonDataScheme[] = [];
     booleanOptions = booleanOptions;
     syncData: SyncType = 'Offline';
 
@@ -107,7 +108,7 @@ export class CollectionFormComponent implements OnInit {
     ngOnInit(): void {
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
         this.mode = this.router['form_mode'] ? this.router['form_mode'] : this.collectionName === EMPTY_OBJECT_NAME ? 'Add' : 'Edit';
-        this.translate.get(['SyncData_Options_Online', 'SyncData_Options_Offline', 'DocumentKey_Options_AutoGenerate', 'DocumentKey_Options_Composite']).subscribe(translations => {
+        this.translate.get(['SyncData_Options_Online', 'SyncData_Options_Offline', 'SyncData_Options_OnlyScheme', 'DocumentKey_Options_AutoGenerate', 'DocumentKey_Options_Composite']).subscribe(translations => {
             this.documentKeyOptions = DocumentKeyTypes.filter(type => type !== 'Key').map(type => {
                 return {
                     key: type,
@@ -124,6 +125,7 @@ export class CollectionFormComponent implements OnInit {
                 this.collection = value;
                 this.fieldsDataSource = this.getFieldsDataSource();
                 this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
+                this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collectionName);
                 this.collectionLoaded = true;
                 if (this.mode === 'Edit') {
                     const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
@@ -142,6 +144,10 @@ export class CollectionFormComponent implements OnInit {
                         Sync: true,
                         SyncFieldLevel: false
                     }
+                }
+                if (this.collection.Type === 'contained') {
+                    this.syncData = 'OnlyScheme';
+                    this.collection.SyncData.Sync = false;
                 }
                 this.nameValid = this.collection.Name != '';
                 this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
@@ -194,26 +200,16 @@ export class CollectionFormComponent implements OnInit {
                                 Mandatory: false,
                                 ReadOnly: true
                             },
-                            {
-                                FieldID: 'Mandatory',
-                                Type: 'Boolean',
-                                Title: this.translate.instant('Mandatory'),
-                                Mandatory: false,
-                                ReadOnly: true
-                            },
                         ],
                         Columns: [
                             {
                                 Width: 20
                             },
                             {
-                                Width: 40
+                                Width: 50
                             },
                             {
                                 Width: 30
-                            },
-                            {
-                                Width: 10
                             }
                         ],
           
@@ -307,7 +303,6 @@ export class CollectionFormComponent implements OnInit {
                 Mandatory: false,
                 Description: ''
             },
-            Fields: this.collection.Fields[name]?.Fields || {},
             Resource: this.collection.Fields[name]?.Resource || '',
             AddonUUID: this.collection.Fields[name]?.AddonUUID || '',
         }
@@ -319,7 +314,8 @@ export class CollectionFormComponent implements OnInit {
             InUidFields: this.collection.DocumentKey.Fields?.includes(name) || false,
             Field: collectionField,
             Resources: this.resources,
-            AvailableTypes: SchemeFieldTypes.filter(type => ['ContainedResource', 'DynamicResource', 'ContainedDynamicResource', 'MultipleStringValues'].includes(type) === false),
+            ContainedResources: this.containedResources,
+            AvailableTypes: this.getAllowedTypes(),
         }
         dialogConfig.data = new PepDialogData({
             content: FieldsFormComponent,
@@ -350,6 +346,14 @@ export class CollectionFormComponent implements OnInit {
                 this.fieldsDataSource = this.getFieldsDataSource();
             }
         })
+    }
+
+    getAllowedTypes(): SchemeFieldType[] {
+        let types = SchemeFieldTypes.filter(type => ['Object', 'DynamicResource', 'ContainedDynamicResource', 'MultipleStringValues'].includes(type) === false);
+        if (this.collection.Type == 'contained') {
+            types = types.filter(type => type != 'ContainedResource');
+        }
+        return types;
     }
 
     goBack() {
@@ -510,7 +514,7 @@ export class CollectionFormComponent implements OnInit {
                     type = 'MultiTickBox';
                 }
                 else {
-                    type = 'TextBox'
+                    type = 'TextArea'
                 }
                 break;
             }
@@ -565,26 +569,11 @@ export class CollectionFormComponent implements OnInit {
             const config = this.dialogService.getDialogConfig({}, 'regular');
             this.dialogService.openDefaultDialog(data, config).afterClosed().subscribe((isOKPressed) => {
                 if(isOKPressed) {
-                    if(value != 'Online') {
-                        this.collection.SyncData = {
-                            Sync: true,
-                            SyncFieldLevel: false,
-                        }
-                    }
-                    else {
-                        if(this.collection.SyncData) {
-                            this.collection.SyncData.Sync = false;
-                        }
-                        else {
-                            this.collection.SyncData = {
-                                Sync: false
-                            }
-                        }
-                    }
+                    this.changeSyncData(value);
                 }
                 else {
                     if (this.collection.SyncData) {
-                        this.syncData = this.collection.SyncData.Sync ? 'Offline' : 'Online';
+                        this.syncData = this.collection.Type === 'contained' ? 'OnlyScheme' : this.collection.SyncData.Sync ? 'Offline' : 'Online';
                     }
                     else {
                         this.syncData = 'Online';
@@ -593,13 +582,31 @@ export class CollectionFormComponent implements OnInit {
             });
         }
         else {
-            if(value != 'Online') {
+            this.changeSyncData(value);
+        }
+        // after settting sync data, if it's not scheme only, change collection's type
+        if (this.syncData != 'OnlyScheme') {
+            this.collection.Type = 'data';
+        }
+    }
+    
+    nameChanged(value: string) {
+        this.nameValid = value != '';
+    }
+
+    changeSyncData(newSyncData: SyncType) {
+        switch (newSyncData) {
+            case 'Online': {
                 this.collection.SyncData = {
                     Sync: true,
                     SyncFieldLevel: false,
                 }
+                break;
             }
-            else {
+            case 'OnlyScheme': {
+                this.collection.Type = 'contained';
+            }
+            case 'Offline': {
                 if(this.collection.SyncData) {
                     this.collection.SyncData.Sync = false;
                 }
@@ -608,11 +615,8 @@ export class CollectionFormComponent implements OnInit {
                         Sync: false
                     }
                 }
+                break;
             }
         }
-    }
-    
-    nameChanged(value: string) {
-        this.nameValid = value != '';
     }
 }
