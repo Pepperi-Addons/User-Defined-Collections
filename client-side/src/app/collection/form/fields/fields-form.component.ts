@@ -29,6 +29,7 @@ export class FieldsFormComponent implements OnInit {
     objectFields: {
         [key:string]: CollectionField;
     }
+    isIndexed: boolean = false;
 
     objectFieldsActions: IPepGenericListActions = {
         get: async (data: PepSelectionData) => {
@@ -86,6 +87,7 @@ export class FieldsFormComponent implements OnInit {
         })
         this.objectFieldsValid = this.dialogData.Field.Type !== 'Object' || (this.dialogData.Field.Type === 'Object' && Object.keys(this.objectFields).length > 0);
         this.supportArray = this.dialogData.AvailableTypes.includes('Array');
+        this.isIndexed = this.dialogData.Field.Indexed;
     }
 
     ngOnInit() {
@@ -129,6 +131,7 @@ export class FieldsFormComponent implements OnInit {
     }
 
     saveField() {
+        this.dialogData.Field.Indexed = this.isIndexed;
         if (this.dialogData.Field.Type != 'Object') {
             this.dialogData.Field.Fields = undefined; // erase object scheme to avoid saving stale data
         }
@@ -257,7 +260,8 @@ export class FieldsFormComponent implements OnInit {
             InUidFields: false,
             Field: collectionField,
             Resources: this.dialogData.Resources,
-            AvailableTypes: SchemeFieldTypes.filter(type => ['ContainedResource', 'DynamicResource', 'ContainedDynamicResource', 'MultipleStringValues', 'Object', 'Array'].includes(type) === false)
+            AvailableTypes: SchemeFieldTypes.filter(type => ['ContainedResource', 'DynamicResource', 'ContainedDynamicResource', 'MultipleStringValues', 'Object', 'Array'].includes(type) === false),
+            AllowTypeChange: true,
         }
         dialogConfig.data = new PepDialogData({
             content: FieldsFormComponent,
