@@ -27,6 +27,10 @@
                 "group": "build"
             },
             "runtimeExecutable": "${workspaceFolder}/server-side/node_modules/.bin/nodemon",
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ],
             "restart": true,
         },
         {

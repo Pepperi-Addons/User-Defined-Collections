@@ -1,7 +1,7 @@
 import { UtilitiesService } from './utilities.service';
 import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
+import { AtdRelations, DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
 import { DocumentsService } from './documents.service';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema, regexPattern } from '../jsonSchemes/collections';
@@ -34,6 +34,7 @@ export class CollectionsService {
             if (fieldsValid.size === 0) {
                 const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
                 await this.createDIMXRelations(collection.Name);
+                await this.createDataQueryRelations(collection);
                 return collection;
             }
             else {
@@ -86,6 +87,27 @@ export class CollectionsService {
             singleRelation.AddonRelativeURL = `/api/${functionName}?collection_name=${collectionName}`
             await this.utilities.papiClient.addons.data.relations.upsert(singleRelation);
         }));
+    }
+    
+    async createDataQueryRelations(collection: AddonDataScheme) {
+        for (let relation of DataQueryRelation) {
+            relation.Name = collection.Name;
+            relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${this.client.AddonUUID}/${this.client.AddonUUID}_${collection.Name}`;
+            relation.SchemaRelativeURL = `/api/collection_fields?collection_name=${collection.Name}`;
+            Object.keys(collection.Fields!).forEach((fieldName) => {
+                const collectionField = collection.Fields![fieldName];
+                if (collectionField.Type === 'Resource') {
+                    if (collectionField.Resource === 'accounts' && fieldName === 'account') {
+                        relation.AccountFieldID = 'UUID',
+                        relation.IndexedAccountFieldID = `${fieldName}.Key`
+                    }
+                    if (collectionField.Resource === 'users' && fieldName === 'user') {
+                        relation.UserFieldID = 'UUID',
+                        relation.IndexedUserFieldID = `${fieldName}.Key`
+                    }
+                }
+            })
+        }
     }
 
     async hardDelete(collectionName: string, force: boolean) {
