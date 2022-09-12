@@ -83,5 +83,6 @@
     "Object_Field_Scheme": "Object fields schema",
     "Fields_Array_Title": "Is array",
     "Documents_LoadingErrorDialog_Title": "Loading Error",
-    "Documents_LoadingErrorDialog_Message": "Error occured while getting documents, please try again later"
+    "Documents_LoadingErrorDialog_Message": "Error occured while getting documents, please try again later",
+    "Fields_Indexed_Title": "Indexed"
 }
