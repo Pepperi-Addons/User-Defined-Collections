@@ -8,6 +8,7 @@ export type FieldsFormDialogData = {
     InUidFields: boolean;
     Resources: AddonDataScheme[];
     AvailableTypes: SchemeFieldType[];
+    AllowTypeChange: boolean;
 }
 
 export type FormMode = 'Add' | 'Edit';
