@@ -34,7 +34,9 @@ export class CollectionsService {
             if (fieldsValid.size === 0) {
                 const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
                 await this.createDIMXRelations(collection.Name);
-                await this.createDataQueryRelations(collection);
+                if(collection.Type !== 'contained') {
+                    await this.createDataQueryRelations(collection);
+                }
                 return collection;
             }
             else {
@@ -107,6 +109,8 @@ export class CollectionsService {
                     }
                 }
             })
+
+            await this.utilities.papiClient.addons.data.relations.upsert(relation);
         }
     }
 

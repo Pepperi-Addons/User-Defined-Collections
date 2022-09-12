@@ -111,13 +111,6 @@ export class FieldsFormComponent implements OnInit {
             this.hasOptionalValues = false;
             this.dialogData.Field.OptionalValues = [];
         }
-        if (type == 'Resource') {
-            this.dialogData.Field.IndexedFields = {
-                Key: {
-                    Type: 'String'
-                }
-            };
-        }
         if (type == 'Resource' || type == 'DateTime') {
             this.isArray = false;
         }
