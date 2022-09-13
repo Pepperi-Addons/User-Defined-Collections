@@ -145,7 +145,9 @@ export class DocumentsListComponent implements OnInit {
                         Type: 'Grid',
                         Title: '',
                         Fields: [
-                            ...this.collectionData.ListView.Fields,
+                            ...this.collectionData.ListView.Fields.filter(field => {
+                                return this.collectionData.Fields[field.FieldID].Type !== 'Array' && this.collectionData.Fields[field.FieldID].Type !== 'Object';
+                            }),
                             {
                                 FieldID: 'CreationDateTime',
                                 Title: this.translate.instant('Creation Date'),
