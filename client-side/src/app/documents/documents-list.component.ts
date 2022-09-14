@@ -258,7 +258,7 @@ export class DocumentsListComponent implements OnInit {
 
     navigateToDocumentsForm(formMode: FormMode, documentKey: string) {
         const listItem = this.documents.find(x => x.Key === documentKey);
-        let item = listItem;
+        let item = listItem || {};
         if (formMode == 'Edit') {
             // item['Key'] = documentKey;
             Object.keys(listItem).forEach((fieldID) => {
