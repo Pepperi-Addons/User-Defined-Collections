@@ -362,7 +362,11 @@ export class CollectionFormComponent implements OnInit {
                     }
                     else {
                         this.collection.ListView.Fields.push(dvField);
-                        this.collection.ListView.Columns.push({Width:10});
+                        const column = {
+                            Width: 30,
+                            ColumnWidthType: 1
+                        }
+                        this.collection.ListView.Columns.push(column);
                     }
                 }
                 else {

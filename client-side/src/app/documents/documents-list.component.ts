@@ -164,10 +164,12 @@ export class DocumentsListComponent implements OnInit {
                         Columns: [ 
                             ...this.collectionData.ListView.Columns,
                             {
-                                Width:10
+                                Width:30,
+                                ColumnWidthType: 1
                             },
                             {
-                                Width:10
+                                Width:30,
+                                ColumnWidthType: 1
                             }
                         ],
                         FrozenColumnsCount: 0,
