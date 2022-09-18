@@ -279,7 +279,15 @@ export class CollectionListComponent implements OnInit {
     }
     
     onFieldClick(event: IPepFieldClickEvent) {
-        this.navigateToDocumentsView(event.value);
+        const collection = this.collections.find(c => c.Name === event.value);
+        if (collection && collection.Type != 'contained') {
+            this.navigateToDocumentsView(event.value);
+        }
+        else {
+            const title = this.translate.instant('Collection_ContainedErrorDialog_Title');
+            const content = this.translate.instant('Collection_ContainedErrorDialog_Content');
+            this.utilitiesService.showMessageDialog(title, content);
+        }
     }
     
     

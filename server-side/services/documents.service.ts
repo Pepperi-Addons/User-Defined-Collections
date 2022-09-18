@@ -176,7 +176,8 @@ export class DocumentsService {
                 retVal.type = "string";
                 break;
             }
-            case 'Object': {
+            case 'Object': 
+            case 'ContainedResource': {
                 retVal.type = "object";
                 break;
             }

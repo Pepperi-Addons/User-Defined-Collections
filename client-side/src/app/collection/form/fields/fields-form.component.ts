@@ -21,7 +21,8 @@ export class FieldsFormComponent implements OnInit {
     hasOptionalValues: boolean = true;
     resourcesOptions: SelectOptions<string>;
     booleanOptions = booleanOptions;
-    isArray: boolean = false;
+    isArray: string = 'false';
+    isMandatory: string = 'false';
     objectFieldsDataSource: IPepGenericListDataSource;
     EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
     supportArray: boolean = true;
@@ -44,10 +45,10 @@ export class FieldsFormComponent implements OnInit {
             }
         });
         if (this.dialogData.Field.Type === 'Array') {
-            this.isArray = true;
+            this.isArray = 'true';
             this.dialogData.Field.Type = this.dialogData.Field.Items.Type;
         }
-        this.hasOptionalValues = this.dialogData.Field.Type == 'String' || (this.isArray && this.dialogData.Field.Items?.Type === 'String');
+        this.hasOptionalValues = this.dialogData.Field.Type == 'String' || (this.isArray === 'true' && this.dialogData.Field.Items?.Type === 'String');
         this.resourcesOptions = this.dialogData.Resources.map(item => {
             return {
                 key: item.Name,
@@ -56,6 +57,7 @@ export class FieldsFormComponent implements OnInit {
         })
         this.supportArray = this.dialogData.AvailableTypes.includes('Array');
         this.isIndexed = this.dialogData.Field.Indexed;
+        this.isMandatory = this.dialogData.Field.Mandatory ? 'true': 'false';
     }
 
     ngOnInit() {
@@ -72,7 +74,7 @@ export class FieldsFormComponent implements OnInit {
     }
 
     fieldTypeChanged(type: SchemeFieldType) {
-        if (type == 'String' || (this.isArray && this.dialogData.Field.Items?.Type === 'String')) {
+        if (type == 'String' || (this.isArray === 'true' && this.dialogData.Field.Items?.Type === 'String')) {
             this.hasOptionalValues = true;
         }
         else {
@@ -96,13 +98,14 @@ export class FieldsFormComponent implements OnInit {
             })
         }
         if (type == 'Resource' || type == 'DateTime') {
-            this.isArray = false;
+            this.isArray = 'false';
         }
     }
 
     saveField() {
         this.dialogData.Field.Indexed = this.isIndexed;
-        if (this.isArray) {
+        this.dialogData.Field.Mandatory = this.isMandatory === 'true';
+        if (this.isArray === 'true') {
             if(this.dialogData.Field.Type === 'Resource' || this.dialogData.Field.Type === 'ContainedResource') { // on resource array, the resource & addonUUID data should be on the Items.
                 this.dialogData.Field.Items.Resource = this.dialogData.Field.Resource;
                 this.dialogData.Field.Items.AddonUUID = this.dialogData.Field.AddonUUID;

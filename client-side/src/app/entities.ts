@@ -22,12 +22,12 @@ export interface SelectOption<T> {
 
 export type SelectOptions<T> = Array<SelectOption<T>>
 
-export const booleanOptions: SelectOptions<boolean> = [{
-    key: true,
+export const booleanOptions: SelectOptions<string> = [{
+    key: "true",
     value: "True"
 }, 
 {
-    key: false,
+    key: "false",
     value: "False"
 }]
 

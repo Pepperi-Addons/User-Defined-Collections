@@ -5,6 +5,8 @@ import { Injectable } from '@angular/core';
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { EMPTY_OBJECT_NAME, SelectOptions } from '../entities';
 import { config } from '../addon.config';
+import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
+import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({ providedIn: 'root' })
 export class UtilitiesService {
@@ -25,7 +27,9 @@ export class UtilitiesService {
 
     constructor(
         public session:  PepSessionService,
-        private pepHttp: PepHttpService
+        private pepHttp: PepHttpService,
+        private translate: TranslateService,
+        private dialogService: PepDialogService
     ) {
         this.addonUUID = config.AddonUUID;
         const accessToken = this.session.getIdpToken();
@@ -98,5 +102,14 @@ export class UtilitiesService {
     async getReferenceResources(): Promise<AddonDataScheme[]> {
         const resources = await this.papiClient.resources.resource('resources').get();
         return resources as AddonDataScheme[];
+    }
+
+    showMessageDialog(title: string, content: string) {
+        const dataMsg = new PepDialogData({
+            title: title,
+            actionsType: 'close',
+            content: content
+        });
+        this.dialogService.openDefaultDialog(dataMsg);
     }
 }
