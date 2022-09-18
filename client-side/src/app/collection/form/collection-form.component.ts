@@ -135,7 +135,7 @@ export class CollectionFormComponent implements OnInit {
                 this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collectionName);
                 this.collectionLoaded = true;
                 if (this.mode === 'Edit') {
-                    const documents = await this.utilitiesService.getCollectionDocuments(this.collectionName);
+                    const documents = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collectionName): [];
                     this.emptyCollection = documents.length == 0;
                     if (this.uidList) {
                         this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
