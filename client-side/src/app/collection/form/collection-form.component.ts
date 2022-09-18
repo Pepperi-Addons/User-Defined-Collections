@@ -39,18 +39,22 @@ export class CollectionFormComponent implements OnInit {
         get: async (data: PepSelectionData) => {
             const actions = [];
             if (data && data.rows.length == 1) {
+                const fieldIndexed = this.originFields[data.rows[0]]?.Indexed || false
                 actions.push({
                     title: this.translate.instant('Edit'),
                     handler: async (objs) => {
                         this.openFieldForm(objs.rows[0]);
                     }
                 });
-                actions.push({
-                    title: this.translate.instant('Delete'),
-                    handler: async (objs) => {
-                        this.showDeleteDialog(objs.rows[0]);
-                    }
-                })
+                // if the field is indexed than it cannot be deleted
+                if (!fieldIndexed) {
+                    actions.push({
+                        title: this.translate.instant('Delete'),
+                        handler: async (objs) => {
+                            this.showDeleteDialog(objs.rows[0]);
+                        }
+                    })
+                }
                 actions.push({
                     title: this.translate.instant('Change Sort'),
                     handler: async (objs) => {
@@ -88,6 +92,9 @@ export class CollectionFormComponent implements OnInit {
     fieldSort: number;
     dialogRef: MatDialogRef<CollectionFormComponent>
     uidList: GenericListComponent
+    originFields: {
+        [key: string]: CollectionField
+    } = undefined;
 
     @ViewChild('UidFieldForm', { read: TemplateRef }) UidFieldsTemplate: TemplateRef<any>;
     @ViewChild('SortingForm', { read: TemplateRef }) SortingForm: TemplateRef<any>;
@@ -152,6 +159,8 @@ export class CollectionFormComponent implements OnInit {
                 this.nameValid = this.collection.Name != '';
                 this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
                 this.fieldsValid = this.collection.ListView.Fields.length > 0;
+                // deep copy the object to avoid unwanted data changes
+                this.originFields = JSON.parse(JSON.stringify(this.collection.Fields));
             });
         });
     }
@@ -166,6 +175,7 @@ export class CollectionFormComponent implements OnInit {
                         Type: type === 'Array' ? `${this.collection.Fields[obj.FieldID].Items.Type} ${type}` : type,
                         Description: this.collection.Fields[obj.FieldID].Description,
                         Mandatory: this.collection.Fields[obj.FieldID].Mandatory,
+                        Indexed: this.collection.Fields[obj.FieldID].Indexed || false,
                     };
                 });
                 this.fieldsValid = this.collection.ListView.Fields.length > 0;
@@ -200,16 +210,36 @@ export class CollectionFormComponent implements OnInit {
                                 Mandatory: false,
                                 ReadOnly: true
                             },
+                            {
+                                FieldID: 'Mandatory',
+                                Type: 'Boolean',
+                                Title: this.translate.instant('Mandatory'),
+                                Mandatory: false,
+                                ReadOnly: true
+                            },
+                            {
+                                FieldID: 'Indexed',
+                                Type: 'Boolean',
+                                Title: this.translate.instant('Indexed'),
+                                Mandatory: false,
+                                ReadOnly: true
+                            },
                         ],
                         Columns: [
                             {
                                 Width: 20
                             },
                             {
-                                Width: 50
+                                Width: 20
                             },
                             {
-                                Width: 30
+                                Width: 20
+                            },
+                            {
+                                Width: 20
+                            },
+                            {
+                                Width: 20
                             }
                         ],
           
@@ -305,6 +335,7 @@ export class CollectionFormComponent implements OnInit {
             },
             Resource: this.collection.Fields[name]?.Resource || '',
             AddonUUID: this.collection.Fields[name]?.AddonUUID || '',
+            Indexed: this.collection.Fields[name]?.Indexed || false,
         }
         let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
         const dialogData: FieldsFormDialogData = {
@@ -316,6 +347,7 @@ export class CollectionFormComponent implements OnInit {
             Resources: this.resources,
             ContainedResources: this.containedResources,
             AvailableTypes: this.getAllowedTypes(),
+            AllowTypeChange: !this.originFields[name]?.Indexed
         }
         dialogConfig.data = new PepDialogData({
             content: FieldsFormComponent,

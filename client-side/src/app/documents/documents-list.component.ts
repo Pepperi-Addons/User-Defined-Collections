@@ -145,7 +145,9 @@ export class DocumentsListComponent implements OnInit {
                         Type: 'Grid',
                         Title: '',
                         Fields: [
-                            ...this.collectionData.ListView.Fields,
+                            ...this.collectionData.ListView.Fields.filter(field => {
+                                return this.collectionData.Fields[field.FieldID].Type !== 'Array' && this.collectionData.Fields[field.FieldID].Type !== 'Object';
+                            }),
                             {
                                 FieldID: 'CreationDateTime',
                                 Title: this.translate.instant('Creation Date'),
@@ -256,17 +258,18 @@ export class DocumentsListComponent implements OnInit {
 
     navigateToDocumentsForm(formMode: FormMode, documentKey: string) {
         const listItem = this.documents.find(x => x.Key === documentKey);
-        let item = listItem;
+        let item = listItem || {};
         if (formMode == 'Edit') {
             // item['Key'] = documentKey;
             Object.keys(listItem).forEach((fieldID) => {
                 let fieldType = this.collectionData.Fields[fieldID]?.Type;
+                const optionalValues = this.collectionData.Fields[fieldID]?.OptionalValues;
                 // if the field is of type Array or Object, convert to string for editing
-                if (fieldType === 'Object' || fieldType === 'Array') {
+                if (fieldType === 'Object' || (fieldType === 'Array' && (!optionalValues || optionalValues.length === 0))) {
                     item[fieldID] = JSON.stringify(listItem[fieldID]);
                 }
                 // if the field is array and has optional values, convert to string seperated by comma
-                if (this.collectionData.Fields[fieldID]?.Items?.OptionalValues?.length > 0) {
+                if (optionalValues?.length > 0) {
                     item[fieldID] = listItem[fieldID].join(';');
                 }
             });

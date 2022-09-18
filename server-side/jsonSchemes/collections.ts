@@ -196,6 +196,10 @@ export const fieldsSchema: Schema = {
                     type: "boolean",
                     required: true,
                 },
+                Indexed: {
+                    type: "boolean",
+                    required: false,
+                },
                 OptionalValues: {
                     type: "array",
                     items: {

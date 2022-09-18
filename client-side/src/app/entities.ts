@@ -9,6 +9,7 @@ export type FieldsFormDialogData = {
     Resources: AddonDataScheme[];
     ContainedResources: AddonDataScheme[];
     AvailableTypes: SchemeFieldType[];
+    AllowTypeChange: boolean;
 }
 
 export type FormMode = 'Add' | 'Edit';

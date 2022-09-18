@@ -28,6 +28,7 @@ export class FieldsFormComponent implements OnInit {
     objectFields: {
         [key:string]: CollectionField;
     }
+    isIndexed: boolean = false;
 
     constructor(
         private dialogRef: MatDialogRef<FieldsFormComponent>,
@@ -54,6 +55,7 @@ export class FieldsFormComponent implements OnInit {
             }
         })
         this.supportArray = this.dialogData.AvailableTypes.includes('Array');
+        this.isIndexed = this.dialogData.Field.Indexed;
     }
 
     ngOnInit() {
@@ -78,11 +80,6 @@ export class FieldsFormComponent implements OnInit {
             this.dialogData.Field.OptionalValues = [];
         }
         if (type == 'Resource') {
-            this.dialogData.Field.IndexedFields = {
-                Key: {
-                    Type: 'String'
-                }
-            };
             this.resourcesOptions = this.incoming.Resources.map(item => {
                 return {
                     key: item.Name,
@@ -104,6 +101,7 @@ export class FieldsFormComponent implements OnInit {
     }
 
     saveField() {
+        this.dialogData.Field.Indexed = this.isIndexed;
         if (this.isArray) {
             if(this.dialogData.Field.Type === 'Resource' || this.dialogData.Field.Type === 'ContainedResource') { // on resource array, the resource & addonUUID data should be on the Items.
                 this.dialogData.Field.Items.Resource = this.dialogData.Field.Resource;
