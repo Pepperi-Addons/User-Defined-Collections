@@ -19,6 +19,7 @@ export class CollectionsService {
             Type: "data",
             GenericResource: true,
             ...body,
+            UserDefined: true
         }
         if (!collectionObj.DocumentKey || !collectionObj.DocumentKey.Type) {
             collectionObj.DocumentKey = {
