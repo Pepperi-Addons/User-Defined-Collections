@@ -81,7 +81,7 @@
                 </ng-container>
             </pep-generic-list>
         </div>
-        <div class="flex">
+        <div class="flex" *ngIf="collection.Type != 'contained'">
             <pep-select
                 [(value)]="collection.DocumentKey.Type"
                 [label]="'DocumentKey_Select_Title' | translate"
@@ -103,7 +103,7 @@
                 [disabled]="!emptyCollection"
             ></pep-textbox>
         </div>
-        <div class="genericListContainer" *ngIf="collection.DocumentKey.Type === 'Composite'">
+        <div class="genericListContainer" *ngIf="collection.DocumentKey.Type === 'Composite' && collection.Type != 'contained'">
             <pep-generic-list #uidList class="generic-list"
                 [title] = "'UID_Fields_Title' | translate"
                 [showTopBar]="true" 

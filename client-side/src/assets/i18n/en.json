@@ -76,6 +76,7 @@
     "MappingForm_FilterField_Title": "{{field_name}}",
     "SyncData_Options_Online": "Available for online only",
     "SyncData_Options_Offline": "Available for online and offline",
+    "SyncData_Options_OnlyScheme": "Scheme only",
     "Sync_Select_Title": "Data storage & sync",
     "Indexed_Select_Title": "Indexed",
     "CollectionForm_SyncData_Message": "are you sure you want to change the data availability?",
@@ -84,5 +85,7 @@
     "Fields_Array_Title": "Is array",
     "Documents_LoadingErrorDialog_Title": "Loading Error",
     "Documents_LoadingErrorDialog_Message": "Error occured while getting documents, please try again later",
-    "Fields_Indexed_Title": "Indexed"
+    "Fields_Indexed_Title": "Indexed",
+    "Collection_ContainedErrorDialog_Title": "Navigate to data",
+    "Collection_ContainedErrorDialog_Content": "'EditData' is not allowed on 'SchemaOnly' type collections"
 }

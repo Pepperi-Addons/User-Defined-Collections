@@ -181,12 +181,15 @@ export class CollectionListComponent implements OnInit {
                     //         this.exportCollectionScheme(objs.rows[0]);
                     //     }
                     // })
-                    actions.push({
-                        title: this.translate.instant('Edit data'),
-                        handler: async (objs) => {
-                            this.navigateToDocumentsView(objs.rows[0]);
-                        }
-                    })
+                    const selectedCollection = this.collections.find(x=>x.Name === data.rows[0]);
+                    if (selectedCollection && selectedCollection.Type != 'contained') {
+                        actions.push({
+                            title: this.translate.instant('Edit data'),
+                            handler: async (objs) => {
+                                this.navigateToDocumentsView(objs.rows[0]);
+                            },
+                        })
+                    }
                 }
             }
             return actions;
@@ -276,7 +279,15 @@ export class CollectionListComponent implements OnInit {
     }
     
     onFieldClick(event: IPepFieldClickEvent) {
-        this.navigateToDocumentsView(event.value);
+        const collection = this.collections.find(c => c.Name === event.value);
+        if (collection && collection.Type != 'contained') {
+            this.navigateToDocumentsView(event.value);
+        }
+        else {
+            const title = this.translate.instant('Collection_ContainedErrorDialog_Title');
+            const content = this.translate.instant('Collection_ContainedErrorDialog_Content');
+            this.utilitiesService.showMessageDialog(title, content);
+        }
     }
     
     

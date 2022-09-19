@@ -1,5 +1,5 @@
 import jwt from 'jwt-decode';
-import { AddonData, Collection, PapiClient } from '@pepperi-addons/papi-sdk';
+import { AddonData, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
@@ -32,19 +32,31 @@ export class CollectionsService {
         }
         return await this.utilities.papiClient.userDefinedCollections.schemes.find(options);
     }
-
+    
     async getMappingsCollections() {
         const collections = await this.utilities.papiClient.userDefinedCollections.schemes.find();
         return collections.filter(collection => {
-            return collection.Type === 'cpi_meta_data' && collection.DocumentKey.Type === 'Composite'
+            return collection.DocumentKey.Type === 'Composite'
         })
     }
     
     async upsertCollection(obj: Collection) {
         return await this.utilities.papiClient.userDefinedCollections.schemes.upsert(obj);
     }
-
+    
     async createCollection(obj: Collection) {
         return await this.utilities.papiClient.addons.api.uuid(this.utilities.addonUUID).file('api').func('create').post(undefined, obj);
-} 
+    } 
+    
+    async getContainedCollections(params?: FindOptions) {
+        if (params) {
+            params.where = 'Type = "contained"';
+        }
+        else {
+            params = {
+                where: 'Type = "contained"'
+            }
+        }
+        return await this.utilities.papiClient.userDefinedCollections.schemes.find(params);
+    }
 }

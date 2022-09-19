@@ -146,7 +146,7 @@ export class DocumentsListComponent implements OnInit {
                         Title: '',
                         Fields: [
                             ...this.collectionData.ListView.Fields.filter(field => {
-                                return this.collectionData.Fields[field.FieldID].Type !== 'Array' && this.collectionData.Fields[field.FieldID].Type !== 'Object';
+                                return this.collectionData.Fields[field.FieldID].Type !== 'Array' && this.collectionData.Fields[field.FieldID].Type !== 'ContainedResource';
                             }),
                             {
                                 FieldID: 'CreationDateTime',
@@ -265,7 +265,7 @@ export class DocumentsListComponent implements OnInit {
                 let fieldType = this.collectionData.Fields[fieldID]?.Type;
                 const optionalValues = this.collectionData.Fields[fieldID]?.OptionalValues;
                 // if the field is of type Array or Object, convert to string for editing
-                if (fieldType === 'Object' || (fieldType === 'Array' && (!optionalValues || optionalValues.length === 0))) {
+                if (fieldType === 'ContainedResource' || (fieldType === 'Array' && (!optionalValues || optionalValues.length === 0))) {
                     item[fieldID] = JSON.stringify(listItem[fieldID]);
                 }
                 // if the field is array and has optional values, convert to string seperated by comma

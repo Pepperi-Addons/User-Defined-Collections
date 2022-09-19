@@ -21,36 +21,16 @@ export class FieldsFormComponent implements OnInit {
     hasOptionalValues: boolean = true;
     resourcesOptions: SelectOptions<string>;
     booleanOptions = booleanOptions;
-    isArray: boolean = false;
-    objectFieldsValid: boolean = false;
+    isArray: string = 'false';
+    isMandatory: string = 'false';
     objectFieldsDataSource: IPepGenericListDataSource;
     EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
     supportArray: boolean = true;
+    supportIndexed: boolean = true;
     objectFields: {
         [key:string]: CollectionField;
     }
     isIndexed: boolean = false;
-
-    objectFieldsActions: IPepGenericListActions = {
-        get: async (data: PepSelectionData) => {
-            const actions = [];
-            if (data && data.rows.length == 1) {
-                actions.push({
-                    title: this.translate.instant('Edit'),
-                    handler: async (objs) => {
-                        this.openObjectFieldsForm(objs.rows[0]);
-                    }
-                });
-                actions.push({
-                    title: this.translate.instant('Delete'),
-                    handler: async (objs) => {
-                        this.showDeleteDialog(objs.rows[0]);
-                    }
-                });
-            }
-            return actions;
-        }
-    }
 
     constructor(
         private dialogRef: MatDialogRef<FieldsFormComponent>,
@@ -66,28 +46,19 @@ export class FieldsFormComponent implements OnInit {
             }
         });
         if (this.dialogData.Field.Type === 'Array') {
-            this.isArray = true;
+            this.isArray = 'true';
             this.dialogData.Field.Type = this.dialogData.Field.Items.Type;
         }
-        if (this.dialogData.Field.Type === 'Object') {
-            if (this.isArray) {
-                this.objectFields = JSON.parse(JSON.stringify(this.dialogData.Field.Items.Fields));
-            }
-            else {
-                this.objectFields = JSON.parse(JSON.stringify(this.dialogData.Field.Fields));
-            }
-            this.objectFieldsDataSource = this.getFieldsDataSource();
-        }
-        this.hasOptionalValues = this.dialogData.Field.Type == 'String' || (this.isArray && this.dialogData.Field.Items?.Type === 'String');
+        this.hasOptionalValues = this.dialogData.Field.Type == 'String' || (this.isArray === 'true' && this.dialogData.Field.Items?.Type === 'String');
         this.resourcesOptions = this.dialogData.Resources.map(item => {
             return {
                 key: item.Name,
                 value: item.Name,
             }
         })
-        this.objectFieldsValid = this.dialogData.Field.Type !== 'Object' || (this.dialogData.Field.Type === 'Object' && Object.keys(this.objectFields).length > 0);
         this.supportArray = this.dialogData.AvailableTypes.includes('Array');
         this.isIndexed = this.dialogData.Field.Indexed;
+        this.isMandatory = this.dialogData.Field.Mandatory ? 'true': 'false';
     }
 
     ngOnInit() {
@@ -98,46 +69,46 @@ export class FieldsFormComponent implements OnInit {
     }
 
     resourceChanged($event) {
-        const resource = this.dialogData.Resources.find(item => item.Name === $event);
+        const resource = this.dialogData.Field.Type === 'Resource' ? this.dialogData.Resources.find(item => item.Name === $event) : this.dialogData.ContainedResources.find(item => item.Name === $event);
         this.dialogData.Field.Resource = $event;
         this.dialogData.Field.AddonUUID = resource ? resource['AddonUUID'] : undefined;
     }
 
     fieldTypeChanged(type: SchemeFieldType) {
-        if (type == 'String' || (this.isArray && this.dialogData.Field.Items?.Type === 'String')) {
+        if (type == 'String' || (this.isArray === 'true' && this.dialogData.Field.Items?.Type === 'String')) {
             this.hasOptionalValues = true;
         }
         else {
             this.hasOptionalValues = false;
             this.dialogData.Field.OptionalValues = [];
         }
+        if (type == 'Resource') {
+            this.resourcesOptions = this.incoming.Resources.map(item => {
+                return {
+                    key: item.Name,
+                    value: item.Name
+                }
+            })
+        }
+        if (type === 'ContainedResource') {
+            this.resourcesOptions = this.incoming.ContainedResources.map(item => {
+                return {
+                    key: item.Name,
+                    value: item.Name
+                }
+            })
+        }
         if (type == 'Resource' || type == 'DateTime') {
-            this.isArray = false;
+            this.isArray = 'false';
         }
-
-        if (type == 'Object') {
-            this.objectFieldsDataSource = this.getFieldsDataSource();
-        }
-        else {
-            this.objectFieldsValid = true;
-        }
+        this.supportIndexed = ['String', 'Bool', 'Integer', 'Double', 'DateTime'].includes(type);
     }
 
     saveField() {
         this.dialogData.Field.Indexed = this.isIndexed;
-        if (this.dialogData.Field.Type != 'Object') {
-            this.dialogData.Field.Fields = undefined; // erase object scheme to avoid saving stale data
-        }
-        else { // Object field, init the Fields property
-            if(this.isArray) {
-                this.dialogData.Field.Items.Fields = JSON.parse(JSON.stringify(this.objectFields));
-            }
-            else {
-                this.dialogData.Field.Fields = JSON.parse(JSON.stringify(this.objectFields));
-            }
-        }
-        if (this.isArray) {
-            if(this.dialogData.Field.Type === 'Resource') { // on resource array, the resource & addonUUID data should be on the Items.
+        this.dialogData.Field.Mandatory = this.isMandatory === 'true';
+        if (this.isArray === 'true') {
+            if(this.dialogData.Field.Type === 'Resource' || this.dialogData.Field.Type === 'ContainedResource') { // on resource array, the resource & addonUUID data should be on the Items.
                 this.dialogData.Field.Items.Resource = this.dialogData.Field.Resource;
                 this.dialogData.Field.Items.AddonUUID = this.dialogData.Field.AddonUUID;
             }
@@ -154,140 +125,5 @@ export class FieldsFormComponent implements OnInit {
     close() {
         this.dialogRef.close();
     }
-
-
-    getFieldsDataSource() {
-        return {
-            init: async(params:any) => {
-                
-                let fields = Object.keys(this.objectFields).map(obj => {
-                    const type = this.objectFields[obj].Type;
-                    return {
-                        Key: obj,
-                        Type: type === 'Array' ? `${this.objectFields[obj].Items.Type} ${type}` : type,
-                        Description: this.objectFields[obj].Description,
-                        Mandatory: this.objectFields[obj].Mandatory,
-                    };
-                });
-                this.objectFieldsValid = fields.length > 0;
-                return Promise.resolve({
-                    dataView: {
-                        Context: {
-                            Name: '',
-                            Profile: { InternalID: 0 },
-                            ScreenSize: 'Landscape'
-                        },
-                        Type: 'Grid',
-                        Title: '',
-                        Fields: [
-                            {
-                                FieldID: 'Key',
-                                Type: 'TextBox',
-                                Title: this.translate.instant('Key'),
-                                Mandatory: false,
-                                ReadOnly: true
-                            },
-                            {
-                                FieldID: 'Description',
-                                Type: 'TextBox',
-                                Title: this.translate.instant('Description'),
-                                Mandatory: false,
-                                ReadOnly: true
-                            },
-                            {
-                                FieldID: 'Type',
-                                Type: 'TextBox',
-                                Title: this.translate.instant('Type'),
-                                Mandatory: false,
-                                ReadOnly: true
-                            },
-                        ],
-                        Columns: [
-                            {
-                                Width: 20
-                            },
-                            {
-                                Width: 50
-                            },
-                            {
-                                Width: 30
-                            }
-                        ],
-          
-                        FrozenColumnsCount: 0,
-                        MinimumColumnWidth: 0
-                    },
-                    totalCount: fields.length,
-                    items: fields
-                });
-            },
-            inputs: {
-                pager: {
-                    type: 'scroll'
-                },
-                selectionType: 'single',
-                noDataFoundMsg: this.translate.instant('Object_Fields_NoDataFound')
-            },
-        } as IPepGenericListDataSource
-    }
-
-    openObjectFieldsForm(name: string) {
-        const collectionField: CollectionField = {
-            Description: this.objectFields[name]?.Description || '',
-            Mandatory: this.objectFields[name]?.Mandatory || false,
-            Type: this.objectFields[name]?.Type || 'String',
-            OptionalValues: this.objectFields[name]?.OptionalValues || [],
-            Items: this.objectFields[name]?.Items || {
-                Type:"String",
-                Mandatory: false,
-                Description: ''
-            },
-            Resource: this.objectFields[name]?.Resource || '',
-            AddonUUID: this.objectFields[name]?.AddonUUID || '',
-        }
-        let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
-        const dialogData: FieldsFormDialogData = {
-            EmptyCollection: this.dialogData.EmptyCollection,
-            Mode: name == EMPTY_OBJECT_NAME ? 'Add' : 'Edit',
-            FieldName: name == EMPTY_OBJECT_NAME ? '' : name,
-            InUidFields: false,
-            Field: collectionField,
-            Resources: this.dialogData.Resources,
-            AvailableTypes: SchemeFieldTypes.filter(type => ['ContainedResource', 'DynamicResource', 'ContainedDynamicResource', 'MultipleStringValues', 'Object', 'Array'].includes(type) === false),
-            AllowTypeChange: true,
-        }
-        dialogConfig.data = new PepDialogData({
-            content: FieldsFormComponent,
-        })
-        this.dialogService.openDialog(FieldsFormComponent, dialogData, dialogConfig).afterClosed().subscribe(value => {
-            if (value) {
-                const fieldName = value.fieldName;
-                this.objectFields[fieldName] = value.field;
-                const nameChanged = (name != EMPTY_OBJECT_NAME && name != fieldName);
-                // if the field name has changed, delete the old field from the object
-                if (nameChanged) {
-                    delete this.objectFields[name];
-                }
-
-                this.objectFieldsDataSource = this.getFieldsDataSource();
-            }
-        })
-    }
-
-    showDeleteDialog(fieldName: string) {
-        const data = new PepDialogData({
-            title: this.translate.instant('DeleteField_DialogTitle'),
-            content: this.translate.instant('DeleteField_DialogContent', {field_name: fieldName}),
-            actionsType:'cancel-delete',
-        });
-
-        this.dialogService.openDefaultDialog(data).afterClosed().subscribe(isDeletePressed => {
-            if(isDeletePressed) {
-                delete this.objectFields[fieldName];
-                this.objectFieldsDataSource = this.getFieldsDataSource();
-            }
-        });
-    }
-
 }
 
