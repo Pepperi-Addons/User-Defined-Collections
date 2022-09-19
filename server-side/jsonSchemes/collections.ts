@@ -179,7 +179,7 @@ export const fieldsSchema: Schema = {
                     type: "string"
                 },
                 Type: {
-                    enum: SchemeFieldTypes.filter(type => ['DynamicResource', 'ContainedDynamicResource', 'ContainedResource','MultipleStringValues'].includes(type) === false),
+                    enum: SchemeFieldTypes.filter(type => ['DynamicResource', 'ContainedDynamicResource', 'Object','MultipleStringValues'].includes(type) === false),
                     required: true,
                 },
                 IndexedFields: {
@@ -215,10 +215,6 @@ export const fieldsSchema: Schema = {
                         }
                     },
                 },
-                Fields: {
-                    type: "object",
-                    $ref: "/Fields",
-                }
             },
             required: ['Type', 'Mandatory'],
             allOf: [{
@@ -281,7 +277,7 @@ export const fieldsSchema: Schema = {
                             Items: {
                                 properties: {
                                     Type: {
-                                        const: 'Object'
+                                        const: 'ContainedResource'
                                     }
                                 }
                             }
@@ -311,7 +307,7 @@ export const fieldsSchema: Schema = {
                     {
                         properties: {
                             Type: {
-                                const: 'Object',
+                                const: 'ContainedResource',
                             },
                         }
                     },
