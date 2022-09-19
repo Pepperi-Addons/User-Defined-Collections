@@ -1,7 +1,7 @@
 import { UtilitiesService } from './utilities.service';
 import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { AtdRelations, DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
+import { ADAL_UUID, AtdRelations, DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
 import { DocumentsService } from './documents.service';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema, regexPattern } from '../jsonSchemes/collections';
@@ -95,7 +95,7 @@ export class CollectionsService {
     async createDataQueryRelations(collection: AddonDataScheme) {
         for (let relation of DataQueryRelation) {
             relation.Name = collection.Name;
-            relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${this.client.AddonUUID}/${this.client.AddonUUID}_${collection.Name}`;
+            relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${ADAL_UUID}/${this.client.AddonUUID}_${collection.Name}`;
             relation.SchemaRelativeURL = `/addons/api/${this.client.AddonUUID}/api/collection_fields?collection_name=${collection.Name}`;
             Object.keys(collection.Fields!).forEach((fieldName) => {
                 const collectionField = collection.Fields![fieldName];

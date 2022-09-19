@@ -61,7 +61,7 @@
                 type="select"
                 [options]="[{key:true, value:'True'},{key:false, value:'False'}]"
                 [emptyOption]="false"
-                [disabled]="dialogData.Field.Indexed === true || supportIndexed"
+                [disabled]="dialogData.Field.Indexed === true || supportIndexed == false"
             ></pep-select>
         </div>
         <div class="form-row">

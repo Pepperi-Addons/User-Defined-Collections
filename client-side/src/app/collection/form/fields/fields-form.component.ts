@@ -58,6 +58,7 @@ export class FieldsFormComponent implements OnInit {
         })
         this.supportArray = this.dialogData.AvailableTypes.includes('Array');
         this.isIndexed = this.dialogData.Field.Indexed;
+        this.updateSupportIndex(this.dialogData.Field.Type);
         this.isMandatory = this.dialogData.Field.Mandatory ? 'true': 'false';
     }
 
@@ -101,7 +102,8 @@ export class FieldsFormComponent implements OnInit {
         if (type == 'Resource' || type == 'DateTime') {
             this.isArray = 'false';
         }
-        this.supportIndexed = ['String', 'Bool', 'Integer', 'Double', 'DateTime'].includes(type);
+        
+        this.updateSupportIndex(type);
     }
 
     saveField() {
@@ -124,6 +126,10 @@ export class FieldsFormComponent implements OnInit {
 
     close() {
         this.dialogRef.close();
+    }
+
+    updateSupportIndex(type: SchemeFieldType) {
+        this.supportIndexed = ['String', 'Bool', 'Integer', 'Double', 'DateTime'].includes(type) == true;
     }
 }
 
