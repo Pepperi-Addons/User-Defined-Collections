@@ -398,3 +398,30 @@ export async function search(client: Client, request: Request) {
         }
     }
 }
+    
+export async function collection_fields(client: Client, request: Request) {
+    const resourceName = request.query.collection_name || '';
+    const service = new CollectionsService(client);
+    
+    switch(request.method) {
+        case 'GET': {
+            const fields = {};
+            const collection = await service.findByName(resourceName);
+            if (collection) {
+                const fieldNames = Object.keys(collection.Fields!).forEach(fieldName => {
+                    if (collection.Fields![fieldName].Indexed) {
+                        fields[fieldName] = {...collection.Fields![fieldName]};
+                    }
+                });
+            }
+            return {
+                Fields: fields
+            }
+        }
+        default: {
+            const err: any = new Error(`method ${request.method} is not allowed`);
+            err.code = 405;
+            throw err;
+        }
+    }
+}

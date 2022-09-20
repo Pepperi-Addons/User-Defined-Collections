@@ -101,7 +101,19 @@ export const SettingsRelation: Relation[] = [{
     ElementName: `collections-element-${config.AddonUUID}`
 }]
 
+export const DataQueryRelation: Relation[] = [{
+    AddonUUID: config.AddonUUID,
+    Name: '{collection_name}',
+    RelationName: 'DataQueries',
+    Type: 'AddonAPI',
+    AddonRelativeURL: '',
+    SchemaRelativeURL: '/api/collection_fields?collection_name={collection_name}',
+    Description: 'relation for Data queries addon',
+}]
+
 export const UdcMappingsScheme: AddonDataScheme = {
     Name: 'UdcMappings',
     Type: 'meta_data',
 }
+
+export const ADAL_UUID = '00000000-0000-0000-0000-00000000ada1';
