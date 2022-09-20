@@ -89,7 +89,7 @@ export class DocumentsFormComponent implements OnInit {
         Object.keys(collection.Fields!).forEach(fieldName => {
             switch (collection.Fields[fieldName].Type) {
                 case 'Array': {
-                    if(collection.Fields[fieldName].OptionalValues) {
+                    if(collection.Fields[fieldName].OptionalValues.length > 0) {
                         try {
                             if (this.item[fieldName] != "") {
                                 this.item[fieldName] = this.item[fieldName].split(";");
@@ -104,9 +104,11 @@ export class DocumentsFormComponent implements OnInit {
                     }
                     else {
                         try {
-                            this.item[fieldName] = JSON.parse(this.item[fieldName])
                             if(!this.item[fieldName] || this.item[fieldName] === '') {
                                 this.item[fieldName] = []
+                            }
+                            else {
+                                this.item[fieldName] = JSON.parse(this.item[fieldName]);
                             }
                         }
                         catch {
@@ -116,9 +118,11 @@ export class DocumentsFormComponent implements OnInit {
                 }
                 case 'ContainedResource': {
                     try {
-                        this.item[fieldName] = JSON.parse(this.item[fieldName])
                         if(!this.item[fieldName] || this.item[fieldName] === '') {
                             this.item[fieldName] = {}
+                        }
+                        else {
+                            this.item[fieldName] = JSON.parse(this.item[fieldName]);
                         }
                     }
                     catch {
