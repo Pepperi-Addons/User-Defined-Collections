@@ -8,6 +8,7 @@ import { AddonData, FormDataView } from '@pepperi-addons/papi-sdk';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { existingInRecycleBinErrorMessage, existingErrorMessage } from 'udc-shared';
 import { FormMode } from 'src/app/entities';
+import { CollectionsService } from 'src/app/services/collections.service';
 
 @Component({
   selector: 'documents-form',
@@ -38,10 +39,7 @@ export class DocumentsFormComponent implements OnInit {
 
     async saveDocument() {
         try {
-            this.convertMultiChoiceValues();
-            this.convertNumbers();
-            this.convertObjectsAndArrays();
-            this.convertBoolean();
+            await this.fixDataTypes();
             if(this.incoming.Mode === 'Add') {
                 try {
                     await this.documentsService.createCollection(this.incoming.CollectionName, this.item);
@@ -86,45 +84,64 @@ export class DocumentsFormComponent implements OnInit {
         this.dialogRef.close();
     }
 
-    convertMultiChoiceValues() {
-        this.incoming.DataView.Fields?.filter(field => field.Type === 'MultiTickBox').forEach(field => {
-            try {
-                if (this.item[field.FieldID] != "") {
-                    this.item[field.FieldID] = this.item[field.FieldID].split(";");
+    async fixDataTypes() {
+        const collection = await this.utilitiesService.getCollectionByName(this.incoming.CollectionName);
+        Object.keys(collection.Fields!).forEach(fieldName => {
+            switch (collection.Fields[fieldName].Type) {
+                case 'Array': {
+                    if(collection.Fields[fieldName].OptionalValues) {
+                        try {
+                            if (this.item[fieldName] != "") {
+                                this.item[fieldName] = this.item[fieldName].split(";");
+                            }
+                            else {
+                                this.item[fieldName] = [];
+                            }
+                        }
+                        catch (err) {
+                            console.log(`could not convert value ${this.item[fieldName]}. error got: ${JSON.stringify(err)}`);
+                        }
+                    }
+                    else {
+                        try {
+                            this.item[fieldName] = JSON.parse(this.item[fieldName])
+                            if(!this.item[fieldName] || this.item[fieldName] === '') {
+                                this.item[fieldName] = []
+                            }
+                        }
+                        catch {
+                        }
+                    }
+                    break;
                 }
-                else {
-                    this.item[field.FieldID] = [];
+                case 'ContainedResource': {
+                    try {
+                        this.item[fieldName] = JSON.parse(this.item[fieldName])
+                        if(!this.item[fieldName] || this.item[fieldName] === '') {
+                            this.item[fieldName] = {}
+                        }
+                    }
+                    catch {
+                    }
+                    break;
                 }
-            }
-            catch (err) {
-                console.log(`could not convert value ${this.item[field.FieldID]}. error got: ${JSON.stringify(err)}`);
-            }
-        })
-    }
-
-    convertObjectsAndArrays() {
-        this.incoming.DataView.Fields?.filter(field => field.Type === 'TextBox').forEach(field => {
-            try {
-                this.item[field.FieldID] = JSON.parse(this.item[field.FieldID])
-            }
-            catch {
-            }
-        })
-    }
-    
-    convertNumbers() {
-        this.incoming.DataView.Fields?.filter(field => field.Type === 'NumberInteger' || field.Type === 'NumberReal').forEach(field => {
-            this.item[field.FieldID] = Number(this.item[field.FieldID]);
-        })
-    }
-
-    convertBoolean() {
-        this.incoming.DataView.Fields?.filter(field => field.Type === 'Boolean').forEach(field => {
-            if(this.item[field.FieldID]) {
-                this.item[field.FieldID] = true;
-            }
-            else {
-                this.item[field.FieldID] = false;
+                case 'Double': 
+                case 'Integer': {
+                    this.item[fieldName] = Number(this.item[fieldName]);
+                    break;
+                }
+                case 'Bool': {
+                    if(this.item[fieldName]) {
+                        this.item[fieldName] = true;
+                    }
+                    else {
+                        this.item[fieldName] = false;
+                    }
+                    break;
+                }
+                default: {
+                    //No conversion needed. do nothing
+                }
             }
         })
     }
