@@ -24,8 +24,6 @@
       "dimx": "0.0.163",
       "cpi_node": "0.4.16",
       "cpas": "16.80.8",
-      "cpapi": "9.6.2",
-      "sync": "0.1.2",
       "generic_resource": "0.0.11"
     },
     "CPISide": [
