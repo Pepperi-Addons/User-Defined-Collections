@@ -95,7 +95,7 @@ export class CollectionsService {
     async createDataQueryRelations(collection: AddonDataScheme) {
         for (let relation of DataQueryRelation) {
             relation.Name = collection.Name;
-            relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${ADAL_UUID}/${this.client.AddonUUID}_${collection.Name}`;
+            relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${ADAL_UUID}/${collection.Name}`;
             relation.SchemaRelativeURL = `/addons/api/${this.client.AddonUUID}/api/collection_fields?collection_name=${collection.Name}`;
             Object.keys(collection.Fields!).forEach((fieldName) => {
                 const collectionField = collection.Fields![fieldName];
