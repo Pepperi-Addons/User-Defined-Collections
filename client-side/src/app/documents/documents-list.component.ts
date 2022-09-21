@@ -269,7 +269,7 @@ export class DocumentsListComponent implements OnInit {
                     item[fieldID] = JSON.stringify(listItem[fieldID]);
                 }
                 // if the field is array and has optional values, convert to string seperated by comma
-                if (optionalValues?.length > 0) {
+                if (optionalValues?.length > 0 && fieldType === 'Array') {
                     item[fieldID] = listItem[fieldID].join(';');
                 }
             });

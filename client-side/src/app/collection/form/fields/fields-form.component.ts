@@ -30,7 +30,7 @@ export class FieldsFormComponent implements OnInit {
     objectFields: {
         [key:string]: CollectionField;
     }
-    isIndexed: boolean = false;
+    isIndexed: string = 'false';
 
     constructor(
         private dialogRef: MatDialogRef<FieldsFormComponent>,
@@ -57,7 +57,7 @@ export class FieldsFormComponent implements OnInit {
             }
         })
         this.supportArray = this.dialogData.AvailableTypes.includes('Array');
-        this.isIndexed = this.dialogData.Field.Indexed;
+        this.isIndexed = this.dialogData.Field.Indexed ? 'true' : 'false';
         this.updateSupportIndex(this.dialogData.Field.Type);
         this.isMandatory = this.dialogData.Field.Mandatory ? 'true': 'false';
     }
@@ -107,7 +107,7 @@ export class FieldsFormComponent implements OnInit {
     }
 
     saveField() {
-        this.dialogData.Field.Indexed = this.isIndexed;
+        this.dialogData.Field.Indexed = this.isIndexed === 'true';
         this.dialogData.Field.Mandatory = this.isMandatory === 'true';
         if (this.isArray === 'true') {
             if(this.dialogData.Field.Type === 'Resource' || this.dialogData.Field.Type === 'ContainedResource') { // on resource array, the resource & addonUUID data should be on the Items.
