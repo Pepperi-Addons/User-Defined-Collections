@@ -128,7 +128,7 @@ export class DocumentsListComponent implements OnInit {
         return {
             init: async (params:any) => {
                 try {
-                    const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String');
+                    const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Indexed);
                     this.documents = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
                 }
                 catch (err) {

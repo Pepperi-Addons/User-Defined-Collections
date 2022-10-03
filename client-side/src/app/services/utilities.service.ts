@@ -72,14 +72,22 @@ export class UtilitiesService {
             where: ''
         };
 
+        
         if (hidden) {
             options.include_deleted = true;
             options.where = 'Hidden = true';
         }
-
+        
         if (params.searchString) {
-            options.where += this.getWhereClause(params.searchString, searchFields);
+            // DI-21452 - is there are no indexed fields, search only on 'Key'
+            if (searchFields.length === 0) {
+                options.where += `Key LIKE '${params.searchString}%'`;
+            }
+            else {
+                options.where += this.getWhereClause(params.searchString, searchFields);
+            }
         }
+
 
         return await this.papiClient.userDefinedCollections.documents(collectionName).find(options);
     }
