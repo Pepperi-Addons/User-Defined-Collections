@@ -101,7 +101,7 @@ export class UtilitiesService {
             
     async getReferenceResources(): Promise<AddonDataScheme[]> {
         const resources = await this.papiClient.resources.resource('resources').get();
-        return resources as AddonDataScheme[];
+        return (resources as AddonDataScheme[]).filter(x => x.Type != 'contained' && x.Name != 'resources');
     }
 
     showMessageDialog(title: string, content: string) {

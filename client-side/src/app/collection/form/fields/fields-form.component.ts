@@ -50,12 +50,7 @@ export class FieldsFormComponent implements OnInit {
             this.dialogData.Field.Type = this.dialogData.Field.Items.Type;
         }
         this.hasOptionalValues = this.dialogData.Field.Type == 'String' || (this.isArray === 'true' && this.dialogData.Field.Items?.Type === 'String');
-        this.resourcesOptions = this.dialogData.Resources.map(item => {
-            return {
-                key: item.Name,
-                value: item.Name,
-            }
-        })
+        this.initResources(this.dialogData.Field.Type);
         this.supportArray = this.dialogData.AvailableTypes.includes('Array');
         this.isIndexed = this.dialogData.Field.Indexed ? 'true' : 'false';
         this.updateSupportIndex(this.dialogData.Field.Type);
@@ -83,27 +78,12 @@ export class FieldsFormComponent implements OnInit {
             this.hasOptionalValues = false;
             this.dialogData.Field.OptionalValues = [];
         }
-        if (type == 'Resource') {
-            this.resourcesOptions = this.incoming.Resources.map(item => {
-                return {
-                    key: item.Name,
-                    value: item.Name
-                }
-            })
-        }
-        if (type === 'ContainedResource') {
-            this.resourcesOptions = this.incoming.ContainedResources.map(item => {
-                return {
-                    key: item.Name,
-                    value: item.Name
-                }
-            })
-        }
         if (type == 'Resource' || type == 'DateTime') {
             this.isArray = 'false';
         }
         
         this.updateSupportIndex(type);
+        this.initResources(type);
     }
 
     saveField() {
@@ -130,6 +110,25 @@ export class FieldsFormComponent implements OnInit {
 
     updateSupportIndex(type: SchemeFieldType) {
         this.supportIndexed = ['String', 'Bool', 'Integer', 'Double', 'DateTime'].includes(type) == true;
+    }
+
+    initResources(type: SchemeFieldType) {
+        if(type === 'ContainedResource') {
+            this.resourcesOptions = this.dialogData.ContainedResources.map(item => {
+                return {
+                    key: item.Name,
+                    value: item.Name,
+                }
+            })
+        }
+        else if (type === 'Resource') {
+            this.resourcesOptions = this.dialogData.Resources.map(item => {
+                return {
+                    key: item.Name,
+                    value: item.Name,
+                }
+            })
+        }
     }
 }
 

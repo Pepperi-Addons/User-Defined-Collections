@@ -49,14 +49,6 @@ export class CollectionsService {
     } 
     
     async getContainedCollections(params?: FindOptions) {
-        if (params) {
-            params.where = 'Type = "contained"';
-        }
-        else {
-            params = {
-                where: 'Type = "contained"'
-            }
-        }
-        return await this.utilities.papiClient.userDefinedCollections.schemes.find(params);
+        return (await this.utilities.papiClient.userDefinedCollections.schemes.find(params)).filter(x => x.Type === 'contained');
     }
 }
