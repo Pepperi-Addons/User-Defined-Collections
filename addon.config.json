@@ -26,7 +26,9 @@
       "cpas": "16.80.8",
       "cpapi": "9.6.2",
       "sync": "0.1.2",
-      "generic_resource": "0.0.11"
+      "generic_resource": "0.0.11",
+      "pepperi_elastic_search": "1.0.40",
+      "adal": "1.0.459"
     },
     "CPISide": [
       "addon-cpi.ts"
