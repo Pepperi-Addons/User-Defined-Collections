@@ -155,19 +155,22 @@ export class CollectionsService {
     async validateFieldsType(collectionObj: Collection) {
         let validMap = new Map();
         const collections = await this.find({ include_deleted: true, where: `Name != ${collectionObj.Name}` });
-        for (const fieldID of Object.keys(collectionObj.Fields!)) {
-            collections.forEach((collection => {
-                if (collection.Fields && collection.Fields[fieldID]) {
-                    // if one of the collection has a field with the same ID, check to see if it's the same type.
-                    if (collectionObj.Fields![fieldID].Type != collection.Fields![fieldID].Type) { 
-                        this.addFieldToMap(validMap, fieldID, collection.Name);
+        // only check for field's type when there are Fields on the collection
+        if (collectionObj.Fields) {
+            for (const fieldID of Object.keys(collectionObj.Fields!)) {
+                collections.forEach((collection => {
+                    if (collection.Fields && collection.Fields[fieldID]) {
+                        // if one of the collection has a field with the same ID, check to see if it's the same type.
+                        if (collectionObj.Fields![fieldID].Type != collection.Fields![fieldID].Type) { 
+                            this.addFieldToMap(validMap, fieldID, collection.Name);
+                        }
+                        // If they both of type 'Array' check their item's type.
+                        else if (collectionObj.Fields![fieldID].Type === 'Array' && collectionObj.Fields![fieldID].Items!.Type != collection.Fields![fieldID].Items!.Type) {
+                            this.addFieldToMap(validMap, fieldID, collection.Name);                    
+                        }
                     }
-                    // If they both of type 'Array' check their item's type.
-                    else if (collectionObj.Fields![fieldID].Type === 'Array' && collectionObj.Fields![fieldID].Items!.Type != collection.Fields![fieldID].Items!.Type) {
-                        this.addFieldToMap(validMap, fieldID, collection.Name);                    
-                    }
-                }
-            }));
+                }));
+            }
         }
         return validMap;
     }
