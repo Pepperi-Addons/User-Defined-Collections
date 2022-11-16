@@ -184,7 +184,6 @@ export const fieldsSchema: Schema = {
                 },
                 IndexedFields: {
                     type: "object",
-                    $ref: "/Fields",
                 },
                 Resource: {
                     type: "string"
