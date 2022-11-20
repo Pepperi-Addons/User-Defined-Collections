@@ -21,6 +21,11 @@ module.exports = {
         ...webpackConfig.output,
         uniqueName: filename,
     },
+    resolve: {
+        fallback: {
+            'url': false
+        }
+    }
 };
 
 // const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
