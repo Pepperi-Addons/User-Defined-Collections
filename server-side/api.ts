@@ -3,16 +3,20 @@ import { ApiFieldObject, Collection } from '@pepperi-addons/papi-sdk';
 
 import { FieldsService } from './services/fields.service';
 import { CollectionsService } from './services/collections.service'
-import { DocumentsService } from './services/documents.service';
 import { MappingsService } from './services/mappings.service';
 import { UtilitiesService } from './services/utilities.service';
-import { UdcMapping, FieldsResult } from 'udc-shared';
+import { UdcMapping, FieldsResult, DocumentsService } from 'udc-shared';
+import { ApiService } from './services/api-service';
+import { ResourcesService } from './services/resources-service';
+import { ServerDocumentsService } from './services/documents.service';
 
 
 export async function schemes(client: Client, request: Request) {
     
     const collectionService = new CollectionsService(client);
-    const documentsService = new DocumentsService(client);
+    const apiService = new ApiService(client);
+    const resourcesService = new ResourcesService(client);
+    const documentsService = new DocumentsService(apiService, resourcesService);
     let result;
 
     const collectionName = request.query?.name || request.body?.Name;
@@ -40,8 +44,9 @@ export async function schemes(client: Client, request: Request) {
 }
 
 export async function documents(client: Client, request: Request) {
-    const documentsService = new DocumentsService(client);
-    const collectionService = new CollectionsService(client);
+    const apiService = new ApiService(client);
+    const resourcesService = new ResourcesService(client);
+    const documentsService = new DocumentsService(apiService, resourcesService);
 
     let result;
 
@@ -64,7 +69,7 @@ export async function documents(client: Client, request: Request) {
             break;
         }
         case 'POST': {
-            result = await documentsService.upsert(collectionService, collectionName, request.body);
+            result = await documentsService.upsert(collectionName, request.body);
             break;
         }
         default: {
@@ -77,7 +82,7 @@ export async function documents(client: Client, request: Request) {
 }
 
 export async function export_data_source(client: Client, request: Request) {
-    const service = new DocumentsService(client)
+    const service = new ServerDocumentsService(client)
     if (request.method == 'POST') {
         return service.exportDataSource(request.body);
     }
@@ -87,7 +92,7 @@ export async function export_data_source(client: Client, request: Request) {
 }
 
 export async function import_data_source(client: Client, request: Request) {
-    const service = new DocumentsService(client)
+    const service = new ServerDocumentsService(client)
     const collectionsService = new CollectionsService(client)
     const collectionName = request.query.collection_name || '';
     if (request.method == 'POST') {
@@ -125,7 +130,7 @@ export async function collections_number(client: Client, request: Request) {
 
 export async function total_documents(client: Client, request: Request) {
     const collectionsService = new CollectionsService(client);
-    const documentsService = new DocumentsService(client);
+    const documentsService = new ServerDocumentsService(client);
     const count = await documentsService.getAllDocumentsCount(collectionsService);
     
     return {
@@ -144,7 +149,7 @@ export async function total_documents(client: Client, request: Request) {
 
 export async function documents_per_collection(client: Client, request: Request) {
     const collectionsService = new CollectionsService(client);
-    const documentsService = new DocumentsService(client);
+    const documentsService = new ServerDocumentsService(client);
     const collections = await collectionsService.find({page_size: -1});
     const documentsPerCollection = await documentsService.getDocumentsCountForCollection(collections);
     
@@ -327,12 +332,16 @@ export async function import_udc_mappings(client: Client, request: Request) {
 
 export async function create(client: Client, request: Request) {
     const collectionsService = new CollectionsService(client);
-    const documentsService = new DocumentsService(client);
+    const serverDocumentsService = new ServerDocumentsService(client);
+    const apiService = new ApiService(client);
+    const resourcesService = new ResourcesService(client);
+    const documentsService = new DocumentsService(apiService, resourcesService);
+
     switch (request.method) {
         case 'POST': {
             let collectionName = request.query.collection_name || '';
             if(collectionName) {
-                return await documentsService.create(collectionsService, collectionName, request.body)
+                return await serverDocumentsService.create(collectionsService, collectionName, request.body)
             }
             else {
                 collectionName = request.body?.Name || undefined;
@@ -349,7 +358,7 @@ export async function create(client: Client, request: Request) {
 }
 
 export async function hard_delete(client: Client, request: Request) {
-    const documentsService = new DocumentsService(client);
+    const documentsService = new ServerDocumentsService(client);
     const collectionsService = new CollectionsService(client);
 
     switch (request.method) {
@@ -385,11 +394,13 @@ export function unique(client: Client, request: Request) {
 
 export async function search(client: Client, request: Request) {
     const resourceName = request.query.resource_name;
-    const service = new DocumentsService(client);
+    const apiService = new ApiService(client);
+    const resourcesService = new ResourcesService(client);
+    const documentsService = new DocumentsService(apiService, resourcesService);
 
     switch(request.method) {
         case 'POST': {
-            return await service.search(resourceName, request.body);
+            return await documentsService.search(resourceName, request.body);
         }
         default: {
             const err: any = new Error(`method ${request.method} is not allowed`);

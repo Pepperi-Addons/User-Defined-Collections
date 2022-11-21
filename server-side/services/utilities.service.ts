@@ -17,30 +17,6 @@ export class UtilitiesService {
         });
     }
 
-    getItemKey(scheme: Collection, body: any): string {
-        let key = '';
-
-        if ('Key' in body && body.Key != '') {
-            key = body.Key;
-        }
-        else if(scheme.DocumentKey?.Type == 'Key'){
-            throw new Error('Key is mandatory when DocumentKey.Type == "Key"');
-        }
-        else if (scheme.DocumentKey?.Type === 'AutoGenerate') {
-            key = uuid();
-        }
-        else {
-            let fieldsValues: string[] = [];
-            const delimiter = scheme.DocumentKey?.Delimiter || '_';
-            scheme.DocumentKey?.Fields?.forEach((field) => {
-                fieldsValues.push(body[field]);
-            })
-            key = fieldsValues.join(delimiter);
-        }
-
-        return key
-    }
-
     async createRelations(relations) {
         await Promise.all(relations.map(async (singleRelation) => {
             await this.papiClient.addons.data.relations.upsert(singleRelation);

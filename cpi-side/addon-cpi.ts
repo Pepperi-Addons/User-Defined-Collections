@@ -1,7 +1,14 @@
 import '@pepperi-addons/cpi-node'
 import config from '../addon.config.json';
-import { UdcMapping } from 'udc-shared';
+import { DocumentsService, UdcMapping } from 'udc-shared';
 import { DataObject, Transaction } from '@pepperi-addons/cpi-node';
+import { resourcesRouter } from './cpi-resources';
+import { ApiService } from './services/api-service';
+import { ResourcesService } from './services/resources-service';
+
+export const router = Router();
+
+router.use('/', resourcesRouter);
 
 export async function load(configuration: any) {
     const mappings = (await pepperi.api.adal.getList({

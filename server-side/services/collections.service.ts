@@ -2,10 +2,9 @@ import { UtilitiesService } from './utilities.service';
 import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { ADAL_UUID, AtdRelations, DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
-import { DocumentsService } from './documents.service';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema, regexPattern } from '../jsonSchemes/collections';
-import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
+import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService } from 'udc-shared';
 export class CollectionsService {
         
     utilities: UtilitiesService = new UtilitiesService(this.client);
