@@ -135,7 +135,7 @@ export class DocumentsFormComponent implements OnInit {
                     break;
                 }
                 case 'Bool': {
-                    if(this.item[fieldName]) {
+                    if(this.item[fieldName].toLocaleLowerCase() === 'true') {
                         this.item[fieldName] = true;
                     }
                     else {
