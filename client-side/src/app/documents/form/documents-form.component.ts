@@ -131,11 +131,14 @@ export class DocumentsFormComponent implements OnInit {
                 }
                 case 'Double': 
                 case 'Integer': {
-                    this.item[fieldName] = Number(this.item[fieldName]);
+                    // only if the value is not undefined, then convert it to a number
+                    if (this.item[fieldName]) {
+                        this.item[fieldName] = Number(this.item[fieldName]);
+                    }
                     break;
                 }
                 case 'Bool': {
-                    if(this.item[fieldName].toLocaleLowerCase() === 'true') {
+                    if(this.item[fieldName] && this.item[fieldName].toLocaleLowerCase() === 'true') {
                         this.item[fieldName] = true;
                     }
                     else {
@@ -148,6 +151,11 @@ export class DocumentsFormComponent implements OnInit {
                 }
             }
         })
+    }
+
+    onFormValidationChanged($event: any) {
+        console.log(`form valid: ${$event}`);
+        this.isValid = $event;
     }
 }
 
