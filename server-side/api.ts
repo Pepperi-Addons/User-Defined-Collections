@@ -360,7 +360,6 @@ export async function create(client: Client, request: Request) {
 export async function hard_delete(client: Client, request: Request) {
     const documentsService = new ServerDocumentsService(client);
     const collectionsService = new CollectionsService(client);
-
     switch (request.method) {
         case 'POST': {
             const collectionName = request.query.collection_name || '';

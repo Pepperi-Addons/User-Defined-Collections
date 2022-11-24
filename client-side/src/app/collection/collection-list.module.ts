@@ -28,6 +28,7 @@ import { UtilitiesService } from './../services/utilities.service'
 import { PepCheckboxModule } from '@pepperi-addons/ngx-lib/checkbox';
 
 import { config } from '../addon.config';
+import { AdditionalFieldsFormComponent } from './form/fields/additional-fields-form/additional-fields-form.component';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -45,7 +46,8 @@ export const routes: Routes = [
         CollectionListComponent,
         CollectionFormComponent,
         FieldsFormComponent,
-        SortingFormComponent
+        SortingFormComponent,
+        AdditionalFieldsFormComponent
     ],
     imports: [
         CommonModule,
