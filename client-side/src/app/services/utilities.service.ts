@@ -1,5 +1,5 @@
 import jwt from 'jwt-decode';
-import { AddonData, AddonDataScheme, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
+import { AddonData, AddonDataScheme, Collection, FindOptions, PapiClient, SchemeField } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
@@ -110,6 +110,15 @@ export class UtilitiesService {
     async getReferenceResources(): Promise<AddonDataScheme[]> {
         const resources = await this.papiClient.resources.resource('resources').get();
         return (resources as AddonDataScheme[]).filter(x => x.Type != 'contained' && x.Name != 'resources');
+    }
+
+    async getResourceFields(resourceName: string): Promise<AddonDataScheme['Fields']> {
+        const resource: AddonDataScheme = await this.papiClient.resources.resource('resources').key(resourceName).get() as AddonDataScheme;
+        let fields = {}
+        if (resource) {
+            fields = resource.Fields;
+        }
+        return fields;
     }
 
     showMessageDialog(title: string, content: string) {
