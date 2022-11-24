@@ -6,7 +6,7 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"build": "cd ./shared && npm run build && cd .. && cd ./client-side && npm run build && cd .. && cd ./cpi-side && npm run build && cd .. && cd ./server-side && npm run build && cd ..",
-		"init": "npm install && cd ./shared && npm install && cd .. && cd ./client-side && npm install --force && cd .. && cd ./cpi-side && npm install && cd .. && cd ./server-side && npm install && cd ..",
+		"init": "npm install && cd ./shared && npm install && cd .. && cd ./cpi-side && npm install && cd .. && cd ./client-side && npm install --force && cd .. && cd ./server-side && npm install && cd ..",
 		"publish-addon": "npm run build && publish-addon",
 		"cpi-publish-addon": "cd ./cpi-side && npm run build:debug && cd .. && cpi-node-debug"
 	},
@@ -14,6 +14,6 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@pepperi-addons/scripts": "^2.0.4"
+		"@pepperi-addons/scripts": "^2.0.13"
 	}
 }
