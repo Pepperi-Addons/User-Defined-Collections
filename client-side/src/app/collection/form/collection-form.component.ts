@@ -86,7 +86,6 @@ export class CollectionFormComponent implements OnInit {
     documentKeyOptions: SelectOptions<string> = [];
     syncOptions: SelectOptions<string> = [];
     collectionLoaded: boolean = false;
-    mode: FormMode;
     collectionFields: { key:string, value: string }[] = [];
     fieldKey: string;
     fieldSort: number;
@@ -114,7 +113,6 @@ export class CollectionFormComponent implements OnInit {
 
     ngOnInit(): void {
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
-        this.mode = this.router['form_mode'] ? this.router['form_mode'] : this.collectionName === EMPTY_OBJECT_NAME ? 'Add' : 'Edit';
         this.translate.get(['SyncData_Options_Online', 'SyncData_Options_Offline', 'SyncData_Options_OnlyScheme', 'DocumentKey_Options_AutoGenerate', 'DocumentKey_Options_Composite']).subscribe(translations => {
             this.documentKeyOptions = DocumentKeyTypes.filter(type => type !== 'Key').map(type => {
                 return {
@@ -134,13 +132,11 @@ export class CollectionFormComponent implements OnInit {
                 this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
                 this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collectionName);
                 this.collectionLoaded = true;
-                if (this.mode === 'Edit') {
-                    const documents = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collectionName): [];
-                    this.emptyCollection = documents.length == 0;
-                    if (this.uidList) {
-                        this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
-                        this.uidFieldsDataSource = this.getUIDFieldsDataSource();
-                    }
+                const documents = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collectionName): [];
+                this.emptyCollection = documents.length == 0;
+                if (this.uidList) {
+                    this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
+                    this.uidFieldsDataSource = this.getUIDFieldsDataSource();
                 }
                 if (this.collection.SyncData) {
                     this.syncData = this.collection.SyncData.Sync ? 'Offline' : 'Online';
@@ -398,50 +394,18 @@ export class CollectionFormComponent implements OnInit {
 
     async saveClicked() {
         try {
-            if(this.mode === 'Add') {
-                try {
-                    await this.collectionsService.createCollection(this.collection);
-                    this.showSuccessMessage();
-                }
-                catch (err) {
-                    let contentKey = '';
-                    if (err.message.indexOf(existingInRecycleBinErrorMessage) >= 0) {
-                        contentKey = 'Collection_ExistingRecycleBinError_Content'
-                    }
-                    else if(err.message.indexOf(existingErrorMessage) >= 0){
-                        contentKey = 'Collection_ExistingError_Content'
-                    }
-                    else {
-                        throw err;
-                    }
-                    const dataMsg = new PepDialogData({
-                        title: this.translate.instant('Collection_UpdateFailed_Title'),
-                        actionsType: 'close',
-                        content: this.translate.instant(contentKey, {collectionName: this.collection.Name})
-                    });
-                    this.dialogService.openDefaultDialog(dataMsg);
-                }
+            // we cannot change the collection name, so we need first to delete the "old" one
+            if (this.collection.Name != this.collectionName) { 
+                await this.collectionsService.upsertCollection({
+                    Name: this.collectionName,
+                    Hidden: true
+                });
             }
-            else {
-                // we cannot change the collection name, so we need first to delete the "old" one
-                if (this.collectionName != EMPTY_OBJECT_NAME && this.collection.Name != this.collectionName) { 
-                    await this.collectionsService.upsertCollection({
-                        Name: this.collectionName,
-                        Hidden: true
-                    });
-                }
-                await this.collectionsService.upsertCollection(this.collection);
-                this.showSuccessMessage();
-            }
+            await this.collectionsService.upsertCollection(this.collection);
+            this.showSuccessMessage();
         }
         catch (error) {
-            const errors = this.utilitiesService.getErrors(error.message);
-            const dataMsg = new PepDialogData({
-                title: this.translate.instant('Collection_UpdateFailed_Title'),
-                actionsType: 'close',
-                content: this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
-            });
-            this.dialogService.openDefaultDialog(dataMsg);
+            this.collectionsService.showUpsertFailureMessage(error);
         }
     }
     

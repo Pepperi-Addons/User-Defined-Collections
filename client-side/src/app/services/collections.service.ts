@@ -4,13 +4,16 @@ import { Injectable } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { UtilitiesService } from './utilities.service';
+import { PepDialogData } from '@pepperi-addons/ngx-lib/dialog';
+import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
     constructor(
         public session:  PepSessionService,
         private pepHttp: PepHttpService,
-        private utilities: UtilitiesService
+        private utilities: UtilitiesService,
+        private translate: TranslateService
     ) {
     }
 
@@ -50,5 +53,12 @@ export class CollectionsService {
     
     async getContainedCollections(params?: FindOptions) {
         return (await this.utilities.papiClient.userDefinedCollections.schemes.find(params)).filter(x => x.Type === 'contained');
+    }
+
+    showUpsertFailureMessage(error) {
+        const errors = this.utilities.getErrors(error.message);
+        const title = this.translate.instant('Collection_UpdateFailed_Title');
+        const content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
+        this.utilities.showMessageDialog(title, content);
     }
 }

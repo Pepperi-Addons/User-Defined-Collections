@@ -56,3 +56,5 @@ export interface ReferenceValidationResult {
 
 export const existingErrorMessage = 'Object already Exist';
 export const existingInRecycleBinErrorMessage = 'Object already Exist in recycle bin';
+export const collectionNameRegex = "^([A-Z]){1}([\Sa-zA-Z0-9-_])*$"
+export const fieldNameRegex = "^([a-z]){1}([\Sa-zA-Z0-9-_])*$"

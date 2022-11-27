@@ -1,12 +1,14 @@
 import jwt from 'jwt-decode';
 import { AddonData, AddonDataScheme, Collection, FindOptions, PapiClient, SchemeField } from '@pepperi-addons/papi-sdk';
-import { Injectable } from '@angular/core';
+import { Injectable, TemplateRef } from '@angular/core';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { EMPTY_OBJECT_NAME, SelectOptions } from '../entities';
 import { config } from '../addon.config';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { TranslateService } from '@ngx-translate/core';
+import { ComponentType } from '@angular/cdk/portal';
+import { MatDialogRef } from '@angular/material/dialog';
 
 @Injectable({ providedIn: 'root' })
 export class UtilitiesService {
@@ -128,5 +130,25 @@ export class UtilitiesService {
             content: content
         });
         this.dialogService.openDefaultDialog(dataMsg);
+    }
+
+    async getAbstractSchemes() {
+        const papiClient = new PapiClient({
+            baseURL: this.papiBaseURL,
+            token: this.session.getIdpToken(),
+            suppressLogging: true
+        });
+
+        const schemes = await papiClient.addons.data.schemes.get({});
+        return schemes.filter(scheme => scheme.Type === 'abstract');
+    }
+
+    openComponentInDialog(ref: ComponentType<unknown> | TemplateRef<unknown>, data: any, callback: (value:any)=>void) {
+        const dialogConfig = this.dialogService.getDialogConfig();
+        this.dialogService.openDialog(ref, data).afterClosed().subscribe(value=> {
+            if (callback) {
+                callback(value);
+            }
+        })
     }
 }

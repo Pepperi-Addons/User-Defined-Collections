@@ -3,8 +3,8 @@ import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-s
 import { Client } from '@pepperi-addons/debug-server';
 import { ADAL_UUID, AtdRelations, DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
-import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema, regexPattern } from '../jsonSchemes/collections';
-import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService } from 'udc-shared';
+import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
+import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex } from 'udc-shared';
 export class CollectionsService {
         
     utilities: UtilitiesService = new UtilitiesService(this.client);
@@ -126,7 +126,7 @@ export class CollectionsService {
     
     async create(documentsService: DocumentsService, collectionName: string, body: any) {
         try {
-            const regex = new RegExp(regexPattern);
+            const regex = new RegExp(collectionNameRegex);
             if(regex.test(collectionName)) {
                 const collection = await this.findByName(collectionName);
                 if (collection.Hidden) {

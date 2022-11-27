@@ -92,5 +92,11 @@
     "Fields_AdditionalFields_NoDataFound": "Click Add to define additional indexed fields",
     "AdditionalField_Field_Title": "Field Name",
     "DeleteAdditionalField_DialogTitle": "Delete Field",
-    "DeleteAdditionalField_DialogContent": "Are you sure you want to delete {{field_name}} field?"
+    "DeleteAdditionalField_DialogContent": "Are you sure you want to delete {{field_name}} field?",
+    "Collection_ExtensionField_Title": "Inherit fields from",
+    "Collection_NameField_Title": "Key",
+    "Collection_DescriptionField_Title": "Description",
+    "Collection_AddDialog_Title": "Add Collection",
+    "Collection_AddDialog_SubTitle": "Define the collection to add",
+    "Collection_NameField_RegexError": "collection name must start with upper case and contain only url safe chatacters"
 }
