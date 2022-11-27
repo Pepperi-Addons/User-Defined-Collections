@@ -147,7 +147,7 @@ export const dataViewSchema: Schema = {
                 },
                 required: ['FieldID', 'Type', 'Title', 'Mandatory', 'ReadOnly']
             },
-            minItems: 1
+            minItems: 0
         },
         Columns: {
             type: "array",
@@ -162,7 +162,7 @@ export const dataViewSchema: Schema = {
                 },
                 required: ['Width']
             },
-            minItems: 1
+            minItems: 0
         }
     },
     required: ['Fields', 'Columns']
@@ -214,6 +214,9 @@ export const fieldsSchema: Schema = {
                         }
                     },
                 },
+                ExtendedField: {
+                    type: "boolean"
+                }
             },
             required: ['Type', 'Mandatory'],
             allOf: [{
@@ -340,7 +343,7 @@ export const fieldsSchema: Schema = {
             additionalProperties: false
         }
     },
-    minProperties: 1,
+    minProperties: 0,
     additionalProperties:false
 }
 export const collectionSchema: Schema = {
@@ -363,12 +366,12 @@ export const collectionSchema: Schema = {
         },
         ListView: {
             type: "object",
-            required: true,
+            required: false,
             $ref: dataViewSchema.$id,
         },
         Fields: {
             type: "object",
-            required: true,
+            required: false,
             $ref: fieldsSchema.$id,
         },
         Hidden: {
@@ -383,5 +386,5 @@ export const collectionSchema: Schema = {
             format: "date-time",
         },
     },
-    required: ['Name', 'DocumentKey', 'Fields', 'ListView']
+    required: ['Name', 'DocumentKey']
 }
