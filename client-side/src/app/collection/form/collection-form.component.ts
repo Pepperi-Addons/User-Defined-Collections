@@ -21,17 +21,14 @@ import { EMPTY_OBJECT_NAME, FormMode, FieldsFormDialogData, booleanOptions, Sync
 export class CollectionFormComponent implements OnInit {
     
     collection: Collection;
-    indexed: boolean = false;
     collectionName: string;
     emptyCollection: boolean = true;
-    EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
-    fieldsValid: boolean = false;
     documentKeyValid: boolean = false;
-    nameValid: boolean = false;
     resources: AddonDataScheme[] = [];
     containedResources: AddonDataScheme[] = [];
     booleanOptions = booleanOptions;
     syncData: SyncType = 'Offline';
+    EMPTY_OBJECT_NAME = EMPTY_OBJECT_NAME;
 
     fieldsDataSource: IPepGenericListDataSource;
 
@@ -39,21 +36,24 @@ export class CollectionFormComponent implements OnInit {
         get: async (data: PepSelectionData) => {
             const actions = [];
             if (data && data.rows.length == 1) {
-                const fieldIndexed = this.originFields[data.rows[0]]?.Indexed || false
-                actions.push({
-                    title: this.translate.instant('Edit'),
-                    handler: async (objs) => {
-                        this.openFieldForm(objs.rows[0]);
-                    }
-                });
-                // if the field is indexed than it cannot be deleted
-                if (!fieldIndexed) {
+                const fieldIndexed = this.originFields[data.rows[0]]?.Indexed || false;
+                const extendedField = this.originFields[data.rows[0]] ? this.originFields[data.rows[0]]['ExtendedField'] : false;
+                if (!extendedField) {
                     actions.push({
-                        title: this.translate.instant('Delete'),
+                        title: this.translate.instant('Edit'),
                         handler: async (objs) => {
-                            this.showDeleteDialog(objs.rows[0]);
+                            this.openFieldForm(objs.rows[0]);
                         }
-                    })
+                    });
+                    // if the field is indexed than it cannot be deleted
+                    if (!fieldIndexed) {
+                        actions.push({
+                            title: this.translate.instant('Delete'),
+                            handler: async (objs) => {
+                                this.showDeleteDialog(objs.rows[0]);
+                            }
+                        })
+                    }
                 }
                 actions.push({
                     title: this.translate.instant('Change Sort'),
@@ -128,6 +128,7 @@ export class CollectionFormComponent implements OnInit {
             })
             this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
                 this.collection = value;
+                this.updateListView();
                 this.fieldsDataSource = this.getFieldsDataSource();
                 this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
                 this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collectionName);
@@ -152,11 +153,9 @@ export class CollectionFormComponent implements OnInit {
                     this.syncData = 'OnlyScheme';
                     this.collection.SyncData.Sync = false;
                 }
-                this.nameValid = this.collection.Name != '';
                 this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
-                this.fieldsValid = this.collection.ListView.Fields.length > 0;
                 // deep copy the object to avoid unwanted data changes
-                this.originFields = JSON.parse(JSON.stringify(this.collection.Fields));
+                this.originFields = JSON.parse(JSON.stringify(this.collection.Fields || {}));
             });
         });
     }
@@ -174,7 +173,6 @@ export class CollectionFormComponent implements OnInit {
                         Indexed: this.collection.Fields[obj.FieldID].Indexed || false,
                     };
                 });
-                this.fieldsValid = this.collection.ListView.Fields.length > 0;
                 return Promise.resolve({
                     dataView: {
                         Context: {
@@ -405,7 +403,7 @@ export class CollectionFormComponent implements OnInit {
             this.showSuccessMessage();
         }
         catch (error) {
-            this.collectionsService.showUpsertFailureMessage(error);
+            this.collectionsService.showUpsertFailureMessage(error.message, this.collection.Name);
         }
     }
     
@@ -479,7 +477,7 @@ export class CollectionFormComponent implements OnInit {
             Mandatory: field.Mandatory,
             ReadOnly: true,
             Title: fieldName,
-            Type: this.getDataViewFieldType(field.Type, field.OptionalValues.length > 0)
+            Type: this.getDataViewFieldType(field.Type, field.OptionalValues?.length > 0 || false)
         }
     }
 
@@ -586,10 +584,6 @@ export class CollectionFormComponent implements OnInit {
             this.collection.Type = 'data';
         }
     }
-    
-    nameChanged(value: string) {
-        this.nameValid = value != '';
-    }
 
     changeSyncData(newSyncData: SyncType) {
         switch (newSyncData) {
@@ -614,6 +608,19 @@ export class CollectionFormComponent implements OnInit {
                 }
                 break;
             }
+        }
+    }
+
+    updateListView() {
+        if(this.collection.Fields) {
+            Object.keys(this.collection.Fields).forEach(fieldName => {
+                let dvField = this.collection.ListView.Fields.find(x => x.FieldID === fieldName);
+                if(!dvField) {
+                    dvField = this.getDataViewField(fieldName, this.collection.Fields[fieldName]);
+                    this.collection.ListView.Fields.push(dvField);
+                    this.collection.ListView.Columns.push({ Width: 10 });
+                }
+            })
         }
     }
 }

@@ -11,7 +11,7 @@
                     class="pep-spacing-element" 
                     [value]="'Update' | translate" 
                     [styleType]="'strong'" 
-                    [disabled]="!nameValid || !fieldsValid || !documentKeyValid"
+                    [disabled]="!documentKeyValid"
                     (buttonClick)="saveClicked()"
                 ></pep-button>
             </div>
@@ -24,16 +24,13 @@
                 [(value)]="collection.Name"
                 [label]="'Key' | translate"
                 type="text"
-                [mandatory]="true"
-                [disabled]="!emptyCollection"
-                (valueChange)="nameChanged($event)"
+                [disabled]="true"
             ></pep-textbox>
             <pep-textbox
                 [(value)]="collection.Description"
                 [label]="'Description' | translate"
                 type="text"
                 [mandatory]="false"
-                [disabled]="false"
             ></pep-textbox>
         </div>
         <div class="flex">
@@ -47,15 +44,12 @@
                 [emptyOption]="false"
                 (valueChange)="syncFieldChanged($event)"
             ></pep-select>
-            <pep-select
-                [(value)]="indexed"
-                [label]="'Indexed_Select_Title' | translate"
-                type="select"
-                [options]="booleanOptions"
-                [showTitle]="true"
-                [emptyOption]="false"
-                [visible]="false"
-            ></pep-select>
+            <pep-textbox
+                [(value)]="collection['Extends'].Name"
+                [label]="'Collection_ExtensionField_Title' | translate"
+                type="text"
+                [disabled]="true"
+            ></pep-textbox>
         </div>
         <div class="genericListContainer">
             <pep-generic-list class="generic-list"

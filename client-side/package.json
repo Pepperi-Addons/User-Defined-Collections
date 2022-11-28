@@ -31,7 +31,7 @@
         "@pepperi-addons/data-views": "^0.0.2",
         "@pepperi-addons/ngx-composite-lib": "^0.4.1-beta.12",
         "@pepperi-addons/ngx-lib": "^0.4.1-beta.39",
-        "@pepperi-addons/papi-sdk": "file:../../papi-sdk/pepperi-addons-papi-sdk-1.43.0.tgz",
+        "@pepperi-addons/papi-sdk": "^1.43.0",
         "@tweenjs/tween.js": "^17.1.1",
         "file-saver": "^2.0.5",
         "hammerjs": "^2.0.8",

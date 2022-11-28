@@ -6,6 +6,7 @@ import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { UtilitiesService } from './utilities.service';
 import { PepDialogData } from '@pepperi-addons/ngx-lib/dialog';
 import { TranslateService } from '@ngx-translate/core';
+import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
@@ -55,10 +56,21 @@ export class CollectionsService {
         return (await this.utilities.papiClient.userDefinedCollections.schemes.find(params)).filter(x => x.Type === 'contained');
     }
 
-    showUpsertFailureMessage(error) {
-        const errors = this.utilities.getErrors(error.message);
-        const title = this.translate.instant('Collection_UpdateFailed_Title');
-        const content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
+    showUpsertFailureMessage(errorMessage: string, collectionName: string) {
+        let content = '';
+        let title = this.translate.instant('Collection_UpdateFailed_Title');
+        if (errorMessage.indexOf(existingInRecycleBinErrorMessage) >= 0) {
+            content = this.translate.instant('Collection_ExistingRecycleBinError_Content', {collectionName: collectionName});
+            this.utilities.showMessageDialog(title, content);
+        }
+        else if(errorMessage.indexOf(existingErrorMessage) >= 0){
+            content = this.translate.instant('Collection_ExistingError_Content', {collectionName: collectionName});
+            this.utilities.showMessageDialog(title, content);
+        }
+        else {
+            const errors = this.utilities.getErrors(errorMessage);
+            content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
+        }
         this.utilities.showMessageDialog(title, content);
     }
 }

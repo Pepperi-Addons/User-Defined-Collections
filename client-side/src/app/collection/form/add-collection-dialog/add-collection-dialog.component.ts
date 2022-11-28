@@ -49,27 +49,36 @@ export class AddCollectionDialogComponent implements OnInit {
         const collection: Collection = {
             Name: this.name,
             Description: this.description,
-            Extends: {
-                AddonUUID: addonUUID,
-                Name: this.extention
-            }
+            DocumentKey: {
+                Type: 'AutoGenerate',
+                Delimiter: '@',
+                Fields: []
+            },
+            Fields: {},
+            ListView: {
+                Type: 'Grid',
+                Context: {
+                    Name: '',
+                    Profile: {},
+                    ScreenSize: 'Tablet'
+                },
+                Fields: [],
+                Columns: []
+            },
+            SyncData: {
+                Sync: false
+            },
+            GenericResource: true
+        }
+        // Remove after papi-sdk will support
+        collection['Extends'] = {
+            AddonUUID: addonUUID,
+            Name: this.extention
         }
         this.service.createCollection(collection).then((collection) => {
             this.dialogRef.close(collection)
         }).catch(err => {
-            let content = '';
-            let title = this.translate.instant('Collection_UpdateFailed_Title');
-            if (err.message.indexOf(existingInRecycleBinErrorMessage) >= 0) {
-                content = this.translate.instant('Collection_ExistingRecycleBinError_Content', {collectionName: collection.Name});
-                this.utilities.showMessageDialog(title, content);
-              }
-              else if(err.message.indexOf(existingErrorMessage) >= 0){
-                content = this.translate.instant('Collection_ExistingError_Content', {collectionName: collection.Name});
-                this.utilities.showMessageDialog(title, content);
-            }
-            else {
-                this.service.showUpsertFailureMessage(err);
-            }
+            this.service.showUpsertFailureMessage(err.message, this.name);
         });
     }
 
