@@ -14,7 +14,7 @@ export class CollectionsService {
 
     
     async upsert(service: DocumentsService, body: Collection) {
-        const collectionObj: any = {
+        let collectionObj: any = {
             Type: body.Type || 'data',
             GenericResource: true,
             ...body,
@@ -26,13 +26,15 @@ export class CollectionsService {
             }
         }
         const updatingHidden = 'Hidden' in body && body.Hidden;
-        const collectionForValidation = this.removeExtensionFields(collectionObj);
+        const collectionForValidation = this.removeExtensionFields(collectionObj, true);
         const validResult = this.validateScheme(collectionForValidation);
         const errors: string[] = []
         if (validResult.valid || updatingHidden) {
             await service.checkHidden(body);
             const fieldsValid = await this.validateFieldsType(collectionObj);
             if (fieldsValid.size === 0) {
+                // before sending data to ADAL, remove extended fields, without changing the DV
+                collectionObj = this.removeExtensionFields(collectionObj, false);
                 const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
                 await this.createDIMXRelations(collection.Name);
                 if(collection.Type !== 'contained') {
@@ -184,11 +186,11 @@ export class CollectionsService {
         }
     }
 
-    removeExtensionFields(collection: Collection): Collection {
-        const ret: Collection = {...collection};
+    removeExtensionFields(collection: Collection, changeDV: boolean): Collection {
+        const ret: Collection = JSON.parse(JSON.stringify(collection));
         // empty return object Fields & ListView properties to reconstruct it without extension fields
         ret.Fields = {};
-        if (ret.ListView) {
+        if (ret.ListView && changeDV) {
             ret.ListView.Fields = [];
             ret.ListView.Columns = [];
         }
@@ -196,7 +198,7 @@ export class CollectionsService {
         Object.keys(collection.Fields || {}).forEach(field => {
             if (collection.Fields![field]['ExtendedField'] === false) {
                 ret.Fields![field] = collection.Fields![field];
-                if(collection.ListView && collection.ListView.Fields) {
+                if(collection.ListView && collection.ListView.Fields && changeDV) {
                     const dvField = collection.ListView.Fields.find(x => x.FieldID === field);
                     if (dvField) {
                         ret.ListView!.Fields!.push(dvField);
