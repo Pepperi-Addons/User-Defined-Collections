@@ -9,9 +9,10 @@ import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
-import { Collection } from "@pepperi-addons/papi-sdk";
+import { AddonDataScheme, Collection } from "@pepperi-addons/papi-sdk";
 import { FormMode, EMPTY_OBJECT_NAME } from "../entities";
 import { config } from "../addon.config";
+import { AddCollectionDialogComponent } from "./form/add-collection-dialog/add-collection-dialog.component";
 
 @Component({
     selector: 'collection-list',
@@ -41,6 +42,8 @@ export class CollectionListComponent implements OnInit {
 
     listMessages = [];
 
+    abstractSchemes: AddonDataScheme[] = [];
+
     constructor(
         public collectionsService: CollectionsService,
         public layoutService: PepLayoutService,
@@ -62,6 +65,11 @@ export class CollectionListComponent implements OnInit {
         this.translate.get(['RecycleBin_NoDataFound', 'Collection_List_NoDataFound']).subscribe(translations=> {
             this.listMessages = translations;
             this.dataSource = this.getDataSource();
+        })
+        this.utilitiesService.getAbstractSchemes().then(schemes => {
+            this.abstractSchemes = schemes;
+        }).catch(error => {
+            console.log(`caould not get abstract schemes. error:${error}`);
         })
     }
 
@@ -166,7 +174,7 @@ export class CollectionListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Edit'),
                         handler: async (objs) => {
-                            this.navigateToCollectionForm('Edit', objs.rows[0]);
+                            this.navigateToCollectionForm(objs.rows[0]);
                         }
                     });
                     actions.push({
@@ -198,14 +206,22 @@ export class CollectionListComponent implements OnInit {
 
     menuItems:PepMenuItem[] = []
 
-    navigateToCollectionForm(mode: FormMode, name: string) {
-        const route: ActivatedRoute = this.getCurrentRoute(this.activateRoute);
-        this.router['form_mode'] = mode;
+    navigateToCollectionForm(name: string) {
         this.router.navigate([name], {
             relativeTo: this.activateRoute,
-            queryParamsHandling: 'preserve',
-            state: {form_mode: 'Edit'}
+            queryParamsHandling: 'preserve'
         })
+    }
+
+    openAddCollectionForm() {
+        const data = {
+            AsbtractSchemes: this.abstractSchemes
+        };
+        this.utilitiesService.openComponentInDialog(AddCollectionDialogComponent, data, (collection) => {
+            if (collection) {
+                this.navigateToCollectionForm(collection.Name);
+            }
+        });
     }
 
     menuItemClick(event: any) {

@@ -1,0 +1,51 @@
+<pep-dialog [title]="'Collection_AddDialog_Title' | translate">
+    <ng-container pep-dialog-content>
+        <p>{{'Collection_AddDialog_SubTitle' | translate}}</p>
+        <div class="form-row">
+            <pep-textbox
+                [(value)]="name"
+                [label]="'Collection_NameField_Title' | translate"
+                type="text"
+                [mandatory]="true"
+                (valueChange)="nameChanged($event)"
+            ></pep-textbox>
+        </div>
+        <div class="form-row">
+            <pep-textbox
+                [(value)]="description"
+                [label]="'Collection_DescriptionField_Title' | translate"
+                type="text"
+                [mandatory]="false"
+            ></pep-textbox>
+        </div>
+        <div class="form-row">
+            <pep-select
+                [(value)]="extention"
+                [label]="'Collection_ExtensionField_Title' | translate"
+                type="select"
+                [options]="extentionOptions"
+                [emptyOption]="true"
+            ></pep-select>
+        </div>
+
+    </ng-container>
+    <ng-container pep-dialog-actions>
+        <div class="pep-spacing-element-negative" style="display: flex;">
+            <pep-button 
+                class="pep-spacing-element"
+                [sizeType]="'md'" 
+                [value]="'cancel' | translate" 
+                [styleType]="'weak'" 
+                (buttonClick)="close()"
+            ></pep-button>          
+            <pep-button 
+                class="pep-spacing-element"
+                [sizeType]="'md'" 
+                [value]="'Create' | translate" 
+                [styleType]="'strong'" 
+                (buttonClick)="saveCollection()"
+                [disabled]="!isValid"
+            ></pep-button>
+        </div>
+    </ng-container>
+</pep-dialog>

@@ -1,7 +1,7 @@
 import { DocumentKeyTypes, SchemeFieldTypes, DataViewFieldTypes, HorizontalAlignments, VerticalAlignments } from "@pepperi-addons/papi-sdk"
 import { Schema } from 'jsonschema';
+import { collectionNameRegex } from 'udc-shared';
 
-export const regexPattern: string = "^([A-Z]){1}([\Sa-zA-Z0-9-_])*$"
 
 export const documentKeySchema: Schema = {
     $id: "/DocumentKey",
@@ -353,7 +353,7 @@ export const collectionSchema: Schema = {
     properties: {
         Name: {
             type: "string",
-            pattern: regexPattern,
+            pattern: collectionNameRegex,
             required: true,
         },
         Description: {

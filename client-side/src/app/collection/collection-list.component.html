@@ -36,7 +36,7 @@
                     [sizeType]="'md'" 
                     [value]="'Add' | translate"
                     [styleType]="'strong'" 
-                    (buttonClick)="navigateToCollectionForm('Add', EMPTY_OBJECT_NAME)"
+                    (buttonClick)="openAddCollectionForm()"
                     *ngIf="!recycleBin"
                 ></pep-button>
             </ng-container>
