@@ -168,6 +168,12 @@ export class CollectionListComponent implements OnInit {
                                 }
                             }
                         }
+                    });
+                    actions.push({
+                        title: this.translate.instant('Delete'),
+                        handler: async (objs) => {
+                            this.showPurgeDialog(objs.rows[0]);
+                        }
                     })
                 }
                 else {
@@ -306,5 +312,33 @@ export class CollectionListComponent implements OnInit {
         }
     }
     
-    
+    showPurgeDialog(name: string) {
+        const dataMsg = new PepDialogData({
+            title: this.translate.instant('Collection_PurgeDialog_Title'),
+            actionsType: 'cancel-delete',
+            content: this.translate.instant('Collection_PurgeDialog_Content')
+        });
+        this.dialogService.openDefaultDialog(dataMsg).afterClosed()
+            .subscribe(async (isDeletePressed) => {
+                if (isDeletePressed) {
+                    this.purgeCollection(name);
+                }
+            });
+    }
+
+    async purgeCollection(name: string) {
+        try {
+            await this.collectionsService.purgeCollection(name);
+        }
+        catch (error) {
+            if (error.message && error.message.toLocaleLowerCase().indexOf('timeout') > 0) {
+                let title = this.translate.instant('Collection_TimeoutDialog_Title');
+                let content = this.translate.instant('Collection_TimeoutDialog_Content');
+                this.utilitiesService.showMessageDialog(title, content);
+            }
+            else {
+                console.log('cannot purge collection, error:', error);
+            }
+        }
+    }
 }

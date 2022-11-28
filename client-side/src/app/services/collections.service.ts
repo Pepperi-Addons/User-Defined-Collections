@@ -7,6 +7,7 @@ import { UtilitiesService } from './utilities.service';
 import { PepDialogData } from '@pepperi-addons/ngx-lib/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
+import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
@@ -72,5 +73,9 @@ export class CollectionsService {
             content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
         }
         this.utilities.showMessageDialog(title, content);
+    }
+
+    async purgeCollection(collectionName: string) {
+        return await this.utilities.papiClient.addons.api.uuid(config.AddonUUID).file('api').func('hard_delete').post({collection_name: collectionName}, {});
     }
 }
