@@ -230,7 +230,7 @@ export class DocumentsService {
         Object.keys(fields).forEach(fieldName => {
             const field = fields[fieldName];
             // validate only fields that are not coming from base schema
-            if (field['ExtendedField'] === false) {
+            if (field.ExtendedField === false) {
                 if (field.Type === 'Object') {
                     propertiesScheme[fieldName] = {
                         type: 'object',

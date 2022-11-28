@@ -7,8 +7,6 @@
                 [label]="'Collection_NameField_Title' | translate"
                 type="text"
                 [mandatory]="true"
-                [regex]="collectionNameRegex"
-                [regexError]="'Collection_NameField_RegexError' | translate"
                 (valueChange)="nameChanged($event)"
             ></pep-textbox>
         </div>

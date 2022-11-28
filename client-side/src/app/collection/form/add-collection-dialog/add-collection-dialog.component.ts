@@ -5,7 +5,7 @@ import { Collection } from '@pepperi-addons/papi-sdk';
 import { SelectOptions } from 'src/app/entities';
 import { CollectionsService } from 'src/app/services/collections.service';
 import { UtilitiesService } from 'src/app/services/utilities.service';
-import { existingErrorMessage, existingInRecycleBinErrorMessage, collectionNameRegex } from 'udc-shared';
+import { collectionNameRegex } from 'udc-shared';
 
 @Component({
   selector: 'addon-add-collection-dialog',
@@ -68,12 +68,11 @@ export class AddCollectionDialogComponent implements OnInit {
             SyncData: {
                 Sync: false
             },
+            Extends: {                
+                AddonUUID: addonUUID,
+                Name: this.extention
+            },
             GenericResource: true
-        }
-        // Remove after papi-sdk will support
-        collection['Extends'] = {
-            AddonUUID: addonUUID,
-            Name: this.extention
         }
         this.service.createCollection(collection).then((collection) => {
             this.dialogRef.close(collection)

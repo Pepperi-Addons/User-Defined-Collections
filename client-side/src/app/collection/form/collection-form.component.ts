@@ -37,7 +37,7 @@ export class CollectionFormComponent implements OnInit {
             const actions = [];
             if (data && data.rows.length == 1) {
                 const fieldIndexed = this.originFields[data.rows[0]]?.Indexed || false;
-                const extendedField = this.originFields[data.rows[0]] ? this.originFields[data.rows[0]]['ExtendedField'] : false;
+                const extendedField = this.originFields[data.rows[0]] ? this.originFields[data.rows[0]].ExtendedField : false;
                 if (!extendedField) {
                     actions.push({
                         title: this.translate.instant('Edit'),

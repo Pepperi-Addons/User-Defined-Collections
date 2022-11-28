@@ -196,7 +196,7 @@ export class CollectionsService {
         }
 
         Object.keys(collection.Fields || {}).forEach(field => {
-            if (collection.Fields![field]['ExtendedField'] === false) {
+            if (collection.Fields![field].ExtendedField === false) {
                 ret.Fields![field] = collection.Fields![field];
                 if(collection.ListView && collection.ListView.Fields && changeDV) {
                     const dvField = collection.ListView.Fields.find(x => x.FieldID === field);
