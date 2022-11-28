@@ -29,6 +29,7 @@ export class CollectionFormComponent implements OnInit {
     booleanOptions = booleanOptions;
     syncData: SyncType = 'Offline';
     EMPTY_OBJECT_NAME = EMPTY_OBJECT_NAME;
+    extended: string = ''
 
     fieldsDataSource: IPepGenericListDataSource;
 
@@ -156,6 +157,7 @@ export class CollectionFormComponent implements OnInit {
                 this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
                 // deep copy the object to avoid unwanted data changes
                 this.originFields = JSON.parse(JSON.stringify(this.collection.Fields || {}));
+                this.extended = this.collection.Extends ? this.collection.Extends.Name : ''; 
             });
         });
     }
