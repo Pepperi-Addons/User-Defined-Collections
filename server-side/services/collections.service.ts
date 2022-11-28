@@ -13,12 +13,12 @@ export class CollectionsService {
     }
 
     
-    async upsert(service: DocumentsService, body: any) {
-        const collectionObj: Collection = {
-            Type: "data",
+    async upsert(service: DocumentsService, body: Collection) {
+        const collectionObj: any = {
+            Type: body.Type || 'data',
             GenericResource: true,
             ...body,
-            UserDefined: true
+            UserDefined: true,
         }
         if (!collectionObj.DocumentKey || !collectionObj.DocumentKey.Type) {
             collectionObj.DocumentKey = {
@@ -26,7 +26,8 @@ export class CollectionsService {
             }
         }
         const updatingHidden = 'Hidden' in body && body.Hidden;
-        const validResult = this.validateScheme(collectionObj);
+        const collectionForValidation = this.removeExtensionFields(collectionObj);
+        const validResult = this.validateScheme(collectionForValidation);
         const errors: string[] = []
         if (validResult.valid || updatingHidden) {
             await service.checkHidden(body);
@@ -96,7 +97,7 @@ export class CollectionsService {
             relation.Name = collection.Name;
             relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${ADAL_UUID}/${collection.Name}`;
             relation.SchemaRelativeURL = `/addons/api/${this.client.AddonUUID}/api/collection_fields?collection_name=${collection.Name}`;
-            Object.keys(collection.Fields!).forEach((fieldName) => {
+            Object.keys(collection.Fields || {}).forEach((fieldName) => {
                 const collectionField = collection.Fields![fieldName];
                 if (collectionField.Type === 'Resource') {
                     if (collectionField.Resource === 'accounts' && fieldName === 'account') {
@@ -181,6 +182,33 @@ export class CollectionsService {
         } else {
             list.push(collectionName);
         }
+    }
+
+    removeExtensionFields(collection: Collection): Collection {
+        const ret: Collection = {...collection};
+        // empty return object Fields & ListView properties to reconstruct it without extension fields
+        ret.Fields = {};
+        if (ret.ListView) {
+            ret.ListView.Fields = [];
+            ret.ListView.Columns = [];
+        }
+
+        Object.keys(collection.Fields || {}).forEach(field => {
+            if (collection.Fields![field]['ExtendedField'] === false) {
+                ret.Fields![field] = collection.Fields![field];
+                if(collection.ListView && collection.ListView.Fields) {
+                    const dvField = collection.ListView.Fields.find(x => x.FieldID === field);
+                    if (dvField) {
+                        ret.ListView!.Fields!.push(dvField);
+                        ret.ListView!.Columns!.push({
+                            Width: 10
+                        })
+                    }
+                }
+            }
+        })
+
+        return ret;
     }
 }
 
