@@ -229,39 +229,41 @@ export class DocumentsService {
         const propertiesScheme = {};
         Object.keys(fields).forEach(fieldName => {
             const field = fields[fieldName];
-            
-            if (field.Type === 'Object') {
-                propertiesScheme[fieldName] = {
-                    type: 'object',
-                    required: field.Mandatory,
-                    properties: {
-                        ...this.createObjectScheme(field.Fields!)
-                    }
-                }
-            }
-            else if((field.Type === 'Array' && field.Items!.Type === 'Object')) {
-                propertiesScheme[fieldName] = {
-                    type: 'array',
-                    required: field.Mandatory,
-                    items:{
+            // validate only fields that are not coming from base schema
+            if (field['ExtendedField'] === false) {
+                if (field.Type === 'Object') {
+                    propertiesScheme[fieldName] = {
                         type: 'object',
+                        required: field.Mandatory,
                         properties: {
-                            ...this.createObjectScheme(field.Items!.Fields!)
+                            ...this.createObjectScheme(field.Fields!)
                         }
                     }
                 }
-            }
-            else {
-                propertiesScheme[fieldName] = {
-                    ...this.getFieldSchemaType(field.Type, field.Items?.Type || 'String'),
-                    required: field.Mandatory
-                }
-                if (field.OptionalValues && field.OptionalValues.length > 0) {
-                    if (field.Type === 'Array') {
-                        propertiesScheme[fieldName].items!['enum'] = field.OptionalValues;
+                else if((field.Type === 'Array' && field.Items!.Type === 'Object')) {
+                    propertiesScheme[fieldName] = {
+                        type: 'array',
+                        required: field.Mandatory,
+                        items:{
+                            type: 'object',
+                            properties: {
+                                ...this.createObjectScheme(field.Items!.Fields!)
+                            }
+                        }
                     }
-                    else {
-                        propertiesScheme[fieldName].enum = field.OptionalValues;
+                }
+                else {
+                    propertiesScheme[fieldName] = {
+                        ...this.getFieldSchemaType(field.Type, field.Items?.Type || 'String'),
+                        required: field.Mandatory
+                    }
+                    if (field.OptionalValues && field.OptionalValues.length > 0) {
+                        if (field.Type === 'Array') {
+                            propertiesScheme[fieldName].items!['enum'] = field.OptionalValues;
+                        }
+                        else {
+                            propertiesScheme[fieldName].enum = field.OptionalValues;
+                        }
                     }
                 }
             }
