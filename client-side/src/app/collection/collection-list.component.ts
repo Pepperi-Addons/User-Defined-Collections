@@ -263,7 +263,7 @@ export class CollectionListComponent implements OnInit {
                         this.dataSource = this.getDataSource();
                     }
                     catch (error) {
-                        if (error.message.indexOf(this.deleteError) > 0)
+                        if (error.indexOf(this.deleteError) > 0)
                         {
                             const dataMsg = new PepDialogData({
                                 title: this.translate.instant('Collection_DeleteDialogTitle'),

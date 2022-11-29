@@ -115,7 +115,7 @@ export class DocumentsListComponent implements OnInit {
             this.menuItems = this.getMenuItems();
         });
         const dimxHostObject: DIMXHostObject = {
-            DIMXAddonUUID: this.utilitiesService.addonUUID,
+            DIMXAddonUUID: config.AddonUUID,
             DIMXResource: this.collectionName,
         }
         this.dimxService.register(this.viewContainer, dimxHostObject, (dimxEvent) => {
@@ -234,7 +234,7 @@ export class DocumentsListComponent implements OnInit {
               this.dimxService.import({
                 OverwriteObject: false,
                 Delimiter: ",",
-                OwnerID: this.utilitiesService.addonUUID
+                OwnerID: config.AddonUUID
               });
               this.dataSource = this.getDataSource();
               break
