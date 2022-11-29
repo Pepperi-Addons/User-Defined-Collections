@@ -171,6 +171,7 @@ export class CollectionListComponent implements OnInit {
                     })
                 }
                 else {
+                    const selectedCollection = this.collections.find(x=>x.Name === data.rows[0]);
                     actions.push({
                         title: this.translate.instant('Edit'),
                         handler: async (objs) => {
@@ -183,20 +184,21 @@ export class CollectionListComponent implements OnInit {
                             this.showDeleteDialog(objs.rows[0]);
                         }
                     })
-                    // actions.push({
-                    //     title: this.translate.instant('Export'),
-                    //     handler: async (objs) => {
-                    //         this.exportCollectionScheme(objs.rows[0]);
-                    //     }
-                    // })
-                    const selectedCollection = this.collections.find(x=>x.Name === data.rows[0]);
-                    if (selectedCollection && selectedCollection.Type != 'contained') {
+                    if(selectedCollection && selectedCollection.Type != 'contained') {
+                        if(this.collectionsService.isCollectionIndexed(selectedCollection)) {
+                            actions.push({
+                                title: this.translate.instant('Collections_RebuildAction_Title'),
+                                handler: async (objs) => {
+                                    this.showCleanRebuildMessage(objs.rows[0]);
+                                }
+                            })
+                        }
                         actions.push({
                             title: this.translate.instant('Edit data'),
                             handler: async (objs) => {
                                 this.navigateToDocumentsView(objs.rows[0]);
                             },
-                        })
+                        });
                     }
                 }
             }
@@ -306,5 +308,13 @@ export class CollectionListComponent implements OnInit {
         }
     }
     
-    
+    showCleanRebuildMessage(collectionName) {
+        const title = this.translate.instant('Collection_RebuildDialog_Title');
+        const content = this.translate.instant('Collection_RebuildDialog_Content');
+        this.utilitiesService.showMessageDialog(title, content, 'cancel-continue', (continuePressed => {
+            if (continuePressed) {
+                this.collectionsService.handleCleanRebuild(collectionName);
+            }
+        }));
+    }
 }

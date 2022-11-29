@@ -1,12 +1,15 @@
 import jwt from 'jwt-decode';
 import { AddonData, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
-
-import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { MatSnackBarRef } from '@angular/material/snack-bar';
+import { FileStatus, FileStatusPanelComponent } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
+import { PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
+import { PepGuid, PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { UtilitiesService } from './utilities.service';
-import { PepDialogData } from '@pepperi-addons/ngx-lib/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
+import { RebuildStatus } from '../entities';
+import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
@@ -14,7 +17,7 @@ export class CollectionsService {
         public session:  PepSessionService,
         private pepHttp: PepHttpService,
         private utilities: UtilitiesService,
-        private translate: TranslateService
+        private translate: TranslateService,
     ) {
     }
 
@@ -72,5 +75,32 @@ export class CollectionsService {
             content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
         }
         this.utilities.showMessageDialog(title, content);
+    }
+
+    async cleanRebuild(collectionName: string): Promise<string> {
+        const result = await this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/clean_rebuild`);
+        return result ? result.ExecutionUUID : '';
+    }
+
+    isCollectionIndexed(collection: Collection): boolean {
+        let result: boolean = false;
+        Object.keys(collection.Fields || {}).forEach(fieldName => {
+            if (collection.Fields[fieldName].Indexed) {
+                result = true;
+            }
+        })
+        return result;
+    }
+
+    async handleCleanRebuild(collectionName: string) {
+        try {
+            const auditLog = await this.cleanRebuild(collectionName);
+            if (auditLog) {
+                this.utilities.handleCleanRebuild(auditLog, collectionName);
+            }
+        }
+        catch (error) {
+            console.log(`clean rebuild for ${collectionName} failed with error: ${error}`);
+        }
     }
 }

@@ -1,3 +1,4 @@
+import { FileStatus, FileStatusType } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
 import { CollectionField, AddonDataScheme, SchemeFieldType } from '@pepperi-addons/papi-sdk'
 
 export type FieldsFormDialogData = {
@@ -34,3 +35,12 @@ export const booleanOptions: SelectOptions<string> = [{
 export const SyncTypes = ['Online', 'Offline', 'OnlyScheme'] as const;
 
 export type SyncType = typeof SyncTypes[number];
+
+ export type RebuildStatusType = FileStatusType | 'indexing'
+
+export class RebuildStatus {
+    key: number;
+    name: string;
+    status: RebuildStatusType = 'indexing';
+    statusMessage?: string | undefined;
+}
