@@ -2,8 +2,8 @@ import jwt from 'jwt-decode';
 import { AddonData, AddonDataScheme, Collection, FindOptions, PapiClient, SchemeField } from '@pepperi-addons/papi-sdk';
 import { Injectable, TemplateRef } from '@angular/core';
 
-import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
-import { EMPTY_OBJECT_NAME, SelectOptions } from '../entities';
+import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { ADDONS_BASE_URL, API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, EMPTY_OBJECT_NAME, SelectOptions } from '../entities';
 import { config } from '../addon.config';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { TranslateService } from '@ngx-translate/core';
@@ -12,36 +12,18 @@ import { MatDialogRef } from '@angular/material/dialog';
 
 @Injectable({ providedIn: 'root' })
 export class UtilitiesService {
-    
-    accessToken = '';
-    parsedToken: any
-    papiBaseURL = ''
-    addonUUID;
-
-    get papiClient(): PapiClient {
-        return new PapiClient({
-            baseURL: this.papiBaseURL,
-            token: this.session.getIdpToken(),
-            addonUUID: this.addonUUID,
-            suppressLogging:true
-        })
-    }
 
     constructor(
         public session:  PepSessionService,
-        private pepHttp: PepHttpService,
+        private httpService: PepHttpService,
         private translate: TranslateService,
         private dialogService: PepDialogService
-    ) {
-        this.addonUUID = config.AddonUUID;
-        const accessToken = this.session.getIdpToken();
-        this.parsedToken = jwt(accessToken);
-        this.papiBaseURL = this.parsedToken["pepperi.baseurl"];
-    }
+    ) { }
 
     async getCollectionByName(collectionName: string): Promise<Collection> {
         if (collectionName !== EMPTY_OBJECT_NAME) {
-            return await this.papiClient.userDefinedCollections.schemes.name(collectionName).get();
+            const url = this.getAddonApiURL(COLLECTIONS_FUNCTION_NAME, {name: collectionName});
+            return await this.httpService.getPapiApiCall(url).toPromise();
         }
         else {
             return {
@@ -89,9 +71,8 @@ export class UtilitiesService {
                 options.where += this.getWhereClause(params.searchString, searchFields);
             }
         }
-
-
-        return await this.papiClient.userDefinedCollections.documents(collectionName).find(options);
+        const url = this.getAddonApiURL(DOCUMENTS_FUNCTION_NAME, { name: collectionName, ...options });
+        return await this.httpService.getPapiApiCall(url).toPromise();
     }
 
     getWhereClause(searchString: string, fields: string[]) {
@@ -102,7 +83,7 @@ export class UtilitiesService {
         return whereClause.substring(0, whereClause.length - 3);
     }
 
-    getErrors(message:string): string[] {
+    getErrors(message: string): string[] {
         const start = message.indexOf('exception:') + 10;
         const end = message.indexOf('","detail');
         const errors = message.substring(start, end).split("\\n");
@@ -110,12 +91,12 @@ export class UtilitiesService {
     }
             
     async getReferenceResources(): Promise<AddonDataScheme[]> {
-        const resources = await this.papiClient.resources.resource('resources').get();
+        const resources = await this.httpService.getPapiApiCall('/resources/resources').toPromise();
         return (resources as AddonDataScheme[]).filter(x => x.Type != 'contained' && x.Name != 'resources');
     }
-
+    
     async getResourceFields(resourceName: string): Promise<AddonDataScheme['Fields']> {
-        const resource: AddonDataScheme = await this.papiClient.resources.resource('resources').key(resourceName).get() as AddonDataScheme;
+        const resource: AddonDataScheme = await this.httpService.getPapiApiCall(`/resources/resources/key/${resourceName}`).toPromise();
         let fields = {}
         if (resource) {
             fields = resource.Fields;
@@ -134,7 +115,7 @@ export class UtilitiesService {
 
     async getAbstractSchemes() {
         const papiClient = new PapiClient({
-            baseURL: this.papiBaseURL,
+            baseURL: this.session.getPapiBaseUrl(),
             token: this.session.getIdpToken(),
             suppressLogging: true
         });
@@ -150,5 +131,21 @@ export class UtilitiesService {
                 callback(value);
             }
         })
+    }
+
+    getAddonApiURL(functionName: string, params: any = {}) {
+        const paramsQS = UtilitiesService.encodeQueryParams(params);
+        const query = paramsQS ? `?${paramsQS}` : '';
+        return `${ADDONS_BASE_URL}/${config.AddonUUID}/${API_FILE_NAME}/${functionName}${query}`;
+    }
+
+    private static encodeQueryParams(params: any) {
+        const ret: string[] = [];
+
+        Object.keys(params).forEach((key) => {
+            ret.push(key + '=' + encodeURIComponent(params[key]));
+        });
+
+        return ret.join('&');
     }
 }

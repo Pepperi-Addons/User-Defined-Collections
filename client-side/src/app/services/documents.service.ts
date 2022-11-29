@@ -2,26 +2,28 @@ import jwt from 'jwt-decode';
 import { AddonData, Collection, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
-import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { UtilitiesService } from './utilities.service';
+import { config } from '../addon.config';
+import { CREATE_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME } from '../entities';
 
 @Injectable({ providedIn: 'root' })
 export class DocumentsService {
     
     constructor(
         public session:  PepSessionService,
-        private pepHttp: PepHttpService,
+        private httpService: PepHttpService,
         private UtilitiesService: UtilitiesService
     ) {
     }
     
-    async upsertDocument(collectionName: string, obj: AddonData) {
-        await this.UtilitiesService.papiClient.userDefinedCollections.documents(collectionName).upsert(obj);
+    async upsertDocument(collectionName: string, obj: AddonData) {   
+        const url = this.UtilitiesService.getAddonApiURL(DOCUMENTS_FUNCTION_NAME, {name: collectionName});
+        return await this.httpService.postPapiApiCall(url, obj).toPromise();
     }
-
+    
     async createCollection(collectionName: string, obj: AddonData) {
-        return await this.UtilitiesService.papiClient.addons.api.uuid(this.UtilitiesService.addonUUID).file('api').func('create').post({
-            collection_name: collectionName
-        }, obj);
+        const url = this.UtilitiesService.getAddonApiURL(CREATE_FUNCTION_NAME, {name: collectionName});
+        return await this.httpService.postPapiApiCall(url, obj).toPromise();
     }  
 }

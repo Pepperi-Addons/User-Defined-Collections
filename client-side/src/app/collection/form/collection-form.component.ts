@@ -405,7 +405,7 @@ export class CollectionFormComponent implements OnInit {
             this.showSuccessMessage();
         }
         catch (error) {
-            this.collectionsService.showUpsertFailureMessage(error.message, this.collection.Name);
+            this.collectionsService.showUpsertFailureMessage(error, this.collection.Name);
         }
     }
     

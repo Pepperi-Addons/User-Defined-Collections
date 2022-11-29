@@ -2,23 +2,25 @@ import jwt from 'jwt-decode';
 import { AddonData, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
-import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { UtilitiesService } from './utilities.service';
 import { PepDialogData } from '@pepperi-addons/ngx-lib/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
+import { config } from '../addon.config';
+import { COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME } from '../entities';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
     constructor(
         public session:  PepSessionService,
-        private pepHttp: PepHttpService,
+        private httpService: PepHttpService,
         private utilities: UtilitiesService,
         private translate: TranslateService
     ) {
     }
 
-    async getCollections(hidden: boolean = false, params: any) {
+    async getCollections(hidden: boolean = false, params: any = {}): Promise<Collection[]> {
         let options: any = {
             where: ''
         };
@@ -34,26 +36,32 @@ export class CollectionsService {
         else if (params.searchString) {
             options.where = `Name LIKE "%${params.searchString}%"`;
         }
-        return await this.utilities.papiClient.userDefinedCollections.schemes.find(options);
+        const url = this.utilities.getAddonApiURL(COLLECTIONS_FUNCTION_NAME, options)
+        return await this.httpService.getPapiApiCall(url).toPromise()
     }
     
     async getMappingsCollections() {
-        const collections = await this.utilities.papiClient.userDefinedCollections.schemes.find();
+        const collections = await this.getCollections();
         return collections.filter(collection => {
             return collection.DocumentKey.Type === 'Composite'
         })
     }
     
     async upsertCollection(obj: Collection) {
-        return await this.utilities.papiClient.userDefinedCollections.schemes.upsert(obj);
+        const url = this.utilities.getAddonApiURL(COLLECTIONS_FUNCTION_NAME);
+        return await this.httpService.postPapiApiCall(url, obj).toPromise();
     }
     
     async createCollection(obj: Collection) {
-        return await this.utilities.papiClient.addons.api.uuid(this.utilities.addonUUID).file('api').func('create').post(undefined, obj);
+        const url = this.utilities.getAddonApiURL(CREATE_FUNCTION_NAME);
+        return await this.httpService.postPapiApiCall(url, obj).toPromise();
     } 
     
     async getContainedCollections(params?: FindOptions) {
-        return (await this.utilities.papiClient.userDefinedCollections.schemes.find(params)).filter(x => x.Type === 'contained');
+        const collections = await this.getCollections();
+        return collections.filter(collection => {
+            return collection.Type === 'contained'
+        })
     }
 
     showUpsertFailureMessage(errorMessage: string, collectionName: string) {
