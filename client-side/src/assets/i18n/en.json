@@ -99,6 +99,6 @@
     "Collection_AddDialog_Title": "Add Collection",
     "Collection_AddDialog_SubTitle": "Define the collection to add",
     "Collection_NameField_RegexError": "collection name must start with upper case and contain only url safe chatacters",
-    "Documents_EditForm_Title": "Editing document with key {{document_key}}",
+    "Documents_EditForm_Title": "Editing document",
     "Documents_AddForm_Title": "Adding new document"
 }

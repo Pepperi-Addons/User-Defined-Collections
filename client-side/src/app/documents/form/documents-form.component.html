@@ -1,4 +1,4 @@
-<pep-dialog [title]="(incoming.Mode === 'Edit' ? ('Documents_EditForm_Title' | translate: {document_key : item.Key}) : ('Documents_AddForm_Title' | translate )) ">
+<pep-dialog [title]="(incoming.Mode === 'Edit' ? 'Documents_EditForm_Title' : 'Documents_AddForm_Title') | translate">
     <ng-container pep-dialog-content>
         <pep-generic-form [dataSource]="item" [dataView]="incoming.DataView" (formValidationChange)="isValid = $event">
 
