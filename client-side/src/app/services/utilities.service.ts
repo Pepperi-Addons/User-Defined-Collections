@@ -167,14 +167,15 @@ export class UtilitiesService {
         }
     }
 
-    private async pollAuditLog(auditLog: string, statusObj: RebuildStatus) {
-        console.log(`polling clean rebuild process with executionUUID: ${auditLog}`);
+    private async pollAuditLog(auditLog: string, statusObj: RebuildStatus): Promise<string> {
+        
+        console.log(`polling clean rebuild process with URI: ${auditLog}`);
         const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
         const waitingTime = 1000; //in ms
         try {
             let result: AuditLog;
             while (true) {
-                result = await this.httpService.getPapiApiCall(`/audit_logs/${auditLog}`).toPromise();
+                result = await this.httpService.getPapiApiCall(auditLog).toPromise();
 
                 if (!result || result.Status.ID === 2 || result.Status.ID === 4 || result.Status.ID === 5) {
                     await delay(waitingTime);
@@ -188,19 +189,22 @@ export class UtilitiesService {
                     statusObj.status = "failed";
                     console.log(`operation failed with error: ${result.AuditInfo.ErrorMessage}`);
                     this.updateSnackBar();
+                    break;
                 case 'Success':
                     console.log(`operation succeeded`);
+                    break;
                 default:
                     statusObj.status = "failed";
                     console.log(`operation failed with an unknown audit log type: ${result["Status"]}`);
                     this.updateSnackBar();
-                    return null
             }
+            return result.AuditInfo.ErrorMessage;
         }
         catch (ex) {
-            console.error(`clean rebuild exception: ${ex}`);
+            console.error(`clean rebuild exception: ${JSON.stringify(ex)}`);
             statusObj.status = "failed";
             this.updateSnackBar();
+            return 'Unknown error occured';
         }
     }
 
@@ -216,9 +220,11 @@ export class UtilitiesService {
         let status = this.createRebuildStatusObject(collectionName)
         this.cleanRebuilds.push(status);
         this.updateSnackBar();
-        await this.pollAuditLog(auditLog, status);
-        status.status = 'done';
-        this.updateSnackBar();
+        const error = await this.pollAuditLog(auditLog, status);
+        if (error === undefined) {
+            status.status = 'done';
+            this.updateSnackBar();
+        }
     }
     
     getAddonApiURL(functionName: string, params: any = {}) {

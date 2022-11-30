@@ -53,3 +53,4 @@ export const CREATE_FUNCTION_NAME = 'create';
 export const MAPPINGS_FUNCTION_NAME = 'mappings';
 export const FIELDS_FUNCTION_NAME = 'fields';
 export const ATD_FUNCTION_NAME = 'get_atd';
+export const REBUILD_FUNCTION_NAME = 'clean_rebuild';

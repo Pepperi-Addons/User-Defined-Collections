@@ -2,12 +2,13 @@ import jwt from 'jwt-decode';
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-import { Collection, FindOptions } from '@pepperi-addons/papi-sdk';
+import { Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 import { UtilitiesService } from './utilities.service';
-import { COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME } from '../entities';
+import { COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
+import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
@@ -82,8 +83,9 @@ export class CollectionsService {
     }
 
     async cleanRebuild(collectionName: string): Promise<string> {
-        const result = await this.httpService.postPapiApiCall(`/addons/data/schemes/${collectionName}/clean_rebuild`, {}).toPromise()
-        return result ? result.ExecutionUUID : '';
+        const url = this.utilities.getAddonApiURL(REBUILD_FUNCTION_NAME, {collection_name: collectionName});
+        const result = await this.httpService.postPapiApiCall(url, {}).toPromise();
+        return result ? result.URI : '';
     }
 
     isCollectionIndexed(collection: Collection): boolean {
