@@ -1,14 +1,14 @@
 import jwt from 'jwt-decode';
-import { AddonData, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
-
-import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
-import { UtilitiesService } from './utilities.service';
-import { PepDialogData } from '@pepperi-addons/ngx-lib/dialog';
 import { TranslateService } from '@ngx-translate/core';
+
+import { Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
+import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
+import { UtilitiesService } from './utilities.service';
+import { COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
 import { config } from '../addon.config';
-import { COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME } from '../entities';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
@@ -16,7 +16,7 @@ export class CollectionsService {
         public session:  PepSessionService,
         private httpService: PepHttpService,
         private utilities: UtilitiesService,
-        private translate: TranslateService
+        private translate: TranslateService,
     ) {
     }
 
@@ -80,5 +80,33 @@ export class CollectionsService {
             content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
         }
         this.utilities.showMessageDialog(title, content);
+    }
+
+    async cleanRebuild(collectionName: string): Promise<string> {
+        const url = this.utilities.getAddonApiURL(REBUILD_FUNCTION_NAME, {collection_name: collectionName});
+        const result = await this.httpService.postPapiApiCall(url, {}).toPromise();
+        return result ? result.URI : '';
+    }
+
+    isCollectionIndexed(collection: Collection): boolean {
+        let result: boolean = false;
+        Object.keys(collection.Fields || {}).forEach(fieldName => {
+            if (collection.Fields[fieldName].Indexed) {
+                result = true;
+            }
+        })
+        return result;
+    }
+
+    async handleCleanRebuild(collectionName: string) {
+        try {
+            const auditLog = await this.cleanRebuild(collectionName);
+            if (auditLog) {
+                this.utilities.handleCleanRebuild(auditLog, collectionName);
+            }
+        }
+        catch (error) {
+            console.log(`clean rebuild for ${collectionName} failed with error: ${error}`);
+        }
     }
 }

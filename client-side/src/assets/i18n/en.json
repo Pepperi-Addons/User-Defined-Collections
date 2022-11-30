@@ -99,6 +99,10 @@
     "Collection_AddDialog_Title": "Add Collection",
     "Collection_AddDialog_SubTitle": "Define the collection to add",
     "Collection_NameField_RegexError": "collection name must start with upper case and contain only url safe chatacters",
+    "Collections_RebuildAction_Title": "Rebuild Index",
+    "Collection_RebuildDialog_Title": "Rebuild Index",
+    "Collection_RebuildDialog_Content": "Running rebuild will prevent all users from using this UDC until the process ends. This can take up to several minutes. Are you sure you want to run it now?",
+    "CleanRebuild_SnackBar_Title": "Rebuild Index",
     "Documents_EditForm_Title": "Editing document",
     "Documents_AddForm_Title": "Adding new document"
 }
