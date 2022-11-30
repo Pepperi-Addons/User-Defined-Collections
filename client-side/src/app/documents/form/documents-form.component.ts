@@ -47,10 +47,10 @@ export class DocumentsFormComponent implements OnInit {
                 }
                 catch (err) {
                     let contentKey = '';
-                    if (err.message.indexOf(existingInRecycleBinErrorMessage) >= 0) {
+                    if (err.indexOf(existingInRecycleBinErrorMessage) >= 0) {
                         contentKey = 'Documents_ExistingRecycleBinError_Content'
                     }
-                    else if(err.message.indexOf(existingErrorMessage) >= 0){
+                    else if(err.indexOf(existingErrorMessage) >= 0){
                         contentKey = 'Documents_ExistingError_Content'
                     }
                     else {
@@ -70,7 +70,7 @@ export class DocumentsFormComponent implements OnInit {
             }
         }
         catch(error) {
-            const errors = this.utilitiesService.getErrors(error.message);
+            const errors = this.utilitiesService.getErrors(error);
             const dataMsg = new PepDialogData({
                 title: this.translate.instant('Documents_UpdateFailed_Title'),
                 actionsType: 'close',

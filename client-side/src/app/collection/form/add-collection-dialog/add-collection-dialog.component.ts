@@ -77,7 +77,7 @@ export class AddCollectionDialogComponent implements OnInit {
         this.service.createCollection(collection).then((collection) => {
             this.dialogRef.close(collection)
         }).catch(err => {
-            this.service.showUpsertFailureMessage(err.message, this.name);
+            this.service.showUpsertFailureMessage(err, this.name);
         });
     }
 

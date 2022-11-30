@@ -1,27 +1,25 @@
 import jwt from 'jwt-decode';
-import { AddonData, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
-import { MatSnackBarRef } from '@angular/material/snack-bar';
-import { FileStatus, FileStatusPanelComponent } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
-import { PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
-import { PepGuid, PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
-import { UtilitiesService } from './utilities.service';
 import { TranslateService } from '@ngx-translate/core';
+
+import { Collection, FindOptions } from '@pepperi-addons/papi-sdk';
+import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
-import { RebuildStatus } from '../entities';
-import { config } from '../addon.config';
+import { UtilitiesService } from './utilities.service';
+import { COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME } from '../entities';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
     constructor(
         public session:  PepSessionService,
-        private pepHttp: PepHttpService,
+        private httpService: PepHttpService,
         private utilities: UtilitiesService,
         private translate: TranslateService,
     ) {
     }
 
-    async getCollections(hidden: boolean = false, params: any) {
+    async getCollections(hidden: boolean = false, params: any = {}): Promise<Collection[]> {
         let options: any = {
             where: ''
         };
@@ -37,26 +35,32 @@ export class CollectionsService {
         else if (params.searchString) {
             options.where = `Name LIKE "%${params.searchString}%"`;
         }
-        return await this.utilities.papiClient.userDefinedCollections.schemes.find(options);
+        const url = this.utilities.getAddonApiURL(COLLECTIONS_FUNCTION_NAME, options)
+        return await this.httpService.getPapiApiCall(url).toPromise()
     }
     
     async getMappingsCollections() {
-        const collections = await this.utilities.papiClient.userDefinedCollections.schemes.find();
+        const collections = await this.getCollections();
         return collections.filter(collection => {
             return collection.DocumentKey.Type === 'Composite'
         })
     }
     
     async upsertCollection(obj: Collection) {
-        return await this.utilities.papiClient.userDefinedCollections.schemes.upsert(obj);
+        const url = this.utilities.getAddonApiURL(COLLECTIONS_FUNCTION_NAME);
+        return await this.httpService.postPapiApiCall(url, obj).toPromise();
     }
     
     async createCollection(obj: Collection) {
-        return await this.utilities.papiClient.addons.api.uuid(this.utilities.addonUUID).file('api').func('create').post(undefined, obj);
+        const url = this.utilities.getAddonApiURL(CREATE_FUNCTION_NAME);
+        return await this.httpService.postPapiApiCall(url, obj).toPromise();
     } 
     
     async getContainedCollections(params?: FindOptions) {
-        return (await this.utilities.papiClient.userDefinedCollections.schemes.find(params)).filter(x => x.Type === 'contained');
+        const collections = await this.getCollections();
+        return collections.filter(collection => {
+            return collection.Type === 'contained'
+        })
     }
 
     showUpsertFailureMessage(errorMessage: string, collectionName: string) {
@@ -78,7 +82,7 @@ export class CollectionsService {
     }
 
     async cleanRebuild(collectionName: string): Promise<string> {
-        const result = await this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/clean_rebuild`);
+        const result = await this.httpService.postPapiApiCall(`/addons/data/schemes/${collectionName}/clean_rebuild`, {}).toPromise()
         return result ? result.ExecutionUUID : '';
     }
 

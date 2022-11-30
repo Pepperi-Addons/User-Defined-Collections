@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-import { KeyValuePair } from '@pepperi-addons/ngx-lib';
+import { KeyValuePair, PepHttpService } from '@pepperi-addons/ngx-lib';
 import { AddonData, ApiFieldObject, BaseFormDataViewField, Collection, Type, FormDataView, SchemeFieldType } from '@pepperi-addons/papi-sdk';
 
 import { MappingFieldType, MappingFieldTypes, MappingResource, UdcMapping } from 'udc-shared';
@@ -9,34 +9,37 @@ import { MappingFieldType, MappingFieldTypes, MappingResource, UdcMapping } from
 import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
 
-import { FormMode } from '../entities';
+import { ATD_FUNCTION_NAME, FIELDS_FUNCTION_NAME, FormMode, MAPPINGS_FUNCTION_NAME } from '../entities';
 
 @Injectable({ providedIn: 'root' })
 export class MappingsService {
     constructor(
         private utilitiesService: UtilitiesService,
         private collectionsService: CollectionsService,
+        private httpService: PepHttpService,
         private translate: TranslateService
     ) {}
 
     async getMappings(atdID: number): Promise<UdcMapping[]> {
-        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('mappings').get({
-            atd_id: atdID
-        });
+        const url = this.utilitiesService.getAddonApiURL(MAPPINGS_FUNCTION_NAME, {atd_id: atdID});
+        return await this.httpService.getPapiApiCall(url).toPromise();
     }
-
+    
     async upsertMapping(mappingObj: MappingFormItem): Promise<UdcMapping> {
         const obj = this.convertToApiObject(mappingObj)
-        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('mappings').post(undefined, obj);
+        const url = this.utilitiesService.getAddonApiURL(MAPPINGS_FUNCTION_NAME);
+        return await this.httpService.postPapiApiCall(url, obj).toPromise();
     }
-
+    
     async deleteMapping(mappingObj: UdcMapping): Promise<UdcMapping> {
         mappingObj.Hidden = true;
-        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('mappings').post(undefined, mappingObj);
+        const url = this.utilitiesService.getAddonApiURL(MAPPINGS_FUNCTION_NAME);
+        return await this.httpService.postPapiApiCall(url, mappingObj).toPromise();
     }
     
     async getAtd(uuid: string): Promise<Type>{
-        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('get_atd').get({'uuid': uuid});
+        const url = this.utilitiesService.getAddonApiURL(ATD_FUNCTION_NAME, {'uuid': uuid});
+        return await this.httpService.getPapiApiCall(url).toPromise();
     }
 
     convertToApiObject(objToConvert: MappingFormItem): UdcMapping {
@@ -294,9 +297,8 @@ export class MappingsService {
     }
 
     async getFields(atdUUID: string): Promise<any> {
-        return await this.utilitiesService.papiClient.addons.api.uuid(this.utilitiesService.addonUUID).file('api').func('fields').get({
-            atd_uuid: atdUUID
-        });
+        const url = this.utilitiesService.getAddonApiURL(FIELDS_FUNCTION_NAME, { atd_uuid: atdUUID});
+        return await this.httpService.getPapiApiCall(url).toPromise();
     }
 
     filterFieldsByType(fields: ApiFieldObject[], fieldType: SchemeFieldType): ApiFieldObject[] {
