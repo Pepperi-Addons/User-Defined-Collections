@@ -1,23 +1,33 @@
 import jwt from 'jwt-decode';
-import { AddonData, AddonDataScheme, Collection, FindOptions, PapiClient, SchemeField } from '@pepperi-addons/papi-sdk';
 import { Injectable, TemplateRef } from '@angular/core';
-
-import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
-import { ADDONS_BASE_URL, API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, EMPTY_OBJECT_NAME, SelectOptions } from '../entities';
-import { config } from '../addon.config';
-import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { TranslateService } from '@ngx-translate/core';
 import { ComponentType } from '@angular/cdk/portal';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatSnackBarRef } from '@angular/material/snack-bar';
+
+import { AddonData, AddonDataScheme, AuditLog, Collection, FindOptions, PapiClient, SchemeField } from '@pepperi-addons/papi-sdk';
+
+import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { PepDialogActionsType, PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
+import { PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
+
+import { FileStatusPanelComponent } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
+
+import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME} from '../entities';
+import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
 export class UtilitiesService {
+    
+    private currentSnackBar: MatSnackBarRef<FileStatusPanelComponent> | null = null;
+    private cleanRebuilds: RebuildStatus[] = []
+    private cleanRebuildsIndex = 0;
 
     constructor(
         public session:  PepSessionService,
         private httpService: PepHttpService,
         private translate: TranslateService,
-        private dialogService: PepDialogService
+        private dialogService: PepDialogService,
+        private snackBarService: PepSnackBarService
     ) { }
 
     async getCollectionByName(collectionName: string): Promise<Collection> {
@@ -104,13 +114,17 @@ export class UtilitiesService {
         return fields;
     }
 
-    showMessageDialog(title: string, content: string) {
+    showMessageDialog(title: string, content: string, actionsType: PepDialogActionsType = 'close', callback: (value) => void = undefined) {
         const dataMsg = new PepDialogData({
             title: title,
-            actionsType: 'close',
+            actionsType: actionsType,
             content: content
         });
-        this.dialogService.openDefaultDialog(dataMsg);
+        this.dialogService.openDefaultDialog(dataMsg).afterClosed().subscribe(value => {
+            if(callback) {
+                callback(value);
+            }
+        });
     }
 
     async getAbstractSchemes() {
@@ -133,6 +147,86 @@ export class UtilitiesService {
         })
     }
 
+    private updateSnackBar() {
+        if (!this.currentSnackBar?.instance) {
+            this.currentSnackBar = this.snackBarService.openSnackBarFromComponent(FileStatusPanelComponent, {
+                title: this.translate.instant('CleanRebuild_SnackBar_Title'),
+                content: this.cleanRebuilds
+            })
+            this.currentSnackBar.instance.closeClick.subscribe(() => {
+                this.currentSnackBar = null;
+
+            });
+        }
+        else {
+            this.currentSnackBar.instance.data.content = this.cleanRebuilds;
+            if (this.cleanRebuilds.length === 0) {
+                this.currentSnackBar.instance.snackBarRef.dismiss();
+                this.currentSnackBar = null;
+            }
+        }
+    }
+
+    private async pollAuditLog(auditLog: string, statusObj: RebuildStatus): Promise<string> {
+        
+        console.log(`polling clean rebuild process with URI: ${auditLog}`);
+        const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+        const waitingTime = 1000; //in ms
+        try {
+            let result: AuditLog;
+            while (true) {
+                result = await this.httpService.getPapiApiCall(auditLog).toPromise();
+
+                if (!result || result.Status.ID === 2 || result.Status.ID === 4 || result.Status.ID === 5) {
+                    await delay(waitingTime);
+                }
+                else {
+                    break;
+                }
+            }
+            switch (result.Status.Name) {
+                case 'Failure':
+                    statusObj.status = "failed";
+                    console.log(`operation failed with error: ${result.AuditInfo.ErrorMessage}`);
+                    this.updateSnackBar();
+                    break;
+                case 'Success':
+                    console.log(`operation succeeded`);
+                    break;
+                default:
+                    statusObj.status = "failed";
+                    console.log(`operation failed with an unknown audit log type: ${result["Status"]}`);
+                    this.updateSnackBar();
+            }
+            return result.AuditInfo.ErrorMessage;
+        }
+        catch (ex) {
+            console.error(`clean rebuild exception: ${JSON.stringify(ex)}`);
+            statusObj.status = "failed";
+            this.updateSnackBar();
+            return 'Unknown error occured';
+        }
+    }
+
+    private createRebuildStatusObject(collectionName): RebuildStatus {
+        return {
+            key: this.cleanRebuildsIndex++,
+            name: collectionName,
+            status: 'indexing',
+        }
+    }
+
+    async handleCleanRebuild(auditLog: string, collectionName: string) {
+        let status = this.createRebuildStatusObject(collectionName)
+        this.cleanRebuilds.push(status);
+        this.updateSnackBar();
+        const error = await this.pollAuditLog(auditLog, status);
+        if (error === undefined) {
+            status.status = 'done';
+            this.updateSnackBar();
+        }
+    }
+    
     getAddonApiURL(functionName: string, params: any = {}) {
         const paramsQS = UtilitiesService.encodeQueryParams(params);
         const query = paramsQS ? `?${paramsQS}` : '';

@@ -1,3 +1,4 @@
+import { FileStatus, FileStatusType } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
 import { CollectionField, AddonDataScheme, SchemeFieldType } from '@pepperi-addons/papi-sdk'
 
 export type FieldsFormDialogData = {
@@ -35,6 +36,15 @@ export const SyncTypes = ['Online', 'Offline', 'OnlyScheme'] as const;
 
 export type SyncType = typeof SyncTypes[number];
 
+export type RebuildStatusType = FileStatusType | 'indexing'
+
+export class RebuildStatus {
+    key: number;
+    name: string;
+    status: RebuildStatusType = 'indexing';
+    statusMessage?: string | undefined;
+}
+
 export const API_FILE_NAME = 'api';
 export const ADDONS_BASE_URL = '/addons/api';
 export const COLLECTIONS_FUNCTION_NAME = 'schemes';
@@ -43,3 +53,4 @@ export const CREATE_FUNCTION_NAME = 'create';
 export const MAPPINGS_FUNCTION_NAME = 'mappings';
 export const FIELDS_FUNCTION_NAME = 'fields';
 export const ATD_FUNCTION_NAME = 'get_atd';
+export const REBUILD_FUNCTION_NAME = 'clean_rebuild';
