@@ -4,7 +4,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ComponentType } from '@angular/cdk/portal';
 import { MatSnackBarRef } from '@angular/material/snack-bar';
 
-import { AddonData, AddonDataScheme, AuditLog, Collection, FindOptions, PapiClient, SchemeField } from '@pepperi-addons/papi-sdk';
+import { AddonData, AddonDataScheme, AuditLog, Collection, FindOptions, PapiClient, SchemeField, SearchBody, SearchData } from '@pepperi-addons/papi-sdk';
 
 import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { PepDialogActionsType, PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
@@ -58,27 +58,28 @@ export class UtilitiesService {
         }
     }
 
-    async getCollectionDocuments(collectionName: string, params: any = {}, searchFields: string[] = [], hidden: boolean = false): Promise<AddonData[]> {
+    async getCollectionDocuments(collectionName: string, params: any = {}, searchFields: string[] = [], hidden: boolean = false): Promise<SearchData<AddonData>> {
         const pageSize = (params.toIndex - params.fromIndex) + 1 || 50;
-        const options: FindOptions = {
-            page: (params.fromIndex / pageSize) + 1 || 1,
-            page_size: pageSize,
-            where: ''
+        const options: SearchBody = {
+            Page: (params.fromIndex / pageSize) + 1 || 1,
+            PageSize: pageSize,
+            Where: '',
+            IncludeCount: true,
         };
 
         
         if (hidden) {
-            options.include_deleted = true;
-            options.where = 'Hidden = true';
+            options.IncludeDeleted = true;
+            options.Where = 'Hidden = true';
         }
         
         if (params.searchString) {
             // DI-21452 - is there are no indexed fields, search only on 'Key'
             if (searchFields.length === 0) {
-                options.where += `Key LIKE '${params.searchString}%'`;
+                options.Where += `Key LIKE '${params.searchString}%'`;
             }
             else {
-                options.where += this.getWhereClause(params.searchString, searchFields);
+                options.Where += this.getWhereClause(params.searchString, searchFields);
             }
         }
         const url = this.getAddonApiURL(DOCUMENTS_FUNCTION_NAME, { name: collectionName, ...options });

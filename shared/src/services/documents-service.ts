@@ -1,4 +1,4 @@
-import { AddonData, Collection, CollectionField, FindOptions, SchemeFieldType, SearchBody } from "@pepperi-addons/papi-sdk";
+import { AddonData, Collection, CollectionField, FindOptions, SchemeFieldType, SearchBody, SearchData } from "@pepperi-addons/papi-sdk";
 import { Schema, Validator } from "jsonschema";
 import { ReferenceValidationResult } from "../entities";
 import { DocumentSchema } from "../jsonSchemes/documents";
@@ -11,7 +11,7 @@ export class DocumentsService {
 
     constructor(private apiService: IApiService, private resourcesService: IResourcesServices) {}
 
-    async find(collectionName: any, options: any): Promise<AddonData[]> {
+    async find(collectionName: any, options: any): Promise<SearchData<AddonData>> {
         return await this.apiService.find(collectionName, options);
     }
     
@@ -37,7 +37,7 @@ export class DocumentsService {
         if ('Hidden' in body && body.Hidden) {
             const collectionName = body.Name;
             const items = await this.find(collectionName, {});
-            if (items.length > 0) {
+            if (items.Objects.length > 0) {
                 throw new Error('Cannot delete collection with documents');
             }
         }
@@ -58,7 +58,7 @@ export class DocumentsService {
         return result;
     }
 
-    async search(collectionName: string, body: SearchBody): Promise<AddonData[]> {
+    async search(collectionName: string, body: SearchBody): Promise<SearchData<AddonData>> {
         let whereClause = '';
         if(!body.Where) {
             if (body.KeyList && body.KeyList.length > 0) {
@@ -71,13 +71,7 @@ export class DocumentsService {
         else {
             whereClause = body.Where;
         }
-        const options: FindOptions = {
-            fields: body.Fields ? body.Fields : undefined,
-            where: whereClause,
-            page: body.Page,
-            page_size: body.PageSize,
-        }
-        return await this.find(collectionName, options);
+        return await this.apiService.search(collectionName, body);
     }
 
     getWhereClaus(fieldID: string, fieldValues: string[]): string{

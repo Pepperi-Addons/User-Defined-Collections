@@ -22,7 +22,8 @@ export class CollectionsService {
 
     async getCollections(hidden: boolean = false, params: any = {}): Promise<Collection[]> {
         let options: any = {
-            where: ''
+            where: '',
+            page_size: -1
         };
         if (hidden) {
             options.include_deleted = true;

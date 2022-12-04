@@ -18,12 +18,12 @@ export class DocumentsService {
     }
     
     async upsertDocument(collectionName: string, obj: AddonData) {   
-        const url = this.UtilitiesService.getAddonApiURL(DOCUMENTS_FUNCTION_NAME, {name: collectionName});
+        const url = this.UtilitiesService.getAddonApiURL(DOCUMENTS_FUNCTION_NAME, {collection_name: collectionName});
         return await this.httpService.postPapiApiCall(url, obj).toPromise();
     }
     
-    async createCollection(collectionName: string, obj: AddonData) {
-        const url = this.UtilitiesService.getAddonApiURL(CREATE_FUNCTION_NAME, {name: collectionName});
+    async createDocument(collectionName: string, obj: AddonData) {
+        const url = this.UtilitiesService.getAddonApiURL(CREATE_FUNCTION_NAME, {collection_name: collectionName});
         return await this.httpService.postPapiApiCall(url, obj).toPromise();
     }  
 }

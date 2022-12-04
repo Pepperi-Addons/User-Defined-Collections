@@ -9,7 +9,7 @@ import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog"
 import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { DIMXHostObject, PepDIMXHelperService } from '@pepperi-addons/ngx-composite-lib'
 
-import { AddonData, Collection, FormDataView, SchemeField } from "@pepperi-addons/papi-sdk";
+import { AddonData, Collection, FormDataView, SchemeField, SearchData } from "@pepperi-addons/papi-sdk";
 
 import { DocumentsService } from "../services/documents.service";
 import { UtilitiesService } from "../services/utilities.service";
@@ -34,7 +34,7 @@ export class DocumentsListComponent implements OnInit {
     collectionName: string;
     recycleBin: boolean = false;
     collectionData: Collection;
-    documents: AddonData[] = [];
+    documents: SearchData<AddonData> = {Objects: [], Count: 0};
     
     screenSize: PepScreenSizeType;
     
@@ -52,7 +52,7 @@ export class DocumentsListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Restore'),
                         handler: async (objs) => {
-                            let document = this.documents.find(doc => doc.Key === objs.rows[0]);
+                            let document = this.documents.Objects.find(doc => doc.Key === objs.rows[0]);
                             if(document) {
                                 try {
                                     document.Hidden = false;
@@ -132,7 +132,7 @@ export class DocumentsListComponent implements OnInit {
                     this.documents = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
                 }
                 catch (err) {
-                    this.documents = [];
+                    this.documents.Objects = [];
                     this.showMessageInDialog('Documents_LoadingErrorDialog_Title', 'Documents_LoadingErrorDialog_Message');
                 }
                 return Promise.resolve({
@@ -173,8 +173,8 @@ export class DocumentsListComponent implements OnInit {
                         FrozenColumnsCount: 0,
                         MinimumColumnWidth: 0
                     },
-                    totalCount: this.documents.length,
-                    items: this.documents
+                    totalCount: this.documents.Count,
+                    items: this.documents.Objects
                 });
             },
             inputs: {
@@ -257,7 +257,7 @@ export class DocumentsListComponent implements OnInit {
     }
 
     navigateToDocumentsForm(formMode: FormMode, documentKey: string) {
-        const listItem = this.documents.find(x => x.Key === documentKey);
+        const listItem = this.documents.Objects.find(x => x.Key === documentKey);
         let item = listItem || {};
         if (formMode == 'Edit') {
             // item['Key'] = documentKey;

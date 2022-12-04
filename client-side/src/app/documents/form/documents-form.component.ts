@@ -42,7 +42,7 @@ export class DocumentsFormComponent implements OnInit {
             await this.fixDataTypes();
             if(this.incoming.Mode === 'Add') {
                 try {
-                    await this.documentsService.createCollection(this.incoming.CollectionName, this.item);
+                    await this.documentsService.createDocument(this.incoming.CollectionName, this.item);
                     this.dialogRef.close(true);
                 }
                 catch (err) {
