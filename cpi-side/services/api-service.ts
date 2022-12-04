@@ -18,7 +18,7 @@ export class ApiService extends IApiService {
     }
 
     async getByKey(collectionName: string, documentKey: string): Promise<AddonData> {
-        return await pepperi.addons.data.uuid(config.AddonUUID).table(collectionName).key(documentKey);
+        return await pepperi.addons.data.uuid(config.AddonUUID).table(collectionName).key(documentKey).get();
     }
 
     async upsert(collectionName: string, document: AddonData): Promise<AddonData> {
