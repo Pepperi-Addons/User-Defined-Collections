@@ -146,6 +146,14 @@ export class DocumentsFormComponent implements OnInit {
                     }
                     break;
                 }
+                case 'DateTime': {
+                    const testDate = new Date(this.item[fieldName]);
+                    // if the date is not valid, remove it from the object sent to server
+                    if(!this.utilitiesService.isValidDate(testDate)) {
+                        delete this.item[fieldName];
+                    }
+                    break;
+                }
                 default: {
                     //No conversion needed. do nothing
                 }
