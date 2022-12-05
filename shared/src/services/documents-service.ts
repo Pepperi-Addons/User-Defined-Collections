@@ -1,4 +1,4 @@
-import { AddonData, Collection, CollectionField, FindOptions, SchemeFieldType, SearchBody } from "@pepperi-addons/papi-sdk";
+import { AddonData, AddonDataScheme, Collection, CollectionField, FindOptions, SchemeFieldType, SearchBody } from "@pepperi-addons/papi-sdk";
 import { Schema, Validator } from "jsonschema";
 import { ReferenceValidationResult } from "../entities";
 import { DocumentSchema } from "../jsonSchemes/documents";
@@ -108,12 +108,20 @@ export class DocumentsService {
             const resourceName = schemeFields[field].Resource || ""
             if (schemeFields[field].Type === 'Resource') {
                 if (resourceName != "") {
-                    if (field in document) {
-                        valid = await this.getReferencedObject(document[field], resourceName) != undefined;
+                    // TBD - remove once getByKey on abstract scheme will work
+                    // if the reference is for schema of type 'abstract' don't validate.
+                    const resourceScheme = await this.resourcesService.getByKey('resources', resourceName) as AddonDataScheme;
+                    if (resourceScheme && resourceScheme.Type !== 'abstract') {
+                        if (field in document) {
+                            valid = await this.getReferencedObject(document[field], resourceName) != undefined;
+                        }
+                        else {
+                            document = await this.checkUniqueFields(resourceName, document, field);
+                            valid = document[field] != ""; // if reference field has value than the reference is valid
+                        }
                     }
                     else {
-                        document = await this.checkUniqueFields(resourceName, document, field);
-                        valid = document[field] != ""; // if reference field has value than the reference is valid
+                        valid = true
                     }
                 }
                 else {
@@ -124,8 +132,16 @@ export class DocumentsService {
             else {
                 if (schemeFields[field].Type === 'Array' && schemeFields[field].Items!.Type === 'Resource') {
                     if (resourceName != "") {
-                        if(field in document && document[field].length > 0) {
-                            valid = (await this.getReferencedObjects(document[field], resourceName)).length ===  document[field].length;
+                        // TBD - remove once getByKey on abstract scheme will work
+                        // if the reference is for schema of type 'abstract' don't validate.
+                        const resourceScheme = await this.resourcesService.getByKey('resources', resourceName) as AddonDataScheme;
+                        if (resourceScheme && resourceScheme.Type !== 'abstract') {
+                            if(field in document && document[field].length > 0) {
+                                valid = (await this.getReferencedObjects(document[field], resourceName)).length ===  document[field].length;
+                            }
+                        }
+                        else {
+                            valid = true;
                         }
                     }
                     else {
