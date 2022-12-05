@@ -104,5 +104,6 @@
     "Collection_RebuildDialog_Content": "Running rebuild will prevent all users from using this UDC until the process ends. This can take up to several minutes. Are you sure you want to run it now?",
     "CleanRebuild_SnackBar_Title": "Rebuild Index",
     "Documents_EditForm_Title": "Editing document",
-    "Documents_AddForm_Title": "Adding new document"
+    "Documents_AddForm_Title": "Adding new document",
+    "Collection_DeleteDialogGeneralError": "Could not delete collection. got error <br />{{message}}"
 }
