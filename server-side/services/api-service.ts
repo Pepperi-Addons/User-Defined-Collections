@@ -10,16 +10,8 @@ export class ApiService extends IApiService {
         super();
     }
 
-    async find(collectionName: string, options: FindOptions): Promise<SearchData<AddonData>> {
-        const params: SearchBody = {
-            Fields: options.fields,
-            Where: options.where,
-            Page: options.page,
-            PageSize: options.page_size,
-            IncludeDeleted: options.include_deleted,
-            IncludeCount: true
-        }
-        return await this.utilities.papiClient.addons.data.search.uuid(this.client.AddonUUID).table(collectionName).post(params);
+    async find(collectionName: string, options: FindOptions): Promise<AddonData[]> {
+        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).find(options);
     }
 
     async upsert(collectionName: string, document: AddonData): Promise<AddonData> {

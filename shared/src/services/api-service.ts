@@ -3,7 +3,7 @@ import { AddonData, Collection, FindOptions, SearchBody, SearchData } from "@pep
 export abstract class IApiService {
     constructor () {}
 
-    abstract find(collectionName: string, options: FindOptions): Promise<SearchData<AddonData>>;
+    abstract find(collectionName: string, options: FindOptions): Promise<AddonData[]>;
 
     abstract upsert(collectionName: string, document: AddonData): Promise<AddonData>;
 

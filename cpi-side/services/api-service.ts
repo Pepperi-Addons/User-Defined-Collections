@@ -7,14 +7,14 @@ export class ApiService extends IApiService {
         super();
     }
 
-    async find(collectionName: string, options: FindOptions): Promise<SearchData<AddonData>> {
+    async find(collectionName: string, options: FindOptions): Promise<AddonData[]> {
         return (await pepperi.addons.data.uuid(config.AddonUUID).table(collectionName).search({
             Fields: options.fields || [],
             Where: options.where || '',
             Page: options.page || 1,
             PageSize: options.page_size || 100,
             SortBy: options.order_by || ''
-        }));
+        })).Objects;
     }
 
     async getByKey(collectionName: string, documentKey: string): Promise<AddonData> {

@@ -6,14 +6,15 @@ import { MatSnackBarRef } from '@angular/material/snack-bar';
 
 import { AddonData, AddonDataScheme, AuditLog, Collection, FindOptions, PapiClient, SchemeField, SearchBody, SearchData } from '@pepperi-addons/papi-sdk';
 
-import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 import { PepDialogActionsType, PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
 
 import { FileStatusPanelComponent } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
 
-import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME} from '../entities';
+import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME, API_PAGE_SIZE} from '../entities';
 import { config } from '../addon.config';
+import { IPepGenericListParams } from '@pepperi-addons/ngx-composite-lib/generic-list';
 
 @Injectable({ providedIn: 'root' })
 export class UtilitiesService {
@@ -25,6 +26,7 @@ export class UtilitiesService {
     constructor(
         public session:  PepSessionService,
         private httpService: PepHttpService,
+        private addonService: PepAddonService,
         private translate: TranslateService,
         private dialogService: PepDialogService,
         private snackBarService: PepSnackBarService
@@ -32,8 +34,8 @@ export class UtilitiesService {
 
     async getCollectionByName(collectionName: string): Promise<Collection> {
         if (collectionName !== EMPTY_OBJECT_NAME) {
-            const url = this.getAddonApiURL(COLLECTIONS_FUNCTION_NAME, {name: collectionName});
-            return await this.httpService.getPapiApiCall(url).toPromise();
+            const url = this.getFunctionURL(COLLECTIONS_FUNCTION_NAME, {name: collectionName});
+            return await this.addonService.getAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
         }
         else {
             return {
@@ -58,15 +60,15 @@ export class UtilitiesService {
         }
     }
 
-    async getCollectionDocuments(collectionName: string, params: any = {}, searchFields: string[] = [], hidden: boolean = false): Promise<SearchData<AddonData>> {
-        const pageSize = (params.toIndex - params.fromIndex) + 1 || 50;
-        const options: SearchBody = {
-            Page: (params.fromIndex / pageSize) + 1 || 1,
-            PageSize: pageSize,
+    async getCollectionDocuments(collectionName: string, params: IPepGenericListParams = {}, searchFields: string[] = [], hidden: boolean = false): Promise<SearchData<AddonData>> {
+        const pageSize = (params.toIndex - params.fromIndex) + 1 || API_PAGE_SIZE;
+        const page = params.pageIndex || (params.fromIndex / pageSize) + 1 || 1;
+        const options: any = {
+            Page: page,
+            MaxPageSize: pageSize,
             Where: '',
-            IncludeCount: true,
+            IncludeCount: true
         };
-
         
         if (hidden) {
             options.IncludeDeleted = true;
@@ -82,8 +84,10 @@ export class UtilitiesService {
                 options.Where += this.getWhereClause(params.searchString, searchFields);
             }
         }
-        const url = this.getAddonApiURL(DOCUMENTS_FUNCTION_NAME, { name: collectionName, ...options });
-        return await this.httpService.getPapiApiCall(url).toPromise();
+        const qs = UtilitiesService.encodeQueryParams({resource_name: collectionName});
+        const url = qs ? `${DOCUMENTS_FUNCTION_NAME}?${qs}`: DOCUMENTS_FUNCTION_NAME;
+
+        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, options).toPromise();
     }
 
     getWhereClause(searchString: string, fields: string[]) {
@@ -228,10 +232,10 @@ export class UtilitiesService {
         }
     }
     
-    getAddonApiURL(functionName: string, params: any = {}) {
+    getFunctionURL(functionName: string, params: any = {}) {
         const paramsQS = UtilitiesService.encodeQueryParams(params);
         const query = paramsQS ? `?${paramsQS}` : '';
-        return `${ADDONS_BASE_URL}/${config.AddonUUID}/${API_FILE_NAME}/${functionName}${query}`;
+        return `${functionName}${query}`;
     }
 
     private static encodeQueryParams(params: any) {

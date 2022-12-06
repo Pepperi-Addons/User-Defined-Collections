@@ -11,7 +11,7 @@ export class DocumentsService {
 
     constructor(private apiService: IApiService, private resourcesService: IResourcesServices) {}
 
-    async find(collectionName: any, options: any): Promise<SearchData<AddonData>> {
+    async find(collectionName: any, options: any): Promise<AddonData> {
         return await this.apiService.find(collectionName, options);
     }
     

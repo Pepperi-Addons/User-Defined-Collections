@@ -6,7 +6,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ObjectsDataRowCell, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
-import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from "@pepperi-addons/ngx-composite-lib/generic-list";
+import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource, IPepGenericListParams } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { DIMXHostObject, PepDIMXHelperService } from '@pepperi-addons/ngx-composite-lib'
 
 import { AddonData, Collection, FormDataView, SchemeField, SearchData } from "@pepperi-addons/papi-sdk";
@@ -14,7 +14,7 @@ import { AddonData, Collection, FormDataView, SchemeField, SearchData } from "@p
 import { DocumentsService } from "../services/documents.service";
 import { UtilitiesService } from "../services/utilities.service";
 import { DocumentsFormComponent, DocumentsFormData } from './form/documents-form.component';
-import { EMPTY_OBJECT_NAME, FormMode } from '../entities';
+import { EMPTY_OBJECT_NAME, FormMode, GL_PAGE_SIZE } from '../entities';
 import { config } from '../addon.config';
 
 @Component({
@@ -125,10 +125,10 @@ export class DocumentsListComponent implements OnInit {
 
     getDataSource() {
         const noDataMessageKey = this.recycleBin ? 'RecycleBin_NoDataFound' : 'Documents_NoDataFound'
+        const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String' && this.collectionData.Fields[field].Indexed);
         return {
-            init: async (params:any) => {
+            init: async (params: IPepGenericListParams) => {
                 try {
-                    const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String' && this.collectionData.Fields[field].Indexed);
                     this.documents = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
                 }
                 catch (err) {
@@ -177,9 +177,13 @@ export class DocumentsListComponent implements OnInit {
                     items: this.documents.Objects
                 });
             },
+            update: async (params: IPepGenericListParams) => {
+                return (await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin)).Objects;
+            },
             inputs: {
                 pager: {
-                    type: 'pages'
+                    type: 'pages',
+                    size: GL_PAGE_SIZE
                 },
                 selectionType: 'single',
                 noDataFoundMsg: this.translate.instant(noDataMessageKey)
