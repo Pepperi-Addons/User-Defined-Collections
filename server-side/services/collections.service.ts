@@ -112,6 +112,7 @@ export class CollectionsService {
                     }
                 }
             })
+            relation.Hidden = collection.Hidden;
 
             await this.utilities.papiClient.addons.data.relations.upsert(relation);
         }

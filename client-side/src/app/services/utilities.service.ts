@@ -243,4 +243,8 @@ export class UtilitiesService {
 
         return ret.join('&');
     }
+
+    isValidDate(d) {
+        return d instanceof Date && !isNaN(d.getTime());
+    }
 }

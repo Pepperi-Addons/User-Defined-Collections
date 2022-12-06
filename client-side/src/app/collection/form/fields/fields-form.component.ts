@@ -127,7 +127,7 @@ export class FieldsFormComponent implements OnInit {
         }
         
         updateSupportIndex(type: SchemeFieldType) {
-            this.supportIndexed = ['String', 'Bool', 'Integer', 'Double', 'DateTime', 'Resource'].includes(type) == true;
+            this.supportIndexed = ['String', 'Bool', 'Integer', 'Double', 'DateTime'].includes(type) == true;
         }
         
         initResources(type: SchemeFieldType) {
