@@ -173,7 +173,8 @@ export class DocumentsListComponent implements OnInit {
                         FrozenColumnsCount: 0,
                         MinimumColumnWidth: 0
                     },
-                    totalCount: this.documents.Count,
+                    // on unindexed collections, the count return -1. until the GL will support, we are sending the number of itms
+                    totalCount: this.documents.Count && this.documents.Count > 0 ? this.documents.Count : this.documents.Objects.length,
                     items: this.documents.Objects
                 });
             },
