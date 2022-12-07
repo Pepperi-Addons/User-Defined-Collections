@@ -78,7 +78,12 @@ export class CollectionsService {
         }
         else {
             const errors = this.utilities.getErrors(errorMessage);
-            content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
+            if(errors.length > 1) {
+                content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
+            }
+            else {
+                content = errorMessage;
+            }
         }
         this.utilities.showMessageDialog(title, content);
     }

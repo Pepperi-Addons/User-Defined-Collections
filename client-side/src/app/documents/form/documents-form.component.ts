@@ -74,7 +74,7 @@ export class DocumentsFormComponent implements OnInit {
             const dataMsg = new PepDialogData({
                 title: this.translate.instant('Documents_UpdateFailed_Title'),
                 actionsType: 'close',
-                content: this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
+                content: errors.length > 1 ? this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)}) : error
             });
             this.dialogService.openDefaultDialog(dataMsg);
         }

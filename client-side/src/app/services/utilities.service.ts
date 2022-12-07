@@ -66,8 +66,7 @@ export class UtilitiesService {
         const options: any = {
             Page: page,
             MaxPageSize: pageSize,
-            Where: '',
-            IncludeCount: true
+            IncludeCount:true
         };
         
         if (hidden) {
@@ -84,9 +83,10 @@ export class UtilitiesService {
                 options.Where += this.getWhereClause(params.searchString, searchFields);
             }
         }
+
         const qs = UtilitiesService.encodeQueryParams({resource_name: collectionName});
         const url = qs ? `${DOCUMENTS_FUNCTION_NAME}?${qs}`: DOCUMENTS_FUNCTION_NAME;
-
+        
         return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, options).toPromise();
     }
 
@@ -99,9 +99,11 @@ export class UtilitiesService {
     }
 
     getErrors(message: string): string[] {
+        let errors = [message];
         const start = message.indexOf('exception:') + 10;
-        const end = message.indexOf('","detail');
-        const errors = message.substring(start, end).split("\\n");
+        if (start > 9) {
+            errors = message.substring(start).split("\n");
+        }
         return errors;
     }
             
@@ -144,8 +146,8 @@ export class UtilitiesService {
     }
 
     openComponentInDialog(ref: ComponentType<unknown> | TemplateRef<unknown>, data: any, callback: (value:any)=>void) {
-        const dialogConfig = this.dialogService.getDialogConfig();
-        this.dialogService.openDialog(ref, data).afterClosed().subscribe(value=> {
+        const dialogConfig = this.dialogService.getDialogConfig({}, 'large');
+        this.dialogService.openDialog(ref, data, dialogConfig).afterClosed().subscribe(value=> {
             if (callback) {
                 callback(value);
             }
