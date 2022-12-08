@@ -45,7 +45,6 @@ export class AddCollectionDialogComponent implements OnInit {
     }
 
     saveCollection() {
-        const addonUUID = this.incoming.AsbtractSchemes.find(collection => collection.Name === this.extention).AddonUUID;
         const collection: Collection = {
             Name: this.name,
             Description: this.description,
@@ -68,11 +67,14 @@ export class AddCollectionDialogComponent implements OnInit {
             SyncData: {
                 Sync: false
             },
-            Extends: {                
+            GenericResource: true
+        }
+        if(this.extention != '') {
+            const addonUUID = this.incoming.AsbtractSchemes.find(collection => collection.Name === this.extention).AddonUUID;
+            collection.Extends = {
                 AddonUUID: addonUUID,
                 Name: this.extention
-            },
-            GenericResource: true
+            }
         }
         this.service.createCollection(collection).then((collection) => {
             this.dialogRef.close(collection)

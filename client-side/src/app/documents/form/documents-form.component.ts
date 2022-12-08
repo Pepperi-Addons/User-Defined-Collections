@@ -42,7 +42,7 @@ export class DocumentsFormComponent implements OnInit {
             await this.fixDataTypes();
             if(this.incoming.Mode === 'Add') {
                 try {
-                    await this.documentsService.createCollection(this.incoming.CollectionName, this.item);
+                    await this.documentsService.createDocument(this.incoming.CollectionName, this.item);
                     this.dialogRef.close(true);
                 }
                 catch (err) {
@@ -74,7 +74,7 @@ export class DocumentsFormComponent implements OnInit {
             const dataMsg = new PepDialogData({
                 title: this.translate.instant('Documents_UpdateFailed_Title'),
                 actionsType: 'close',
-                content: this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
+                content: errors.length > 1 ? this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)}) : error
             });
             this.dialogService.openDefaultDialog(dataMsg);
         }
