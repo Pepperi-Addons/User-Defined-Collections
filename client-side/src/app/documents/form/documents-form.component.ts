@@ -32,9 +32,8 @@ export class DocumentsFormComponent implements OnInit {
         @Inject(MAT_DIALOG_DATA) public incoming: DocumentsFormData) { }
 
     ngOnInit(): void {
-        this.item = this.incoming.Item;
-        console.log(this.item);
-        this.isValid = this.incoming.Mode === 'Edit';
+        this.item = this.getItem(this.incoming.Item);
+        console.log('after string conversion:', this.item);
     }
 
     async saveDocument() {
@@ -135,7 +134,7 @@ export class DocumentsFormComponent implements OnInit {
                     break;
                 }
                 case 'Bool': {
-                    if(this.item[fieldName].toLocaleLowerCase() === 'true') {
+                    if(this.item[fieldName] && this.item[fieldName].toString().toLocaleLowerCase() === 'true') {
                         this.item[fieldName] = true;
                     }
                     else {
@@ -148,6 +147,27 @@ export class DocumentsFormComponent implements OnInit {
                 }
             }
         })
+    }
+
+    onFormValidationChanged($event: any) {
+        console.log(`form valid: ${$event}`);
+        this.isValid = $event;
+    }
+
+    getItem(item: AddonData): AddonData {
+        let ret: AddonData = {}
+        Object.keys(item || {}).forEach(prop => {
+            if (typeof(item[prop]) != 'boolean') {
+                // if the value is null/undefined, don't copy it
+                if(item[prop]) {
+                    ret[prop] = item[prop].toString();
+                }
+            }
+            else {
+                ret[prop] = item[prop];
+            }
+        });
+        return ret;
     }
 }
 

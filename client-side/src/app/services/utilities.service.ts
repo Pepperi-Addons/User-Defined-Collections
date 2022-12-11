@@ -2,8 +2,7 @@ import jwt from 'jwt-decode';
 import { AddonData, AddonDataScheme, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
 import { Injectable } from '@angular/core';
 
-import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
-import { EMPTY_OBJECT_NAME, SelectOptions } from '../entities';
+import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME, API_PAGE_SIZE, SEARCH_DOCUMENTS_FUNCTION_NAME} from '../entities';
 import { config } from '../addon.config';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { TranslateService } from '@ngx-translate/core';
@@ -88,8 +87,10 @@ export class UtilitiesService {
             }
         }
 
-
-        return await this.papiClient.userDefinedCollections.documents(collectionName).find(options);
+        const qs = UtilitiesService.encodeQueryParams({resource_name: collectionName});
+        const url = qs ? `${SEARCH_DOCUMENTS_FUNCTION_NAME}?${qs}`: SEARCH_DOCUMENTS_FUNCTION_NAME;
+        
+        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, options).toPromise();
     }
 
     getWhereClause(searchString: string, fields: string[]) {

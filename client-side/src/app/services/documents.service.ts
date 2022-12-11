@@ -15,8 +15,9 @@ export class DocumentsService {
     ) {
     }
     
-    async upsertDocument(collectionName: string, obj: AddonData) {
-        await this.UtilitiesService.papiClient.userDefinedCollections.documents(collectionName).upsert(obj);
+    async upsertDocument(collectionName: string, obj: AddonData) {   
+        const url = this.UtilitiesService.getFunctionURL(DOCUMENTS_FUNCTION_NAME, {name: collectionName});
+        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, obj).toPromise();
     }
 
     async createCollection(collectionName: string, obj: AddonData) {

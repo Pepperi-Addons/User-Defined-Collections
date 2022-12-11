@@ -34,3 +34,25 @@ export const booleanOptions: SelectOptions<string> = [{
 export const SyncTypes = ['Online', 'Offline', 'OnlyScheme'] as const;
 
 export type SyncType = typeof SyncTypes[number];
+
+export type RebuildStatusType = FileStatusType | 'indexing'
+
+export class RebuildStatus {
+    key: number;
+    name: string;
+    status: RebuildStatusType = 'indexing';
+    statusMessage?: string | undefined;
+}
+
+export const API_FILE_NAME = 'api';
+export const ADDONS_BASE_URL = '/addons/api';
+export const COLLECTIONS_FUNCTION_NAME = 'schemes';
+export const DOCUMENTS_FUNCTION_NAME = 'documents';
+export const SEARCH_DOCUMENTS_FUNCTION_NAME = 'search';
+export const CREATE_FUNCTION_NAME = 'create';
+export const MAPPINGS_FUNCTION_NAME = 'mappings';
+export const FIELDS_FUNCTION_NAME = 'fields';
+export const ATD_FUNCTION_NAME = 'get_atd';
+export const REBUILD_FUNCTION_NAME = 'clean_rebuild';
+export const GL_PAGE_SIZE = 20;
+export const API_PAGE_SIZE = 100;
