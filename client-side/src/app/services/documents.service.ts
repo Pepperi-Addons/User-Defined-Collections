@@ -19,7 +19,7 @@ export class DocumentsService {
     }
     
     async upsertDocument(collectionName: string, obj: AddonData) {   
-        const url = this.UtilitiesService.getFunctionURL(DOCUMENTS_FUNCTION_NAME, {collection_name: collectionName});
+        const url = this.UtilitiesService.getFunctionURL(DOCUMENTS_FUNCTION_NAME, {name: collectionName});
         return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, obj).toPromise();
     }
     

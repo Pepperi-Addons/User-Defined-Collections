@@ -48,7 +48,8 @@ export class RebuildStatus {
 export const API_FILE_NAME = 'api';
 export const ADDONS_BASE_URL = '/addons/api';
 export const COLLECTIONS_FUNCTION_NAME = 'schemes';
-export const DOCUMENTS_FUNCTION_NAME = 'search';
+export const DOCUMENTS_FUNCTION_NAME = 'documents';
+export const SEARCH_DOCUMENTS_FUNCTION_NAME = 'search';
 export const CREATE_FUNCTION_NAME = 'create';
 export const MAPPINGS_FUNCTION_NAME = 'mappings';
 export const FIELDS_FUNCTION_NAME = 'fields';
