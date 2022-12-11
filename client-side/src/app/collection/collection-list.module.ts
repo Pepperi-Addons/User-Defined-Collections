@@ -28,6 +28,9 @@ import { UtilitiesService } from './../services/utilities.service'
 import { PepCheckboxModule } from '@pepperi-addons/ngx-lib/checkbox';
 
 import { config } from '../addon.config';
+import { AdditionalFieldsFormComponent } from './form/fields/additional-fields-form/additional-fields-form.component';
+import { AddCollectionDialogComponent } from './form/add-collection-dialog/add-collection-dialog.component';
+import { PepSnackBarModule } from '@pepperi-addons/ngx-lib/snack-bar';
 
 const pepIcons = [
     pepIconSystemClose,
@@ -45,7 +48,9 @@ export const routes: Routes = [
         CollectionListComponent,
         CollectionFormComponent,
         FieldsFormComponent,
-        SortingFormComponent
+        SortingFormComponent,
+        AdditionalFieldsFormComponent,
+        AddCollectionDialogComponent
     ],
     imports: [
         CommonModule,
@@ -62,6 +67,7 @@ export const routes: Routes = [
         PepTextareaModule,
         PepDialogModule,
         PepCheckboxModule,
+        PepSnackBarModule,
         TranslateModule.forChild(),
         RouterModule.forChild(routes)
     ],

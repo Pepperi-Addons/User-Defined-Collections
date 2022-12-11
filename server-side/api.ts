@@ -360,7 +360,6 @@ export async function create(client: Client, request: Request) {
 export async function hard_delete(client: Client, request: Request) {
     const documentsService = new ServerDocumentsService(client);
     const collectionsService = new CollectionsService(client);
-
     switch (request.method) {
         case 'POST': {
             const collectionName = request.query.collection_name || '';
@@ -428,6 +427,22 @@ export async function collection_fields(client: Client, request: Request) {
             return {
                 Fields: fields
             }
+        }
+        default: {
+            const err: any = new Error(`method ${request.method} is not allowed`);
+            err.code = 405;
+            throw err;
+        }
+    }
+}
+
+export async function clean_rebuild(client: Client, request: Request) {
+    const resourceName = request.query.collection_name || '';
+    const service = new CollectionsService(client);
+    
+    switch(request.method) {
+        case 'POST': {
+            return await service.cleanRebuild(resourceName);
         }
         default: {
             const err: any = new Error(`method ${request.method} is not allowed`);

@@ -5,7 +5,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
-import { AddonDataScheme, Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType, SchemeFieldTypes } from '@pepperi-addons/papi-sdk';
+import { AddonData, AddonDataScheme, Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType, SchemeFieldTypes, SearchData } from '@pepperi-addons/papi-sdk';
 import { CollectionsService } from '../../services/collections.service';
 import { UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -21,17 +21,15 @@ import { EMPTY_OBJECT_NAME, FormMode, FieldsFormDialogData, booleanOptions, Sync
 export class CollectionFormComponent implements OnInit {
     
     collection: Collection;
-    indexed: boolean = false;
     collectionName: string;
     emptyCollection: boolean = true;
-    EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
-    fieldsValid: boolean = false;
     documentKeyValid: boolean = false;
-    nameValid: boolean = false;
     resources: AddonDataScheme[] = [];
     containedResources: AddonDataScheme[] = [];
     booleanOptions = booleanOptions;
     syncData: SyncType = 'Offline';
+    EMPTY_OBJECT_NAME = EMPTY_OBJECT_NAME;
+    extended: string = ''
 
     fieldsDataSource: IPepGenericListDataSource;
 
@@ -39,21 +37,24 @@ export class CollectionFormComponent implements OnInit {
         get: async (data: PepSelectionData) => {
             const actions = [];
             if (data && data.rows.length == 1) {
-                const fieldIndexed = this.originFields[data.rows[0]]?.Indexed || false
-                actions.push({
-                    title: this.translate.instant('Edit'),
-                    handler: async (objs) => {
-                        this.openFieldForm(objs.rows[0]);
-                    }
-                });
-                // if the field is indexed than it cannot be deleted
-                if (!fieldIndexed) {
+                const fieldIndexed = this.originFields[data.rows[0]]?.Indexed || false;
+                const extendedField = this.originFields[data.rows[0]] ? this.originFields[data.rows[0]].ExtendedField : false;
+                if (!extendedField) {
                     actions.push({
-                        title: this.translate.instant('Delete'),
+                        title: this.translate.instant('Edit'),
                         handler: async (objs) => {
-                            this.showDeleteDialog(objs.rows[0]);
+                            this.openFieldForm(objs.rows[0]);
                         }
-                    })
+                    });
+                    // if the field is indexed than it cannot be deleted
+                    if (!fieldIndexed) {
+                        actions.push({
+                            title: this.translate.instant('Delete'),
+                            handler: async (objs) => {
+                                this.showDeleteDialog(objs.rows[0]);
+                            }
+                        })
+                    }
                 }
                 actions.push({
                     title: this.translate.instant('Change Sort'),
@@ -86,7 +87,6 @@ export class CollectionFormComponent implements OnInit {
     documentKeyOptions: SelectOptions<string> = [];
     syncOptions: SelectOptions<string> = [];
     collectionLoaded: boolean = false;
-    mode: FormMode;
     collectionFields: { key:string, value: string }[] = [];
     fieldKey: string;
     fieldSort: number;
@@ -114,7 +114,6 @@ export class CollectionFormComponent implements OnInit {
 
     ngOnInit(): void {
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
-        this.mode = this.router['form_mode'] ? this.router['form_mode'] : this.collectionName === EMPTY_OBJECT_NAME ? 'Add' : 'Edit';
         this.translate.get(['SyncData_Options_Online', 'SyncData_Options_Offline', 'SyncData_Options_OnlyScheme', 'DocumentKey_Options_AutoGenerate', 'DocumentKey_Options_Composite']).subscribe(translations => {
             this.documentKeyOptions = DocumentKeyTypes.filter(type => type !== 'Key').map(type => {
                 return {
@@ -130,17 +129,16 @@ export class CollectionFormComponent implements OnInit {
             })
             this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
                 this.collection = value;
+                this.updateListView();
                 this.fieldsDataSource = this.getFieldsDataSource();
                 this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
                 this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collectionName);
                 this.collectionLoaded = true;
-                if (this.mode === 'Edit') {
-                    const documents = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collectionName): [];
-                    this.emptyCollection = documents.length == 0;
-                    if (this.uidList) {
-                        this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
-                        this.uidFieldsDataSource = this.getUIDFieldsDataSource();
-                    }
+                const documents: SearchData<AddonData> = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collectionName): { Objects: [], Count: 0};
+                this.emptyCollection = documents.Count == 0;
+                if (this.uidList) {
+                    this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
+                    this.uidFieldsDataSource = this.getUIDFieldsDataSource();
                 }
                 if (this.collection.SyncData) {
                     this.syncData = this.collection.SyncData.Sync ? 'Offline' : 'Online';
@@ -156,11 +154,10 @@ export class CollectionFormComponent implements OnInit {
                     this.syncData = 'OnlyScheme';
                     this.collection.SyncData.Sync = false;
                 }
-                this.nameValid = this.collection.Name != '';
                 this.documentKeyValid = (this.collection.DocumentKey.Type !== 'Composite' || this.collection.DocumentKey.Fields.length > 0);
-                this.fieldsValid = this.collection.ListView.Fields.length > 0;
                 // deep copy the object to avoid unwanted data changes
-                this.originFields = JSON.parse(JSON.stringify(this.collection.Fields));
+                this.originFields = JSON.parse(JSON.stringify(this.collection.Fields || {}));
+                this.extended = this.collection.Extends ? this.collection.Extends.Name : ''; 
             });
         });
     }
@@ -178,7 +175,6 @@ export class CollectionFormComponent implements OnInit {
                         Indexed: this.collection.Fields[obj.FieldID].Indexed || false,
                     };
                 });
-                this.fieldsValid = this.collection.ListView.Fields.length > 0;
                 return Promise.resolve({
                     dataView: {
                         Context: {
@@ -336,6 +332,7 @@ export class CollectionFormComponent implements OnInit {
             Resource: this.collection.Fields[name]?.Resource || '',
             AddonUUID: this.collection.Fields[name]?.AddonUUID || '',
             Indexed: this.collection.Fields[name]?.Indexed || false,
+            IndexedFields: this.collection.Fields[name]?.IndexedFields || {},
         }
         let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
         const dialogData: FieldsFormDialogData = {
@@ -397,50 +394,18 @@ export class CollectionFormComponent implements OnInit {
 
     async saveClicked() {
         try {
-            if(this.mode === 'Add') {
-                try {
-                    await this.collectionsService.createCollection(this.collection);
-                    this.showSuccessMessage();
-                }
-                catch (err) {
-                    let contentKey = '';
-                    if (err.message.indexOf(existingInRecycleBinErrorMessage) >= 0) {
-                        contentKey = 'Collection_ExistingRecycleBinError_Content'
-                    }
-                    else if(err.message.indexOf(existingErrorMessage) >= 0){
-                        contentKey = 'Collection_ExistingError_Content'
-                    }
-                    else {
-                        throw err;
-                    }
-                    const dataMsg = new PepDialogData({
-                        title: this.translate.instant('Collection_UpdateFailed_Title'),
-                        actionsType: 'close',
-                        content: this.translate.instant(contentKey, {collectionName: this.collection.Name})
-                    });
-                    this.dialogService.openDefaultDialog(dataMsg);
-                }
+            // we cannot change the collection name, so we need first to delete the "old" one
+            if (this.collection.Name != this.collectionName) { 
+                await this.collectionsService.upsertCollection({
+                    Name: this.collectionName,
+                    Hidden: true
+                });
             }
-            else {
-                // we cannot change the collection name, so we need first to delete the "old" one
-                if (this.collectionName != EMPTY_OBJECT_NAME && this.collection.Name != this.collectionName) { 
-                    await this.collectionsService.upsertCollection({
-                        Name: this.collectionName,
-                        Hidden: true
-                    });
-                }
-                await this.collectionsService.upsertCollection(this.collection);
-                this.showSuccessMessage();
-            }
+            await this.collectionsService.upsertCollection(this.collection);
+            this.showSuccessMessage();
         }
         catch (error) {
-            const errors = this.utilitiesService.getErrors(error.message);
-            const dataMsg = new PepDialogData({
-                title: this.translate.instant('Collection_UpdateFailed_Title'),
-                actionsType: 'close',
-                content: this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
-            });
-            this.dialogService.openDefaultDialog(dataMsg);
+            this.collectionsService.showUpsertFailureMessage(error, this.collection.Name);
         }
     }
     
@@ -514,7 +479,7 @@ export class CollectionFormComponent implements OnInit {
             Mandatory: field.Mandatory,
             ReadOnly: true,
             Title: fieldName,
-            Type: this.getDataViewFieldType(field.Type, field.OptionalValues.length > 0)
+            Type: this.getDataViewFieldType(field.Type, field.OptionalValues?.length > 0 || false)
         }
     }
 
@@ -621,10 +586,6 @@ export class CollectionFormComponent implements OnInit {
             this.collection.Type = 'data';
         }
     }
-    
-    nameChanged(value: string) {
-        this.nameValid = value != '';
-    }
 
     changeSyncData(newSyncData: SyncType) {
         switch (newSyncData) {
@@ -649,6 +610,19 @@ export class CollectionFormComponent implements OnInit {
                 }
                 break;
             }
+        }
+    }
+
+    updateListView() {
+        if(this.collection.Fields) {
+            Object.keys(this.collection.Fields).forEach(fieldName => {
+                let dvField = this.collection.ListView.Fields.find(x => x.FieldID === fieldName);
+                if(!dvField) {
+                    dvField = this.getDataViewField(fieldName, this.collection.Fields[fieldName]);
+                    this.collection.ListView.Fields.push(dvField);
+                    this.collection.ListView.Columns.push({ Width: 10 });
+                }
+            })
         }
     }
 }

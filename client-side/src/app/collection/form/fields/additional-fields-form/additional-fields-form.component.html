@@ -1,8 +1,13 @@
-<pep-dialog [title]="(incoming.Mode === 'Edit' ? 'Documents_EditForm_Title' : 'Documents_AddForm_Title') | translate">
+<pep-dialog [showHeader]="false">
     <ng-container pep-dialog-content>
-        <pep-generic-form [dataSource]="item" [dataView]="incoming.DataView" (formValidationChange)="isValid = $event">
-
-        </pep-generic-form>
+        <pep-select
+            [(value)]="fieldName"
+            [label]="'AdditionalField_Field_Title' | translate"
+            type="select"
+            [options]="incoming.ResourceFields"
+            [emptyOption]="false"
+            (valueChange)="fieldChanged($event)"
+        ></pep-select>
     </ng-container>
     <ng-container pep-dialog-actions>
         <div class="pep-spacing-element-negative" style="display: flex;">         
@@ -16,9 +21,9 @@
             <pep-button 
                 class="pep-spacing-element"
                 [sizeType]="'md'" 
-                [value]="(incoming.Mode === 'Edit' ? 'Update' : 'Save') | translate"
+                [value]="'Save' | translate" 
                 [styleType]="'strong'" 
-                (buttonClick)="saveDocument()"
+                (buttonClick)="addField()"
                 [disabled]="!isValid"
             ></pep-button>
         </div>

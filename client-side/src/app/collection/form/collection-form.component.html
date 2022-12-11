@@ -1,7 +1,7 @@
 
 <pep-page-layout [addPadding]="true" *ngIf="collectionLoaded">
     <ng-container pep-top-area>
-        <pep-top-bar [title]="mode == 'Add' ? ('Collection_Add_Title' | translate) : ('Collection_Edit_Title' | translate: {collection_name: collectionName})">
+        <pep-top-bar [title]="'Collection_Edit_Title' | translate: {collection_name: collectionName}">
             <div header-start-content>
                 <!-- <pep-button class="pep-spacing-element" (buttonClick)="goBack()" [iconName]="'arrow_left_alt'"></pep-button> -->
             </div>
@@ -9,9 +9,9 @@
                 <pep-button class="pep-spacing-element" [value]="'Back_to_list' | translate" (buttonClick)="goBack()"></pep-button> 
                 <pep-button 
                     class="pep-spacing-element" 
-                    [value]="mode == 'Add' ? ('Save' | translate) : ('Update' | translate)" 
+                    [value]="'Update' | translate" 
                     [styleType]="'strong'" 
-                    [disabled]="!nameValid || !fieldsValid || !documentKeyValid"
+                    [disabled]="!documentKeyValid"
                     (buttonClick)="saveClicked()"
                 ></pep-button>
             </div>
@@ -24,16 +24,13 @@
                 [(value)]="collection.Name"
                 [label]="'Key' | translate"
                 type="text"
-                [mandatory]="true"
-                [disabled]="!emptyCollection"
-                (valueChange)="nameChanged($event)"
+                [disabled]="true"
             ></pep-textbox>
             <pep-textbox
                 [(value)]="collection.Description"
                 [label]="'Description' | translate"
                 type="text"
                 [mandatory]="false"
-                [disabled]="false"
             ></pep-textbox>
         </div>
         <div class="flex">
@@ -47,15 +44,12 @@
                 [emptyOption]="false"
                 (valueChange)="syncFieldChanged($event)"
             ></pep-select>
-            <pep-select
-                [(value)]="indexed"
-                [label]="'Indexed_Select_Title' | translate"
-                type="select"
-                [options]="booleanOptions"
-                [showTitle]="true"
-                [emptyOption]="false"
-                [visible]="false"
-            ></pep-select>
+            <pep-textbox
+                [(value)]="extended"
+                [label]="'Collection_ExtensionField_Title' | translate"
+                type="text"
+                [disabled]="true"
+            ></pep-textbox>
         </div>
         <div class="genericListContainer">
             <pep-generic-list class="generic-list"

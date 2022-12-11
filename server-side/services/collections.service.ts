@@ -3,8 +3,8 @@ import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-s
 import { Client } from '@pepperi-addons/debug-server';
 import { ADAL_UUID, AtdRelations, DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
-import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema, regexPattern } from '../jsonSchemes/collections';
-import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService } from 'udc-shared';
+import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
+import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex } from 'udc-shared';
 export class CollectionsService {
         
     utilities: UtilitiesService = new UtilitiesService(this.client);
@@ -13,12 +13,12 @@ export class CollectionsService {
     }
 
     
-    async upsert(service: DocumentsService, body: any) {
-        const collectionObj: Collection = {
-            Type: "data",
+    async upsert(service: DocumentsService, body: Collection) {
+        let collectionObj: any = {
+            Type: body.Type || 'data',
             GenericResource: true,
             ...body,
-            UserDefined: true
+            UserDefined: true,
         }
         if (!collectionObj.DocumentKey || !collectionObj.DocumentKey.Type) {
             collectionObj.DocumentKey = {
@@ -26,12 +26,15 @@ export class CollectionsService {
             }
         }
         const updatingHidden = 'Hidden' in body && body.Hidden;
-        const validResult = this.validateScheme(collectionObj);
+        const collectionForValidation = this.removeExtensionFields(collectionObj, true);
+        const validResult = this.validateScheme(collectionForValidation);
         const errors: string[] = []
         if (validResult.valid || updatingHidden) {
             await service.checkHidden(body);
             const fieldsValid = await this.validateFieldsType(collectionObj);
             if (fieldsValid.size === 0) {
+                // before sending data to ADAL, remove extended fields, without changing the DV
+                collectionObj = this.removeExtensionFields(collectionObj, false);
                 const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
                 await this.createDIMXRelations(collection.Name);
                 if(collection.Type !== 'contained') {
@@ -96,7 +99,7 @@ export class CollectionsService {
             relation.Name = collection.Name;
             relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${ADAL_UUID}/${collection.Name}`;
             relation.SchemaRelativeURL = `/addons/api/${this.client.AddonUUID}/api/collection_fields?collection_name=${collection.Name}`;
-            Object.keys(collection.Fields!).forEach((fieldName) => {
+            Object.keys(collection.Fields || {}).forEach((fieldName) => {
                 const collectionField = collection.Fields![fieldName];
                 if (collectionField.Type === 'Resource') {
                     if (collectionField.Resource === 'accounts' && fieldName === 'account') {
@@ -109,6 +112,7 @@ export class CollectionsService {
                     }
                 }
             })
+            relation.Hidden = collection.Hidden;
 
             await this.utilities.papiClient.addons.data.relations.upsert(relation);
         }
@@ -126,7 +130,7 @@ export class CollectionsService {
     
     async create(documentsService: DocumentsService, collectionName: string, body: any) {
         try {
-            const regex = new RegExp(regexPattern);
+            const regex = new RegExp(collectionNameRegex);
             if(regex.test(collectionName)) {
                 const collection = await this.findByName(collectionName);
                 if (collection.Hidden) {
@@ -181,6 +185,37 @@ export class CollectionsService {
         } else {
             list.push(collectionName);
         }
+    }
+
+    removeExtensionFields(collection: Collection, changeDV: boolean): Collection {
+        const ret: Collection = JSON.parse(JSON.stringify(collection));
+        // empty return object Fields & ListView properties to reconstruct it without extension fields
+        ret.Fields = {};
+        if (ret.ListView && changeDV) {
+            ret.ListView.Fields = [];
+            ret.ListView.Columns = [];
+        }
+
+        Object.keys(collection.Fields || {}).forEach(field => {
+            if (!collection.Fields![field].ExtendedField) {
+                ret.Fields![field] = collection.Fields![field];
+                if(collection.ListView && collection.ListView.Fields && changeDV) {
+                    const dvField = collection.ListView.Fields.find(x => x.FieldID === field);
+                    if (dvField) {
+                        ret.ListView!.Fields!.push(dvField);
+                        ret.ListView!.Columns!.push({
+                            Width: 10
+                        })
+                    }
+                }
+            }
+        })
+
+        return ret;
+    }
+
+    async cleanRebuild(collectionName: string) {
+        return this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/clean_rebuild`);
     }
 }
 

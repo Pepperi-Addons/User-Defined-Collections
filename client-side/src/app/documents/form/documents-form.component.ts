@@ -41,15 +41,15 @@ export class DocumentsFormComponent implements OnInit {
             await this.fixDataTypes();
             if(this.incoming.Mode === 'Add') {
                 try {
-                    await this.documentsService.createCollection(this.incoming.CollectionName, this.item);
+                    await this.documentsService.createDocument(this.incoming.CollectionName, this.item);
                     this.dialogRef.close(true);
                 }
                 catch (err) {
                     let contentKey = '';
-                    if (err.message.indexOf(existingInRecycleBinErrorMessage) >= 0) {
+                    if (err.indexOf(existingInRecycleBinErrorMessage) >= 0) {
                         contentKey = 'Documents_ExistingRecycleBinError_Content'
                     }
-                    else if(err.message.indexOf(existingErrorMessage) >= 0){
+                    else if(err.indexOf(existingErrorMessage) >= 0){
                         contentKey = 'Documents_ExistingError_Content'
                     }
                     else {
@@ -69,11 +69,11 @@ export class DocumentsFormComponent implements OnInit {
             }
         }
         catch(error) {
-            const errors = this.utilitiesService.getErrors(error.message);
+            const errors = this.utilitiesService.getErrors(error);
             const dataMsg = new PepDialogData({
                 title: this.translate.instant('Documents_UpdateFailed_Title'),
                 actionsType: 'close',
-                content: this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
+                content: errors.length > 1 ? this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)}) : error
             });
             this.dialogService.openDefaultDialog(dataMsg);
         }
@@ -130,7 +130,10 @@ export class DocumentsFormComponent implements OnInit {
                 }
                 case 'Double': 
                 case 'Integer': {
-                    this.item[fieldName] = Number(this.item[fieldName]);
+                    // only if the value is not undefined, then convert it to a number
+                    if (this.item[fieldName]) {
+                        this.item[fieldName] = Number(this.item[fieldName]);
+                    }
                     break;
                 }
                 case 'Bool': {
@@ -139,6 +142,14 @@ export class DocumentsFormComponent implements OnInit {
                     }
                     else {
                         this.item[fieldName] = false;
+                    }
+                    break;
+                }
+                case 'DateTime': {
+                    const testDate = new Date(this.item[fieldName]);
+                    // if the date is not valid, remove it from the object sent to server
+                    if(!this.utilitiesService.isValidDate(testDate)) {
+                        delete this.item[fieldName];
                     }
                     break;
                 }

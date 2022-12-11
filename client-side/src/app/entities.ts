@@ -1,3 +1,4 @@
+import { FileStatus, FileStatusType } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
 import { CollectionField, AddonDataScheme, SchemeFieldType } from '@pepperi-addons/papi-sdk'
 
 export type FieldsFormDialogData = {

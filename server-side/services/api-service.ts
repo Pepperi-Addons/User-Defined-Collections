@@ -1,5 +1,5 @@
 import { Client } from "@pepperi-addons/debug-server/dist";
-import { AddonData, Collection, FindOptions, SearchBody } from "@pepperi-addons/papi-sdk";
+import { AddonData, Collection, FindOptions, SearchBody, SearchData } from "@pepperi-addons/papi-sdk";
 import { IApiService } from "udc-shared";
 import { UtilitiesService } from "./utilities.service";
 
@@ -22,8 +22,8 @@ export class ApiService extends IApiService {
         return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).key(docKey).get();
     }
 
-    async search(collectionName: string, params: SearchBody): Promise<AddonData[]> {
-        throw new Error('Not implemented');
+    async search(collectionName: string, params: SearchBody): Promise<SearchData<AddonData>> {
+        return await this.utilities.papiClient.addons.data.search.uuid(this.client.AddonUUID).table(collectionName).post(params);
     }
 
     async findCollectionByName(collectionName: string): Promise<Collection> {

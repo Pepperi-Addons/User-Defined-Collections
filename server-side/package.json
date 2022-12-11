@@ -29,7 +29,7 @@
     },
     "dependencies": {
         "@pepperi-addons/debug-server": "*",
-        "@pepperi-addons/papi-sdk": "^1.43.0",
+        "@pepperi-addons/papi-sdk": "^1.44.0",
         "@types/semver": "^7.3.10",
         "jsonschema": "^1.4.0",
         "semver": "^7.3.7",

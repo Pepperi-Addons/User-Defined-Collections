@@ -1,4 +1,4 @@
-import { AddonData, Collection, CollectionField, FindOptions, SchemeFieldType, SearchBody } from "@pepperi-addons/papi-sdk";
+import { AddonData, AddonDataScheme, Collection, CollectionField, SearchData, SchemeFieldType, SearchBody } from "@pepperi-addons/papi-sdk";
 import { Schema, Validator } from "jsonschema";
 import { ReferenceValidationResult } from "../entities";
 import { DocumentSchema } from "../jsonSchemes/documents";
@@ -11,7 +11,7 @@ export class DocumentsService {
 
     constructor(private apiService: IApiService, private resourcesService: IResourcesServices) {}
 
-    async find(collectionName: any, options: any): Promise<AddonData[]> {
+    async find(collectionName: any, options: any): Promise<AddonData> {
         return await this.apiService.find(collectionName, options);
     }
     
@@ -37,7 +37,7 @@ export class DocumentsService {
         if ('Hidden' in body && body.Hidden) {
             const collectionName = body.Name;
             const items = await this.find(collectionName, {});
-            if (items.length > 0) {
+            if (items.Objects.length > 0) {
                 throw new Error('Cannot delete collection with documents');
             }
         }
@@ -58,7 +58,7 @@ export class DocumentsService {
         return result;
     }
 
-    async search(collectionName: string, body: SearchBody): Promise<AddonData[]> {
+    async search(collectionName: string, body: SearchBody): Promise<SearchData<AddonData>> {
         let whereClause = '';
         if(!body.Where) {
             if (body.KeyList && body.KeyList.length > 0) {
@@ -71,13 +71,7 @@ export class DocumentsService {
         else {
             whereClause = body.Where;
         }
-        const options: FindOptions = {
-            fields: body.Fields ? body.Fields : undefined,
-            where: whereClause,
-            page: body.Page,
-            page_size: body.PageSize,
-        }
-        return await this.find(collectionName, options);
+        return await this.apiService.search(collectionName, body);
     }
 
     getWhereClaus(fieldID: string, fieldValues: string[]): string{
@@ -108,12 +102,20 @@ export class DocumentsService {
             const resourceName = schemeFields[field].Resource || ""
             if (schemeFields[field].Type === 'Resource') {
                 if (resourceName != "") {
-                    if (field in document) {
-                        valid = await this.getReferencedObject(document[field], resourceName) != undefined;
+                    // TBD - remove once getByKey on abstract scheme will work
+                    // if the reference is for schema of type 'abstract' don't validate.
+                    const resourceScheme = await this.resourcesService.getByKey('resources', resourceName) as AddonDataScheme;
+                    if (resourceScheme && resourceScheme.Type !== 'abstract') {
+                        if (field in document) {
+                            valid = await this.getReferencedObject(document[field], resourceName) != undefined;
+                        }
+                        else {
+                            document = await this.checkUniqueFields(resourceName, document, field);
+                            valid = document[field] != ""; // if reference field has value than the reference is valid
+                        }
                     }
                     else {
-                        document = await this.checkUniqueFields(resourceName, document, field);
-                        valid = document[field] != ""; // if reference field has value than the reference is valid
+                        valid = true
                     }
                 }
                 else {
@@ -124,8 +126,16 @@ export class DocumentsService {
             else {
                 if (schemeFields[field].Type === 'Array' && schemeFields[field].Items!.Type === 'Resource') {
                     if (resourceName != "") {
-                        if(field in document && document[field].length > 0) {
-                            valid = (await this.getReferencedObjects(document[field], resourceName)).length ===  document[field].length;
+                        // TBD - remove once getByKey on abstract scheme will work
+                        // if the reference is for schema of type 'abstract' don't validate.
+                        const resourceScheme = await this.resourcesService.getByKey('resources', resourceName) as AddonDataScheme;
+                        if (resourceScheme && resourceScheme.Type !== 'abstract') {
+                            if(field in document && document[field].length > 0) {
+                                valid = (await this.getReferencedObjects(document[field], resourceName)).length ===  document[field].length;
+                            }
+                        }
+                        else {
+                            valid = true;
                         }
                     }
                     else {
@@ -229,39 +239,41 @@ export class DocumentsService {
         const propertiesScheme = {};
         Object.keys(fields).forEach(fieldName => {
             const field = fields[fieldName];
-            
-            if (field.Type === 'Object') {
-                propertiesScheme[fieldName] = {
-                    type: 'object',
-                    required: field.Mandatory,
-                    properties: {
-                        ...this.createObjectScheme(field.Fields!)
-                    }
-                }
-            }
-            else if((field.Type === 'Array' && field.Items!.Type === 'Object')) {
-                propertiesScheme[fieldName] = {
-                    type: 'array',
-                    required: field.Mandatory,
-                    items:{
+            // validate only fields that are not coming from base schema
+            if (field.ExtendedField === false) {
+                if (field.Type === 'Object') {
+                    propertiesScheme[fieldName] = {
                         type: 'object',
+                        required: field.Mandatory,
                         properties: {
-                            ...this.createObjectScheme(field.Items!.Fields!)
+                            ...this.createObjectScheme(field.Fields!)
                         }
                     }
                 }
-            }
-            else {
-                propertiesScheme[fieldName] = {
-                    ...this.getFieldSchemaType(field.Type, field.Items?.Type || 'String'),
-                    required: field.Mandatory
-                }
-                if (field.OptionalValues && field.OptionalValues.length > 0) {
-                    if (field.Type === 'Array') {
-                        propertiesScheme[fieldName].items!['enum'] = field.OptionalValues;
+                else if((field.Type === 'Array' && field.Items!.Type === 'Object')) {
+                    propertiesScheme[fieldName] = {
+                        type: 'array',
+                        required: field.Mandatory,
+                        items:{
+                            type: 'object',
+                            properties: {
+                                ...this.createObjectScheme(field.Items!.Fields!)
+                            }
+                        }
                     }
-                    else {
-                        propertiesScheme[fieldName].enum = field.OptionalValues;
+                }
+                else {
+                    propertiesScheme[fieldName] = {
+                        ...this.getFieldSchemaType(field.Type, field.Items?.Type || 'String'),
+                        required: field.Mandatory
+                    }
+                    if (field.OptionalValues && field.OptionalValues.length > 0) {
+                        if (field.Type === 'Array') {
+                            propertiesScheme[fieldName].items!['enum'] = field.OptionalValues;
+                        }
+                        else {
+                            propertiesScheme[fieldName].enum = field.OptionalValues;
+                        }
                     }
                 }
             }

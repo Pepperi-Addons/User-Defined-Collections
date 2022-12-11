@@ -9,9 +9,10 @@ import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
-import { Collection } from "@pepperi-addons/papi-sdk";
+import { AddonDataScheme, Collection } from "@pepperi-addons/papi-sdk";
 import { FormMode, EMPTY_OBJECT_NAME } from "../entities";
 import { config } from "../addon.config";
+import { AddCollectionDialogComponent } from "./form/add-collection-dialog/add-collection-dialog.component";
 
 @Component({
     selector: 'collection-list',
@@ -41,6 +42,8 @@ export class CollectionListComponent implements OnInit {
 
     listMessages = [];
 
+    abstractSchemes: AddonDataScheme[] = [];
+
     constructor(
         public collectionsService: CollectionsService,
         public layoutService: PepLayoutService,
@@ -62,6 +65,11 @@ export class CollectionListComponent implements OnInit {
         this.translate.get(['RecycleBin_NoDataFound', 'Collection_List_NoDataFound']).subscribe(translations=> {
             this.listMessages = translations;
             this.dataSource = this.getDataSource();
+        })
+        this.utilitiesService.getAbstractSchemes().then(schemes => {
+            this.abstractSchemes = schemes;
+        }).catch(error => {
+            console.log(`caould not get abstract schemes. error:${error}`);
         })
     }
 
@@ -163,10 +171,11 @@ export class CollectionListComponent implements OnInit {
                     })
                 }
                 else {
+                    const selectedCollection = this.collections.find(x=>x.Name === data.rows[0]);
                     actions.push({
                         title: this.translate.instant('Edit'),
                         handler: async (objs) => {
-                            this.navigateToCollectionForm('Edit', objs.rows[0]);
+                            this.navigateToCollectionForm(objs.rows[0]);
                         }
                     });
                     actions.push({
@@ -175,20 +184,21 @@ export class CollectionListComponent implements OnInit {
                             this.showDeleteDialog(objs.rows[0]);
                         }
                     })
-                    // actions.push({
-                    //     title: this.translate.instant('Export'),
-                    //     handler: async (objs) => {
-                    //         this.exportCollectionScheme(objs.rows[0]);
-                    //     }
-                    // })
-                    const selectedCollection = this.collections.find(x=>x.Name === data.rows[0]);
-                    if (selectedCollection && selectedCollection.Type != 'contained') {
+                    if(selectedCollection && selectedCollection.Type != 'contained') {
+                        if(this.collectionsService.isCollectionIndexed(selectedCollection)) {
+                            actions.push({
+                                title: this.translate.instant('Collections_RebuildAction_Title'),
+                                handler: async (objs) => {
+                                    this.showCleanRebuildMessage(objs.rows[0]);
+                                }
+                            })
+                        }
                         actions.push({
                             title: this.translate.instant('Edit data'),
                             handler: async (objs) => {
                                 this.navigateToDocumentsView(objs.rows[0]);
                             },
-                        })
+                        });
                     }
                 }
             }
@@ -198,14 +208,22 @@ export class CollectionListComponent implements OnInit {
 
     menuItems:PepMenuItem[] = []
 
-    navigateToCollectionForm(mode: FormMode, name: string) {
-        const route: ActivatedRoute = this.getCurrentRoute(this.activateRoute);
-        this.router['form_mode'] = mode;
+    navigateToCollectionForm(name: string) {
         this.router.navigate([name], {
             relativeTo: this.activateRoute,
-            queryParamsHandling: 'preserve',
-            state: {form_mode: 'Edit'}
+            queryParamsHandling: 'preserve'
         })
+    }
+
+    openAddCollectionForm() {
+        const data = {
+            AsbtractSchemes: this.abstractSchemes
+        };
+        this.utilitiesService.openComponentInDialog(AddCollectionDialogComponent, data, (collection) => {
+            if (collection) {
+                this.navigateToCollectionForm(collection.Name);
+            }
+        });
     }
 
     menuItemClick(event: any) {
@@ -247,15 +265,13 @@ export class CollectionListComponent implements OnInit {
                         this.dataSource = this.getDataSource();
                     }
                     catch (error) {
-                        if (error.message.indexOf(this.deleteError) > 0)
+                        const title = this.translate.instant('Collection_DeleteDialogTitle');
+                        let content = this.translate.instant('Collection_DeleteDialogGeneralError', { message: error });
+                        if (error.indexOf(this.deleteError) > 0)
                         {
-                            const dataMsg = new PepDialogData({
-                                title: this.translate.instant('Collection_DeleteDialogTitle'),
-                                actionsType: 'close',
-                                content: this.translate.instant('Collection_DeleteDialogError')
-                            });
-                            this.dialogService.openDefaultDialog(dataMsg);
+                            content = this.translate.instant('Collection_DeleteDialogError');
                         }
+                        this.utilitiesService.showMessageDialog(title, content);
                     }
                 }
         });      
@@ -290,5 +306,13 @@ export class CollectionListComponent implements OnInit {
         }
     }
     
-    
+    showCleanRebuildMessage(collectionName) {
+        const title = this.translate.instant('Collection_RebuildDialog_Title');
+        const content = this.translate.instant('Collection_RebuildDialog_Content');
+        this.utilitiesService.showMessageDialog(title, content, 'cancel-continue', (continuePressed => {
+            if (continuePressed) {
+                this.collectionsService.handleCleanRebuild(collectionName);
+            }
+        }));
+    }
 }
