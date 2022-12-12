@@ -36,7 +36,7 @@ export class DocumentsService {
     async checkHidden(body: any) {
         if ('Hidden' in body && body.Hidden) {
             const collectionName = body.Name;
-            const items = await this.find(collectionName, {});
+            const items = await this.search(collectionName, {});
             if (items.Objects.length > 0) {
                 throw new Error('Cannot delete collection with documents');
             }
