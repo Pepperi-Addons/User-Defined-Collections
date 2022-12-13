@@ -589,7 +589,7 @@ export class CollectionFormComponent implements OnInit {
 
     changeSyncData(newSyncData: SyncType) {
         switch (newSyncData) {
-            case 'Online': {
+            case 'Offline': {
                 this.collection.SyncData = {
                     Sync: true,
                     SyncFieldLevel: false,
@@ -599,7 +599,7 @@ export class CollectionFormComponent implements OnInit {
             case 'OnlyScheme': {
                 this.collection.Type = 'contained';
             }
-            case 'Offline': {
+            case 'Online': {
                 if(this.collection.SyncData) {
                     this.collection.SyncData.Sync = false;
                 }
