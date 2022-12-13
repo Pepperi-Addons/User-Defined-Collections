@@ -18,6 +18,7 @@ export class AddCollectionDialogComponent implements OnInit {
     extention: string = '';
     isValid: boolean = false;
     extentionOptions: SelectOptions<string> = []
+    schemeOnly: boolean = false;
     collectionNameRegex = collectionNameRegex;
 
     constructor(private service: CollectionsService,
@@ -75,6 +76,9 @@ export class AddCollectionDialogComponent implements OnInit {
                 AddonUUID: addonUUID,
                 Name: this.extention
             }
+        }
+        if(this.schemeOnly) {
+            collection.Type = 'contained';
         }
         this.service.createCollection(collection).then((collection) => {
             this.dialogRef.close(collection)

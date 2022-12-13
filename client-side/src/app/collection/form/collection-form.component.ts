@@ -121,7 +121,7 @@ export class CollectionFormComponent implements OnInit {
                     value: translations[`DocumentKey_Options_${type}`],
                 }
             })
-            this.syncOptions = SyncTypes.map(type => {
+            this.syncOptions = SyncTypes.filter(type => type != 'OnlyScheme').map(type => {
                 return {
                     key: type,
                     value: translations[`SyncData_Options_${type}`],
