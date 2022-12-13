@@ -27,6 +27,15 @@
                 [emptyOption]="true"
             ></pep-select>
         </div>
+        <div class="body-xs description">{{'Collection_SchemeOnly_Description' | translate}}</div>
+        <div class="form-row">
+            <pep-checkbox
+                [renderTitle]="false"
+                [(value)]="schemeOnly"
+                [label]="'Collection_SchemeOnly_Title' | translate"
+                type="checkbox"
+            ></pep-checkbox>
+        </div>
 
     </ng-container>
     <ng-container pep-dialog-actions>

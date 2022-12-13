@@ -54,6 +54,7 @@
                 [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode === 'Edit'"
             ></pep-select>
         </div>
+        <div class="body-xs description">{{'Fields_Indexed_Description' | translate}}</div>
         <div class="form-row">
             <pep-select
                 [(value)]="isIndexed"
@@ -75,7 +76,7 @@
                 [rowSpan]="3"
                 (valueChange)=saveOptionalValues($event)
             ></pep-textarea>
-            <div class="genericListContainer" *ngIf="dialogData.Field?.Type === 'Resource' && isIndexed === 'true'">
+            <!-- <div class="genericListContainer" *ngIf="dialogData.Field?.Type === 'Resource' && isIndexed === 'true'">
                 <pep-generic-list class="generic-list"
                     [title] = "'Fields_AdditionalFields_Title' | translate"
                     [showTopBar]="true" 
@@ -98,7 +99,7 @@
                         ></pep-button>
                     </ng-container>
                 </pep-generic-list>
-            </div>
+            </div> -->
         </div>
     </ng-container>
     <ng-container pep-dialog-actions>

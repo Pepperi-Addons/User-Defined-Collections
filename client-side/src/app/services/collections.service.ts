@@ -3,11 +3,11 @@ import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
 import { Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk';
-import { PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
+import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-addons/ngx-lib';
 
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 import { UtilitiesService } from './utilities.service';
-import { COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
+import { API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
 import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
@@ -15,6 +15,7 @@ export class CollectionsService {
     constructor(
         public session:  PepSessionService,
         private httpService: PepHttpService,
+        private addonService: PepAddonService,
         private utilities: UtilitiesService,
         private translate: TranslateService,
     ) {
@@ -22,7 +23,8 @@ export class CollectionsService {
 
     async getCollections(hidden: boolean = false, params: any = {}): Promise<Collection[]> {
         let options: any = {
-            where: ''
+            where: '',
+            page_size: -1
         };
         if (hidden) {
             options.include_deleted = true;
@@ -36,8 +38,8 @@ export class CollectionsService {
         else if (params.searchString) {
             options.where = `Name LIKE "%${params.searchString}%"`;
         }
-        const url = this.utilities.getAddonApiURL(COLLECTIONS_FUNCTION_NAME, options)
-        return await this.httpService.getPapiApiCall(url).toPromise()
+        const url = this.utilities.getFunctionURL(COLLECTIONS_FUNCTION_NAME, options)
+        return await this.addonService.getAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
     }
     
     async getMappingsCollections() {
@@ -48,13 +50,12 @@ export class CollectionsService {
     }
     
     async upsertCollection(obj: Collection) {
-        const url = this.utilities.getAddonApiURL(COLLECTIONS_FUNCTION_NAME);
-        return await this.httpService.postPapiApiCall(url, obj).toPromise();
+        
+        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, obj).toPromise();
     }
     
     async createCollection(obj: Collection) {
-        const url = this.utilities.getAddonApiURL(CREATE_FUNCTION_NAME);
-        return await this.httpService.postPapiApiCall(url, obj).toPromise();
+        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, CREATE_FUNCTION_NAME, obj).toPromise();
     } 
     
     async getContainedCollections(params?: FindOptions) {
@@ -77,14 +78,20 @@ export class CollectionsService {
         }
         else {
             const errors = this.utilities.getErrors(errorMessage);
-            content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
+            if(errors.length > 1) {
+                content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
+            }
+            else {
+                content = errorMessage;
+            }
         }
         this.utilities.showMessageDialog(title, content);
     }
 
     async cleanRebuild(collectionName: string): Promise<string> {
-        const url = this.utilities.getAddonApiURL(REBUILD_FUNCTION_NAME, {collection_name: collectionName});
-        const result = await this.httpService.postPapiApiCall(url, {}).toPromise();
+
+        const url = this.utilities.getFunctionURL(REBUILD_FUNCTION_NAME, {collection_name: collectionName});
+        const result = await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, {}).toPromise();
         return result ? result.URI : '';
     }
 

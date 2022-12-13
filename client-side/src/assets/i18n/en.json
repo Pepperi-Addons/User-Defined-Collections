@@ -85,7 +85,8 @@
     "Fields_Array_Title": "Is array",
     "Documents_LoadingErrorDialog_Title": "Loading Error",
     "Documents_LoadingErrorDialog_Message": "Error occured while getting documents, please try again later",
-    "Fields_Indexed_Title": "Indexed (When set, the user can search for values or do aggregation on this field. Note that each indexed field will consume additional storage)",
+    "Fields_Indexed_Description": "When 'Indexed' is set to true, the user can search for values or do aggregation on this field. Note that each indexed field will consume additional storage",
+    "Fields_Indexed_Title": "Indexed",
     "Collection_ContainedErrorDialog_Title": "Navigate to data",
     "Collection_ContainedErrorDialog_Content": "'EditData' is not allowed on 'SchemaOnly' type collections",
     "Fields_AdditionalFields_Title": "Additional Indexed Fields",
@@ -105,5 +106,7 @@
     "CleanRebuild_SnackBar_Title": "Rebuild Index",
     "Documents_EditForm_Title": "Editing document",
     "Documents_AddForm_Title": "Adding new document",
-    "Collection_DeleteDialogGeneralError": "Could not delete collection. got error <br />{{message}}"
+    "Collection_DeleteDialogGeneralError": "Could not delete collection. got error <br />{{message}}",
+    "Collection_SchemeOnly_Description": "check the 'Scheme Only' checkbox to create a definition object to be used later inside other collections. this collection cannot have data of it's own.",
+    "Collection_SchemeOnly_Title": "Scheme Only"
 }

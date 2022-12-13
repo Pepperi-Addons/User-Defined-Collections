@@ -5,7 +5,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from '@pepperi-addons/ngx-composite-lib/generic-list';
 import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog';
 import { PepSelectionData } from '@pepperi-addons/ngx-lib/list';
-import { AddonDataScheme, Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType, SchemeFieldTypes } from '@pepperi-addons/papi-sdk';
+import { AddonData, AddonDataScheme, Collection, CollectionField, DataViewFieldType, DocumentKeyType, DocumentKeyTypes, GridDataViewField, SchemeFieldType, SchemeFieldTypes, SearchData } from '@pepperi-addons/papi-sdk';
 import { CollectionsService } from '../../services/collections.service';
 import { UtilitiesService } from '../../services/utilities.service';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -121,7 +121,7 @@ export class CollectionFormComponent implements OnInit {
                     value: translations[`DocumentKey_Options_${type}`],
                 }
             })
-            this.syncOptions = SyncTypes.map(type => {
+            this.syncOptions = SyncTypes.filter(type => type != 'OnlyScheme').map(type => {
                 return {
                     key: type,
                     value: translations[`SyncData_Options_${type}`],
@@ -134,8 +134,8 @@ export class CollectionFormComponent implements OnInit {
                 this.resources = (await this.utilitiesService.getReferenceResources()).filter(collection => collection.Name !== this.collectionName);
                 this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collectionName);
                 this.collectionLoaded = true;
-                const documents = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collectionName): [];
-                this.emptyCollection = documents.length == 0;
+                const documents: SearchData<AddonData> = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collectionName): { Objects: [], Count: 0};
+                this.emptyCollection = documents.Count == 0;
                 if (this.uidList) {
                     this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
                     this.uidFieldsDataSource = this.getUIDFieldsDataSource();
@@ -589,7 +589,7 @@ export class CollectionFormComponent implements OnInit {
 
     changeSyncData(newSyncData: SyncType) {
         switch (newSyncData) {
-            case 'Online': {
+            case 'Offline': {
                 this.collection.SyncData = {
                     Sync: true,
                     SyncFieldLevel: false,
@@ -599,7 +599,7 @@ export class CollectionFormComponent implements OnInit {
             case 'OnlyScheme': {
                 this.collection.Type = 'contained';
             }
-            case 'Offline': {
+            case 'Online': {
                 if(this.collection.SyncData) {
                     this.collection.SyncData.Sync = false;
                 }
