@@ -54,13 +54,12 @@
                 [disabled]="(!dialogData.EmptyCollection || dialogData.InUidFields) && dialogData.Mode === 'Edit'"
             ></pep-select>
         </div>
-        <div class="body-xs">{{'Fields_Indexed_Description' | translate}}</div>
+        <div class="body-xs description">{{'Fields_Indexed_Description' | translate}}</div>
         <div class="form-row">
             <pep-select
                 [(value)]="isIndexed"
                 [label]="'Fields_Indexed_Title' | translate"
                 type="select"
-                [renderTitle]="false"
                 [options]="booleanOptions"
                 [emptyOption]="false"
                 [disabled]="dialogData.Field.Indexed === true || supportIndexed == false"
