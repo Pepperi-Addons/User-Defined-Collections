@@ -265,15 +265,13 @@ export class CollectionListComponent implements OnInit {
                         this.dataSource = this.getDataSource();
                     }
                     catch (error) {
+                        const title = this.translate.instant('Collection_DeleteDialogTitle');
+                        let content = this.translate.instant('Collection_DeleteDialogGeneralError', { message: error });
                         if (error.indexOf(this.deleteError) > 0)
                         {
-                            const dataMsg = new PepDialogData({
-                                title: this.translate.instant('Collection_DeleteDialogTitle'),
-                                actionsType: 'close',
-                                content: this.translate.instant('Collection_DeleteDialogError')
-                            });
-                            this.dialogService.openDefaultDialog(dataMsg);
+                            content = this.translate.instant('Collection_DeleteDialogError');
                         }
+                        this.utilitiesService.showMessageDialog(title, content);
                     }
                 }
         });      

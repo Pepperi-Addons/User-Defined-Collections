@@ -32,9 +32,8 @@ export class DocumentsFormComponent implements OnInit {
         @Inject(MAT_DIALOG_DATA) public incoming: DocumentsFormData) { }
 
     ngOnInit(): void {
-        this.item = this.incoming.Item;
-        console.log(this.item);
-        this.isValid = this.incoming.Mode === 'Edit';
+        this.item = this.getItem(this.incoming.Item);
+        console.log('after string conversion:', this.item);
     }
 
     async saveDocument() {
@@ -42,7 +41,7 @@ export class DocumentsFormComponent implements OnInit {
             await this.fixDataTypes();
             if(this.incoming.Mode === 'Add') {
                 try {
-                    await this.documentsService.createCollection(this.incoming.CollectionName, this.item);
+                    await this.documentsService.createDocument(this.incoming.CollectionName, this.item);
                     this.dialogRef.close(true);
                 }
                 catch (err) {
@@ -74,7 +73,7 @@ export class DocumentsFormComponent implements OnInit {
             const dataMsg = new PepDialogData({
                 title: this.translate.instant('Documents_UpdateFailed_Title'),
                 actionsType: 'close',
-                content: this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)})
+                content: errors.length > 1 ? this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)}) : error
             });
             this.dialogService.openDefaultDialog(dataMsg);
         }
@@ -138,11 +137,19 @@ export class DocumentsFormComponent implements OnInit {
                     break;
                 }
                 case 'Bool': {
-                    if(this.item[fieldName] && this.item[fieldName].toLocaleLowerCase() === 'true') {
+                    if(this.item[fieldName] && this.item[fieldName].toString().toLocaleLowerCase() === 'true') {
                         this.item[fieldName] = true;
                     }
                     else {
                         this.item[fieldName] = false;
+                    }
+                    break;
+                }
+                case 'DateTime': {
+                    const testDate = new Date(this.item[fieldName]);
+                    // if the date is not valid, remove it from the object sent to server
+                    if(!this.utilitiesService.isValidDate(testDate)) {
+                        delete this.item[fieldName];
                     }
                     break;
                 }
@@ -156,6 +163,22 @@ export class DocumentsFormComponent implements OnInit {
     onFormValidationChanged($event: any) {
         console.log(`form valid: ${$event}`);
         this.isValid = $event;
+    }
+
+    getItem(item: AddonData): AddonData {
+        let ret: AddonData = {}
+        Object.keys(item || {}).forEach(prop => {
+            if (typeof(item[prop]) != 'boolean') {
+                // if the value is null/undefined, don't copy it
+                if(item[prop]) {
+                    ret[prop] = item[prop].toString();
+                }
+            }
+            else {
+                ret[prop] = item[prop];
+            }
+        });
+        return ret;
     }
 }
 

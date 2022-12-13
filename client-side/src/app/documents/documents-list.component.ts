@@ -6,15 +6,15 @@ import { TranslateService } from '@ngx-translate/core';
 import { ObjectsDataRowCell, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
-import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource } from "@pepperi-addons/ngx-composite-lib/generic-list";
+import { GenericListComponent, IPepGenericListActions, IPepGenericListDataSource, IPepGenericListParams } from "@pepperi-addons/ngx-composite-lib/generic-list";
 import { DIMXHostObject, PepDIMXHelperService } from '@pepperi-addons/ngx-composite-lib'
 
-import { AddonData, Collection, FormDataView, SchemeField } from "@pepperi-addons/papi-sdk";
+import { AddonData, Collection, FormDataView, SchemeField, SearchData } from "@pepperi-addons/papi-sdk";
 
 import { DocumentsService } from "../services/documents.service";
 import { UtilitiesService } from "../services/utilities.service";
 import { DocumentsFormComponent, DocumentsFormData } from './form/documents-form.component';
-import { EMPTY_OBJECT_NAME, FormMode } from '../entities';
+import { EMPTY_OBJECT_NAME, FormMode, GL_PAGE_SIZE } from '../entities';
 import { config } from '../addon.config';
 
 @Component({
@@ -34,7 +34,7 @@ export class DocumentsListComponent implements OnInit {
     collectionName: string;
     recycleBin: boolean = false;
     collectionData: Collection;
-    documents: AddonData[] = [];
+    documents: SearchData<AddonData> = {Objects: [], Count: 0};
     
     screenSize: PepScreenSizeType;
     
@@ -52,7 +52,7 @@ export class DocumentsListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Restore'),
                         handler: async (objs) => {
-                            let document = this.documents.find(doc => doc.Key === objs.rows[0]);
+                            let document = this.documents.Objects.find(doc => doc.Key === objs.rows[0]);
                             if(document) {
                                 try {
                                     document.Hidden = false;
@@ -125,14 +125,14 @@ export class DocumentsListComponent implements OnInit {
 
     getDataSource() {
         const noDataMessageKey = this.recycleBin ? 'RecycleBin_NoDataFound' : 'Documents_NoDataFound'
+        const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String' && this.collectionData.Fields[field].Indexed);
         return {
-            init: async (params:any) => {
+            init: async (params: IPepGenericListParams) => {
                 try {
-                    const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String' && this.collectionData.Fields[field].Indexed);
                     this.documents = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
                 }
                 catch (err) {
-                    this.documents = [];
+                    this.documents.Objects = [];
                     this.showMessageInDialog('Documents_LoadingErrorDialog_Title', 'Documents_LoadingErrorDialog_Message');
                 }
                 return Promise.resolve({
@@ -173,13 +173,18 @@ export class DocumentsListComponent implements OnInit {
                         FrozenColumnsCount: 0,
                         MinimumColumnWidth: 0
                     },
-                    totalCount: this.documents.length,
-                    items: this.documents
+                    // on unindexed collections, the count return -1. until the GL will support, we are sending the number of itms
+                    totalCount: this.documents.Count && this.documents.Count > 0 ? this.documents.Count : this.documents.Objects.length,
+                    items: this.documents.Objects
                 });
+            },
+            update: async (params: IPepGenericListParams) => {
+                return (await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin)).Objects;
             },
             inputs: {
                 pager: {
-                    type: 'pages'
+                    type: 'pages',
+                    size: GL_PAGE_SIZE
                 },
                 selectionType: 'single',
                 noDataFoundMsg: this.translate.instant(noDataMessageKey)
@@ -257,7 +262,7 @@ export class DocumentsListComponent implements OnInit {
     }
 
     navigateToDocumentsForm(formMode: FormMode, documentKey: string) {
-        const listItem = this.documents.find(x => x.Key === documentKey);
+        const listItem = this.documents.Objects.find(x => x.Key === documentKey);
         let item = listItem || {};
         if (formMode == 'Edit') {
             // item['Key'] = documentKey;

@@ -3,8 +3,11 @@
     flex-direction: row;
     width: 100%;
     gap:1rem;
-    pep-textbox, pep-select, pep-textarea {
+    pep-textbox, pep-select, pep-textarea, pep-checkbox {
         width: 100%;
         align-content: space-between;
     }
+}
+.description {
+    margin-bottom: .5rem;
 }
