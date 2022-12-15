@@ -88,7 +88,7 @@ export class DocumentsFormComponent implements OnInit {
         Object.keys(collection.Fields!).forEach(fieldName => {
             switch (collection.Fields[fieldName].Type) {
                 case 'Array': {
-                    if(collection.Fields[fieldName].OptionalValues.length > 0) {
+                    if(collection.Fields[fieldName].OptionalValues && collection.Fields[fieldName].OptionalValues.length > 0) {
                         try {
                             if (this.item[fieldName] != "") {
                                 this.item[fieldName] = this.item[fieldName].split(";");
