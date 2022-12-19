@@ -451,3 +451,18 @@ export async function clean_rebuild(client: Client, request: Request) {
         }
     }
 }
+
+export async function collection_events(client: Client, request: Request) {
+    const collectionName = request.query.collection_name || '';
+    const service = new CollectionsService(client);
+    switch (request.method) {
+        case 'GET': {
+            return await service.getCollectionEvents(collectionName);
+        }
+        default: {
+            const err: any = new Error(`method ${request.method} is not allowed`);
+            err.code = 405;
+            throw err;
+        }
+    }
+}
