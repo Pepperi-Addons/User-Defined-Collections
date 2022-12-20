@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { Component } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { SettingsComponent } from './settings.component';
-import { CollectionFormComponent, CollectionListComponent } from '../collection';
+import { CollectionFormComponent, CollectionEventsComponent, CollectionListComponent } from '../collection';
 import { DocumentsListComponent } from '../documents';
 
 // Important for single spa

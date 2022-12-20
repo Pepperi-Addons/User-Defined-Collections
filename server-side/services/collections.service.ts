@@ -4,7 +4,8 @@ import { Client } from '@pepperi-addons/debug-server';
 import { ADAL_UUID, AtdRelations, DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
-import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex } from 'udc-shared';
+import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex, UserEvent } from 'udc-shared';
+import { UserEventsService } from './user-events.service';
 export class CollectionsService {
         
     utilities: UtilitiesService = new UtilitiesService(this.client);
@@ -216,6 +217,23 @@ export class CollectionsService {
 
     async cleanRebuild(collectionName: string) {
         return this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/clean_rebuild`);
+    }
+
+    async getCollectionEvents(collectionName: string) {
+        const collection: Collection = await this.findByName(collectionName);
+        const service = new UserEventsService(this.client);
+        const collectionNames: string[] = [collectionName];
+        const res: UserEvent[] = [];
+        
+        // if the collection is extending other collections, get their events as well
+        if(collection.SuperTypes) {
+            collectionNames.push(...collection.SuperTypes);
+        }
+        for (const name of collectionNames) {
+            const events = await service.getCollectionEvents(name);
+            res.push(...events.Events);
+        }
+        return res;
     }
 }
 
