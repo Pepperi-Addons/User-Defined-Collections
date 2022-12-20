@@ -7,7 +7,7 @@ import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-add
 
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 import { UtilitiesService } from './utilities.service';
-import { API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
+import { API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, EVENTS_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
 import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
@@ -115,5 +115,10 @@ export class CollectionsService {
         catch (error) {
             console.log(`clean rebuild for ${collectionName} failed with error: ${error}`);
         }
+    }
+
+    async getEvents(collectionName: string) {
+        const url = this.utilities.getFunctionURL(EVENTS_FUNCTION_NAME, {collection_name: collectionName});
+        return await this.addonService.getAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
     }
 }
