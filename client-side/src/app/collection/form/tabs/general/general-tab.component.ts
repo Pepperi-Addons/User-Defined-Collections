@@ -349,6 +349,7 @@ openFieldForm(name: string) {
         AddonUUID: this.collection.Fields[name]?.AddonUUID || '',
         Indexed: this.collection.Fields[name]?.Indexed || false,
         IndexedFields: this.collection.Fields[name]?.IndexedFields || {},
+        ApplySystemFilter: this.collection.Fields[name]?.ApplySystemFilter || false,
     }
     let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
     const dialogData: FieldsFormDialogData = {

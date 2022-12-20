@@ -109,5 +109,6 @@
     "Collection_DeleteDialogGeneralError": "Could not delete collection. got error <br />{{message}}",
     "Collection_SchemeOnly_Description": "check the 'Scheme Only' checkbox to create a definition object to be used later inside other collections. this collection cannot have data of it's own.",
     "Collection_SchemeOnly_Title": "Scheme Only",
-    "Collection_GeneralTab_Title": "Edit collection data"
+    "Collection_GeneralTab_Title": "Edit collection data",
+    "Fields_SystemFilter_Title": "Apply system level filtering on this field"
 }
