@@ -36,6 +36,7 @@ export class CollectionsService {
             if (fieldsValid.size === 0) {
                 // before sending data to ADAL, remove extended fields, without changing the DV
                 collectionObj = this.removeExtensionFields(collectionObj, false);
+                collectionObj = this.handleSyncForContained(collectionObj);
                 const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
                 await this.createDIMXRelations(collection.Name);
                 if(collection.Type !== 'contained') {
@@ -234,6 +235,15 @@ export class CollectionsService {
             res.push(...events.Events);
         }
         return res;
+    }
+
+    private handleSyncForContained(collection: Collection): Collection {
+        if (collection.Type = 'contained') {
+            collection.SyncData = {
+                Sync: true
+            }
+        }
+        return collection;
     }
 }
 
