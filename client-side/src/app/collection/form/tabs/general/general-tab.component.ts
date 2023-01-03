@@ -142,7 +142,6 @@ export class GeneralTabComponent implements OnInit {
               value: translations[`SyncData_Options_${type}`],
           }
       })
-      this.updateListView();
       this.fieldsDataSource = this.getFieldsDataSource();
       this.utilitiesService.getReferenceResources().then(async (values) => {
         this.resources = values.filter(collection => collection.Name !== this.collection.Name);
@@ -597,19 +596,6 @@ changeSyncData(newSyncData: SyncType) {
             }
             break;
         }
-    }
-}
-
-updateListView() {
-    if(this.collection.Fields) {
-        Object.keys(this.collection.Fields).forEach(fieldName => {
-            let dvField = this.collection.ListView.Fields.find(x => x.FieldID === fieldName);
-            if(!dvField) {
-                dvField = this.getDataViewField(fieldName, this.collection.Fields[fieldName]);
-                this.collection.ListView.Fields.push(dvField);
-                this.collection.ListView.Columns.push({ Width: 10 });
-            }
-        })
     }
 }
 }
