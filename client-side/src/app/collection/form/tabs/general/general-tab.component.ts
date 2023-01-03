@@ -149,7 +149,7 @@ export class GeneralTabComponent implements OnInit {
         this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collection.Name);
         this.collectionLoaded = true;
         const documents: SearchData<AddonData> = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collection.Name): { Objects: [], Count: 0};
-        this.emptyCollection = documents.Count == 0;
+        this.emptyCollection = documents.Count == 0 || (documents.Count === -1 && documents.Objects.length === 0);
         if (this.uidList) {
             this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
             this.uidFieldsDataSource = this.getUIDFieldsDataSource();
