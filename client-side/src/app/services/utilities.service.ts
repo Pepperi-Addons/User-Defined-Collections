@@ -67,7 +67,8 @@ export class UtilitiesService {
         const options: any = {
             Page: page,
             MaxPageSize: pageSize,
-            IncludeCount:true
+            IncludeCount:true,
+            Where: ""
         };
         
         if (hidden) {
