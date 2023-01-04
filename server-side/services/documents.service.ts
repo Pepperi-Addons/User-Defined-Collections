@@ -53,20 +53,29 @@ export class ServerDocumentsService {
     // for the AddonRelativeURL of the relation
     async importDataSource(body, collection: Collection) {
         console.log(`@@@@importing documents: ${JSON.stringify(body)}@@@@`);
-        body.DIMXObjects = await Promise.all(body.DIMXObjects.map(async (item) => {
-            const itemKey = this.globalService.getItemKey(collection, item.Object);
-            item.Object.Key = itemKey;
+        const collectionFields = await this.documentsService.getInnerSchemesFields(collection.Fields || {});
+        let items = body.DIMXObjects.map(obj => {
+            return obj.Object;
+        })
+        items = await this.documentsService.referencesService.handleDotAnnotationItems(collectionFields, items);
+        body.DIMXObjects = items.map((item) => {
+            const res: any = {
+                Object: item
+            }
+            const itemKey = this.globalService.getItemKey(collection, item);
+            item.Key = itemKey;
             console.log(`@@@@item key got from function is ${itemKey}`);
-            const validationResult = await this.documentsService.validateDocument(collection, item.Object);
+            const validationResult = this.documentsService.validateDocument(collection, item, collectionFields);
             if (!validationResult.valid) {
                 const errors = validationResult.errors.map(error => error.stack.replace("instance.", ""));
-                item.Status = 'Error';
-                item.Details = `Document validation failed.\n ${errors.join("\n")}`;
-                item.Key = itemKey;
+                res.Status = 'Error';
+                res.Details = `Document validation failed.\n ${errors.join("\n")}`;
+                res.Key = itemKey;
             }
-            return item;
-        }));
+            return res;
+        });
         console.log('@@@@returned object is:@@@@', JSON.stringify(body));
+
         return body;
     }
 
