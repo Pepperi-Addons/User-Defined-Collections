@@ -237,27 +237,27 @@ export class DocumentsService {
     
     createObjectScheme(fields: { [key: string]:CollectionField}) {
         const propertiesScheme = {};
-        Object.keys(fields).forEach(fieldName => {
+        Object.keys(fields || {}).forEach(fieldName => {
             const field = fields[fieldName];
             // validate only fields that are not coming from base schema
-            if (field.ExtendedField === false) {
-                if (field.Type === 'Object') {
+            if (!field.ExtendedField) {
+                if (field.Type === 'ContainedResource') {
                     propertiesScheme[fieldName] = {
                         type: 'object',
                         required: field.Mandatory,
                         properties: {
-                            ...this.createObjectScheme(field.Fields!)
+                            ...this.createObjectScheme(field.Fields || {})
                         }
                     }
                 }
-                else if((field.Type === 'Array' && field.Items!.Type === 'Object')) {
+                else if((field.Type === 'Array' && field.Items!.Type === 'ContainedResource')) {
                     propertiesScheme[fieldName] = {
                         type: 'array',
                         required: field.Mandatory,
                         items:{
                             type: 'object',
                             properties: {
-                                ...this.createObjectScheme(field.Items!.Fields!)
+                                ...this.createObjectScheme(field.Items!.Fields || {})
                             }
                         }
                     }
