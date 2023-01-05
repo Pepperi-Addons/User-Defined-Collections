@@ -235,8 +235,11 @@ export class CollectionsService {
         }
         for (const name of collectionNames) {
             const events = await service.getCollectionEvents(name);
+            // add events filter to the events returned from the relation
+            service.addEventFilter(events, collectionName);
             res.push(...events.Events);
         }
+
         return res;
     }
 
@@ -244,7 +247,7 @@ export class CollectionsService {
         const res: Collection = JSON.parse(JSON.stringify(collection));
 
         // if there is no ListView, create an empty one
-        if(!res.ListView && !res.ListView!.Fields) {
+        if(!res.ListView || !res.ListView!.Fields) {
             res.ListView = {
                 Type: 'Grid',
                 Fields: [],
@@ -260,7 +263,7 @@ export class CollectionsService {
 
         // append to the end all the fields that are not part of the list view
         Object.keys(collection.Fields || {}).forEach(fieldName => {
-            let dvField = collection.ListView!.Fields!.find(x => x.FieldID === fieldName);
+            let dvField = res.ListView!.Fields!.find(x => x.FieldID === fieldName);
             if(!dvField) {
                 dvField = this.utilities.getDataViewField(fieldName, collection.Fields![fieldName]);
                 res.ListView!.Fields!.push(dvField);
@@ -273,7 +276,7 @@ export class CollectionsService {
     }
 
     private handleSyncForContained(collection: Collection): Collection {
-        if (collection.Type = 'contained') {
+        if (collection.Type === 'contained') {
             collection.SyncData = {
                 Sync: true
             }
