@@ -1,13 +1,15 @@
 import { AddonData, AddonDataScheme, Collection, CollectionField, SearchData, SchemeFieldType, SearchBody } from "@pepperi-addons/papi-sdk";
 import { Schema, Validator } from "jsonschema";
-import { ReferenceValidationResult } from "../entities";
+import { CollectionFields, ReferenceValidationResult } from "../entities";
 import { DocumentSchema } from "../jsonSchemes/documents";
 import { IApiService } from "./api-service";
 import { GlobalService } from "./global-service";
+import { ReferenceService } from "./reference-service";
 import { IResourcesServices } from "./resources-service";
 
 export class DocumentsService {
     globalService = new GlobalService();
+    referencesService: ReferenceService = new ReferenceService(this.resourcesService);
 
     constructor(private apiService: IApiService, private resourcesService: IResourcesServices) {}
 
@@ -21,14 +23,12 @@ export class DocumentsService {
     
     async upsert(collectionName: any, body: any): Promise<AddonData> {
         const updatingHidden = 'Hidden' in body && body.Hidden;
-        const collectionScheme = await this.apiService.findCollectionByName(collectionName);
-        body.Key = this.globalService.getItemKey(collectionScheme, body);
-        const validationResult = await this.validateDocument(collectionScheme, body);
-        if (validationResult.valid || updatingHidden) {
-            return await this.apiService.upsert(collectionName, body);
+        const item = (await this.processItemsToSave(collectionName, [body]))[0];
+        if (item.ValidationResult.valid || updatingHidden) {
+            return await this.apiService.upsert(collectionName, item.Item);
         }
         else {
-            const errors = validationResult.errors.map(error => error.stack.replace("instance.", ""));
+            const errors = item.ValidationResult.errors.map(error => error.stack.replace("instance.", ""));
             throw new Error(errors.join("\n"));
         }
     }
@@ -43,8 +43,8 @@ export class DocumentsService {
         }
     }
 
-    async validateDocument(collection: Collection, body: any) {
-        const referenceResult = await this.validateReference(collection.Fields!, body);
+    validateDocument(collection: Collection, body: any, collectionFields: CollectionFields) {
+        const referenceResult = this.validateReference(collectionFields, body);
         body = { ...referenceResult.Document };
         const schema = this.createSchema(collection);
         console.log(`validating document ${JSON.stringify(body)} for collection ${collection.Name}. schema is ${JSON.stringify(schema)}`);
@@ -81,144 +81,61 @@ export class DocumentsService {
         })
     }
 
-    async validateReference(schemeFields: {[key:string]: CollectionField}, document: AddonData): Promise<ReferenceValidationResult> {
+    validateReference(schemeFields: CollectionFields, document: AddonData): ReferenceValidationResult {
         let valid = true;
         const errors: string[] = [];
-        await Promise.all(Object.keys(schemeFields).map(async(field) => {
-            if (schemeFields[field].Type === 'Object' && field in document) {
-                const result:ReferenceValidationResult = await this.validateReference(schemeFields[field].Fields!, document[field]);
-                errors.push(...result.Errors);
-                document[field] = result.Document;
-            }
-            else if(schemeFields[field].Type == 'Array' && schemeFields[field].Items?.Type === 'Object' && (field in document && document[field].length > 0)) {
-                let arr = [...document[field]];
-                document[field] = [];
-                for await (let item of arr) {
-                    const result:ReferenceValidationResult = await this.validateReference(schemeFields[field].Items!.Fields!, item);
-                    errors.push(...result.Errors);
-                    document[field].push(result.Document);
-                }
-            }
-            const resourceName = schemeFields[field].Resource || ""
-            if (schemeFields[field].Type === 'Resource') {
-                if (resourceName != "") {
-                    // TBD - remove once getByKey on abstract scheme will work
-                    // if the reference is for schema of type 'abstract' don't validate.
-                    const resourceScheme = await this.resourcesService.getByKey('resources', resourceName) as AddonDataScheme;
-                    if (resourceScheme && resourceScheme.Type !== 'abstract') {
-                        if (field in document) {
-                            valid = await this.getReferencedObject(document[field], resourceName) != undefined;
-                        }
-                        else {
-                            document = await this.checkUniqueFields(resourceName, document, field);
-                            valid = document[field] != ""; // if reference field has value than the reference is valid
-                        }
-                    }
-                    else {
-                        valid = true
-                    }
+        Object.keys(document).forEach(prop => {
+            const refField = this.referencesService.referenceFields.find(item => item.FieldID === prop);
+            // if the property name include a dot, than we have reference with unique field.
+            // because we already populated all the referenced items, we can check for the existance of the reference field on the object
+            // if he exists, this means that we were able to retrieve the item using the unique field
+            if(prop.indexOf('.') > 0) {
+                const parts = prop.split('.');
+                if (parts.length === 2) {
+                    valid = document[parts[0]] ? true : false;
+                    // after validation we can remove the dot annotation field so it won't stay on the document
+                    delete document[prop];
                 }
                 else {
-                    console.log(`Resource on field ${field} is empty. cannot verify reference`);
                     valid = false;
                 }
             }
+            // if this propery exist on the reference fields, check the item he references exist
+            else if (refField) {
+                const item = this.referencesService.getItemByUniqueField(refField.ResourceName, 'Key', document[prop]);
+                valid = item ? true : false;
+            }
             else {
-                if (schemeFields[field].Type === 'Array' && schemeFields[field].Items!.Type === 'Resource') {
-                    if (resourceName != "") {
-                        // TBD - remove once getByKey on abstract scheme will work
-                        // if the reference is for schema of type 'abstract' don't validate.
-                        const resourceScheme = await this.resourcesService.getByKey('resources', resourceName) as AddonDataScheme;
-                        if (resourceScheme && resourceScheme.Type !== 'abstract') {
-                            if(field in document && document[field].length > 0) {
-                                valid = (await this.getReferencedObjects(document[field], resourceName)).length ===  document[field].length;
-                            }
-                        }
-                        else {
-                            valid = true;
+                // check if the prop is of type object, validate the inner object
+                const schemeField = schemeFields![prop];
+                if (schemeField && schemeField.Type === 'ContainedResource') {
+                    const result:ReferenceValidationResult = this.validateReference(schemeField.Fields!, document[prop]);
+                    errors.push(...result.Errors);
+                    document[prop] = result.Document;
+                }
+                else {
+                    if (schemeField && schemeField.Type === 'Array' && schemeField.Items!.Type === 'ContainedResource') {
+                        const arr = [...document[prop]];
+                        document[prop] = [];
+                        for (let item of arr) {
+                            const result:ReferenceValidationResult = this.validateReference(schemeField.Fields!, item);
+                            errors.push(...result.Errors);
+                            document[prop].push(result.Document);
                         }
                     }
                     else {
-                        console.log(`Resource on field ${field} is empty. cannot verify reference`);
-                        valid = false;
+                        valid = true;
                     }
-                }    
+                }
             }
-            if(!valid) {
-                errors.push(`Field ${field} contains broken reference`);
+            if (!valid) {
+                errors.push(`Field ${prop} contains broken reference`);
             }
-        }))
+        })
         return {
             Errors: errors, 
             Document: document
         };
-    }
-
-    async getReferencedObject(objKey: string, collectionName: string): Promise<AddonData | undefined> {
-        let item: AddonData | undefined = undefined;
-        try {
-            item = await this.resourcesService.getByKey(collectionName, objKey);
-        }
-        catch (err) {
-            console.log(`Could not get item ${objKey} from collection ${collectionName}`);
-        }
-        return item;
-    }
-
-    async getReferencedObjects(objKeys: string[], collectionName: string): Promise<AddonData[]> {
-        let items: AddonData[] = [];
-        try {
-            items = await this.resourcesService.search(collectionName, {
-                KeyList: objKeys,
-            });
-        }
-        catch (err) {
-            console.log(`Could not get the following items ${objKeys} from collection ${collectionName}`);
-        }
-        return items;
-    }
-
-    async getReferencedObjectByUniqueField(fieldID: string, fieldValue:string, collectionName: string): Promise<AddonData | undefined> {
-        let item: AddonData | undefined = undefined;
-        try {
-            item = await this.resourcesService.getByUniqueField(collectionName, fieldID, fieldValue);
-        }
-        catch (err) {
-            console.log(`Could not get item ${fieldID} from collection ${collectionName}`);
-        }
-        return item;
-    }
-
-    async checkUniqueFields(resourceName: string, document: AddonData, referenceField: string): Promise<AddonData> {
-        try {
-            const scheme = await this.resourcesService.getByKey('resources', resourceName);
-            const uniqueFields = Object.keys(scheme.Fields).filter((field: string) => scheme.Fields[field].Unique);
-            let fieldsInDocument: string[] = []; // we don't want to have more than one unique field on a document, so we counting.
-            await Promise.all(uniqueFields.map(async (field) => {
-                const fieldID = `${referenceField}.${field}`;
-                if (fieldID in document) {
-                    fieldsInDocument.push(fieldID);
-                    if(fieldsInDocument.length <= 1) {
-                        const item = await this.getReferencedObjectByUniqueField(field, document[fieldID], resourceName);
-                        if (item) {
-                            // if we found the item using the unique field, we need to replace the unique field with the item key
-                            document[referenceField] = item.Key || "";
-                            delete document[fieldID];
-                        }
-                    }
-                    else {
-                        throw new Error(`Document cannot contain more than 1 unique field, fields: ${fieldsInDocument.join(',')}`)
-                    }
-                }
-            }));
-        }
-        catch (err) {
-            console.log(`could not get generic scheme with name ${resourceName}, got exception ${JSON.stringify(err)}`);
-            if (err instanceof Error && err.message.indexOf('Document cannot contain more than 1 unique field') > -1) {
-                throw err;
-            }
-        }
-        return document;
     }
 
     createSchema(collection: Collection): Schema {
@@ -318,6 +235,42 @@ export class DocumentsService {
             }
         }
         return retVal;
+    }
+
+    async getInnerSchemesFields(tableFields: CollectionFields = {}): Promise<CollectionFields> {
+        // initializing the returned object with common fields from base scheme
+        const res: CollectionFields = {};
+        await Promise.all(Object.keys(tableFields || {}).map(async (fieldName) => {
+            const field = tableFields[fieldName];
+            
+            res[fieldName] = {...field};
+            if (field.Type === 'ContainedResource' || (field.Type === 'Array' && field.Items!.Type === 'ContainedResource')) {
+                try {
+                    console.log(`about to get reference fields for field ${fieldName}, on Addon ${field.AddonUUID} and table ${field.Resource}`);
+                    const objectScheme = await this.apiService.findCollectionByName(field.Resource || '');
+                    const objectFields = await this.getInnerSchemesFields(objectScheme?.Fields || {});
+                    res[fieldName].Fields = {...objectFields}
+                }
+                catch (err) {
+                    console.log(`could not get reference fields for ${fieldName}. got error ${JSON.stringify(err)}`);
+                }
+            }
+        }));
+        return res;
+    }
+
+    async processItemsToSave(collectionName: string, items: AddonData[]) {
+        const collectionScheme = await this.apiService.findCollectionByName(collectionName);
+        const collectionFields = await this.getInnerSchemesFields(collectionScheme.Fields || {});
+        items = (await this.referencesService.handleDotAnnotationItems(collectionFields, items));
+        return items.map(item => {
+            item.Key = this.globalService.getItemKey(collectionScheme, item);
+            const validationResult = this.validateDocument(collectionScheme, item, collectionFields);
+            return {
+                Item: item,
+                ValidationResult: validationResult
+            }
+        });
     }
     
 }

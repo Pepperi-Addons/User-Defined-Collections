@@ -51,22 +51,25 @@ export class ServerDocumentsService {
 
     //DIMX
     // for the AddonRelativeURL of the relation
-    async importDataSource(body, collection: Collection) {
+    async importDataSource(body, collectionName) {
         console.log(`@@@@importing documents: ${JSON.stringify(body)}@@@@`);
-        body.DIMXObjects = await Promise.all(body.DIMXObjects.map(async (item) => {
-            const itemKey = this.globalService.getItemKey(collection, item.Object);
-            item.Object.Key = itemKey;
-            console.log(`@@@@item key got from function is ${itemKey}`);
-            const validationResult = await this.documentsService.validateDocument(collection, item.Object);
-            if (!validationResult.valid) {
-                const errors = validationResult.errors.map(error => error.stack.replace("instance.", ""));
-                item.Status = 'Error';
-                item.Details = `Document validation failed.\n ${errors.join("\n")}`;
-                item.Key = itemKey;
+        let items = body.DIMXObjects.map(obj => {
+            return obj.Object;
+        })
+        const itemsWithValidation = await this.documentsService.processItemsToSave(collectionName, items);
+        body.DIMXObjects = itemsWithValidation.map((element, index) => {
+            const dimxObject = body.DIMXObjects[index];
+            dimxObject.Object = {...element.Item};
+            if (!element.ValidationResult.valid) {
+                const errors = element.ValidationResult.errors.map(error => error.stack.replace("instance.", ""));
+                dimxObject.Status = 'Error';
+                dimxObject.Details = `Document validation failed.\n ${errors.join("\n")}`;
+                dimxObject.Key = element.Item.Key;
             }
-            return item;
-        }));
+            return dimxObject;
+        })
         console.log('@@@@returned object is:@@@@', JSON.stringify(body));
+
         return body;
     }
 

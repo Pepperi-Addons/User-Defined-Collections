@@ -1,4 +1,4 @@
-import { AddonData, SearchBody } from "@pepperi-addons/papi-sdk";
+import { AddonData, SearchBody, SearchData } from "@pepperi-addons/papi-sdk";
 
 export abstract class IResourcesServices {
     constructor() {}
@@ -7,5 +7,5 @@ export abstract class IResourcesServices {
 
     abstract getByUniqueField(resourceName: string, fieldID: string, fieldValue: string): Promise<AddonData>;
     
-    abstract search(resourceName: string, params: SearchBody): Promise<AddonData[]>;
+    abstract search(resourceName: string, params: SearchBody): Promise<SearchData<AddonData>>;
 }
