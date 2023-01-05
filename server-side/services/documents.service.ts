@@ -51,29 +51,23 @@ export class ServerDocumentsService {
 
     //DIMX
     // for the AddonRelativeURL of the relation
-    async importDataSource(body, collection: Collection) {
+    async importDataSource(body, collectionName) {
         console.log(`@@@@importing documents: ${JSON.stringify(body)}@@@@`);
-        const collectionFields = await this.documentsService.getInnerSchemesFields(collection.Fields || {});
         let items = body.DIMXObjects.map(obj => {
             return obj.Object;
         })
-        items = await this.documentsService.referencesService.handleDotAnnotationItems(collectionFields, items);
-        body.DIMXObjects = items.map((item) => {
-            const res: any = {
-                Object: item
+        const itemsWithValidation = await this.documentsService.processItemsToSave(collectionName, items);
+        body.DIMXObjects = itemsWithValidation.map((element, index) => {
+            const dimxObject = body.DIMXObjects[index];
+            dimxObject.Object = {...element.Item};
+            if (!element.ValidationResult.valid) {
+                const errors = element.ValidationResult.errors.map(error => error.stack.replace("instance.", ""));
+                dimxObject.Status = 'Error';
+                dimxObject.Details = `Document validation failed.\n ${errors.join("\n")}`;
+                dimxObject.Key = element.Item.Key;
             }
-            const itemKey = this.globalService.getItemKey(collection, item);
-            item.Key = itemKey;
-            console.log(`@@@@item key got from function is ${itemKey}`);
-            const validationResult = this.documentsService.validateDocument(collection, item, collectionFields);
-            if (!validationResult.valid) {
-                const errors = validationResult.errors.map(error => error.stack.replace("instance.", ""));
-                res.Status = 'Error';
-                res.Details = `Document validation failed.\n ${errors.join("\n")}`;
-                res.Key = itemKey;
-            }
-            return res;
-        });
+            return dimxObject;
+        })
         console.log('@@@@returned object is:@@@@', JSON.stringify(body));
 
         return body;

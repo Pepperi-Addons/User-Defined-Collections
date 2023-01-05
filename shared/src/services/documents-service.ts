@@ -23,16 +23,12 @@ export class DocumentsService {
     
     async upsert(collectionName: any, body: any): Promise<AddonData> {
         const updatingHidden = 'Hidden' in body && body.Hidden;
-        const collectionScheme = await this.apiService.findCollectionByName(collectionName);
-        const collectionFields = await this.getInnerSchemesFields(collectionScheme.Fields || {});
-        const doc = (await this.referencesService.handleDotAnnotationItems(collectionFields, [body]))[0];
-        doc.Key = this.globalService.getItemKey(collectionScheme, doc);
-        const validationResult = this.validateDocument(collectionScheme, doc, collectionFields);
-        if (validationResult.valid || updatingHidden) {
-            return await this.apiService.upsert(collectionName, doc);
+        const item = (await this.processItemsToSave(collectionName, [body]))[0];
+        if (item.ValidationResult.valid || updatingHidden) {
+            return await this.apiService.upsert(collectionName, item.Item);
         }
         else {
-            const errors = validationResult.errors.map(error => error.stack.replace("instance.", ""));
+            const errors = item.ValidationResult.errors.map(error => error.stack.replace("instance.", ""));
             throw new Error(errors.join("\n"));
         }
     }
@@ -261,6 +257,20 @@ export class DocumentsService {
             }
         }));
         return res;
+    }
+
+    async processItemsToSave(collectionName: string, items: AddonData[]) {
+        const collectionScheme = await this.apiService.findCollectionByName(collectionName);
+        const collectionFields = await this.getInnerSchemesFields(collectionScheme.Fields || {});
+        items = (await this.referencesService.handleDotAnnotationItems(collectionFields, items));
+        return items.map(item => {
+            item.Key = this.globalService.getItemKey(collectionScheme, item);
+            const validationResult = this.validateDocument(collectionScheme, item, collectionFields);
+            return {
+                Item: item,
+                ValidationResult: validationResult
+            }
+        });
     }
     
 }
