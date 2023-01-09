@@ -237,31 +237,9 @@ export class DocumentsService {
         return retVal;
     }
 
-    async getInnerSchemesFields(tableFields: CollectionFields = {}): Promise<CollectionFields> {
-        // initializing the returned object with common fields from base scheme
-        const res: CollectionFields = {};
-        await Promise.all(Object.keys(tableFields || {}).map(async (fieldName) => {
-            const field = tableFields[fieldName];
-            
-            res[fieldName] = {...field};
-            if (field.Type === 'ContainedResource' || (field.Type === 'Array' && field.Items!.Type === 'ContainedResource')) {
-                try {
-                    console.log(`about to get reference fields for field ${fieldName}, on Addon ${field.AddonUUID} and table ${field.Resource}`);
-                    const objectScheme = await this.apiService.findCollectionByName(field.Resource || '');
-                    const objectFields = await this.getInnerSchemesFields(objectScheme?.Fields || {});
-                    res[fieldName].Fields = {...objectFields}
-                }
-                catch (err) {
-                    console.log(`could not get reference fields for ${fieldName}. got error ${JSON.stringify(err)}`);
-                }
-            }
-        }));
-        return res;
-    }
-
     async processItemsToSave(collectionName: string, items: AddonData[]) {
         const collectionScheme = await this.apiService.findCollectionByName(collectionName);
-        const collectionFields = await this.getInnerSchemesFields(collectionScheme.Fields || {});
+        const collectionFields = collectionScheme.Fields || {};
         items = (await this.referencesService.handleDotAnnotationItems(collectionFields, items));
         return items.map(item => {
             item.Key = this.globalService.getItemKey(collectionScheme, item);
