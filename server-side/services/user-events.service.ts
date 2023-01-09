@@ -14,9 +14,7 @@ export class UserEventsService {
         // get relations of type UDCEvents with collection name
         const relations = await this.getRelations(collectionName);
         // call the relation api function to get the events
-        const events = await this.getEventsFromRelations(relations, collectionName);
-        // add events filter to the events returned from the relation
-        return this.addEventFilter(events, collectionName);
+        return await this.getEventsFromRelations(relations, collectionName);
     }
     
     getEventFilter(collectionName: string) {
