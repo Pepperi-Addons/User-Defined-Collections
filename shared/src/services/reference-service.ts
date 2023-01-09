@@ -133,11 +133,6 @@ export class ReferenceService {
                     });
                 }
             }
-            else  {
-                if (schemeFields![fieldName].Type === 'ContainedResource' || (schemeFields![fieldName].Type === 'Array' && schemeFields![fieldName].Items!.Type === 'ContainedResource')) {
-                    await this.getReferenceFields(schemeFields![fieldName].Fields);
-                }
-            }
         }));
     }
 
@@ -153,16 +148,6 @@ export class ReferenceService {
                 // current prop is a reference by itself, need to add it's value with 'Key' field
                 else if (refField) {
                     this.addValueToResource(refField.ResourceName, 'Key', doc[prop]);
-                }
-                else if (field && field.Type === 'ContainedResource') {
-                    this.collectItemReferences(doc[prop] || {}, schemeFields![prop].Fields);
-                }
-                else if (field && field.Type === 'Array' && field.Items!.Type === 'ContainedResource') {
-                    if(doc[prop] && Array.isArray(doc[prop])) {
-                        doc[prop].forEach(item => {
-                            this.collectItemReferences(item, schemeFields![prop].Fields);
-                        })
-                    }
                 }
             })
         }
