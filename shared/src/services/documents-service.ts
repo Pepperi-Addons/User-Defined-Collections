@@ -85,51 +85,36 @@ export class DocumentsService {
         let valid = true;
         const errors: string[] = [];
         Object.keys(document).forEach(prop => {
-            const refField = this.referencesService.referenceFields.find(item => item.FieldID === prop);
-            // if the property name include a dot, than we have reference with unique field.
-            // because we already populated all the referenced items, we can check for the existance of the reference field on the object
-            // if he exists, this means that we were able to retrieve the item using the unique field
-            if(prop.indexOf('.') > 0) {
-                const parts = prop.split('.');
-                if (parts.length === 2) {
-                    valid = document[parts[0]] ? true : false;
-                    // after validation we can remove the dot annotation field so it won't stay on the document
-                    delete document[prop];
-                }
-                else {
-                    valid = false;
-                }
-            }
-            // if this propery exist on the reference fields, check the item he references exist
-            else if (refField) {
-                const item = this.referencesService.getItemByUniqueField(refField.ResourceName, 'Key', document[prop]);
-                valid = item ? true : false;
-            }
-            else {
-                // check if the prop is of type object, validate the inner object
-                const schemeField = schemeFields![prop];
-                if (schemeField && schemeField.Type === 'ContainedResource') {
-                    const result:ReferenceValidationResult = this.validateReference(schemeField.Fields!, document[prop]);
-                    errors.push(...result.Errors);
-                    document[prop] = result.Document;
-                }
-                else {
-                    if (schemeField && schemeField.Type === 'Array' && schemeField.Items!.Type === 'ContainedResource') {
-                        const arr = [...document[prop]];
-                        document[prop] = [];
-                        for (let item of arr) {
-                            const result:ReferenceValidationResult = this.validateReference(schemeField.Fields!, item);
-                            errors.push(...result.Errors);
-                            document[prop].push(result.Document);
-                        }
+            try {
+                const refField = this.referencesService.referenceFields.find(item => item.FieldID === prop);
+                // if the property name include a dot, than we have reference with unique field.
+                // because we already populated all the referenced items, we can check for the existance of the reference field on the object
+                // if he exists, this means that we were able to retrieve the item using the unique field
+                if(prop.indexOf('.') > 0) {
+                    const parts = prop.split('.');
+                    if (parts.length === 2) {
+                        valid = document[parts[0]] ? true : false;
+                        // after validation we can remove the dot annotation field so it won't stay on the document
+                        delete document[prop];
                     }
                     else {
-                        valid = true;
+                        valid = false;
                     }
                 }
+                // if this propery exist on the reference fields, check the item he references exist
+                else if (refField) {
+                    const item = this.referencesService.getItemByUniqueField(refField.ResourceName, 'Key', document[prop]);
+                    valid = item ? true : false;
+                }
+                else {
+                    valid = true;
+                }
+                if (!valid) {
+                    errors.push(`Field ${prop} contains broken reference`);
+                }
             }
-            if (!valid) {
-                errors.push(`Field ${prop} contains broken reference`);
+            catch (err) {
+                console.log(`could not validate ${prop}. got error ${JSON.stringify(err)}`);
             }
         })
         return {
