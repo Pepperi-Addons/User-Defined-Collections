@@ -211,7 +211,7 @@ export class FieldsFormComponent implements OnInit {
 
         async openFieldForm() {
             const config = this.dialogService.getDialogConfig({});
-            const fieldsToShow = Object.keys(this.resourceFields || {}).filter(fieldName => this.isNotIndexedField(fieldName));
+            const fieldsToShow = Object.keys(this.resourceFields || {}).filter(fieldName => this.isNotIndexedField(fieldName)).sort((a,b)=> {return a.localeCompare(b)});
             const fieldNames: SelectOptions<string> = fieldsToShow.map(field => {
                 return {
                     key: field,
