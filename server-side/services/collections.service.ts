@@ -36,12 +36,16 @@ export class CollectionsService {
             if (fieldsValid.size === 0) {
                 // before sending data to ADAL, remove extended fields, without changing the DV
                 collectionObj = this.removeExtensionFields(collectionObj, false);
-                const collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj);
+                collectionObj = this.handleSyncForContained(collectionObj);
+                let collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj) as Collection;
                 await this.createDIMXRelations(collection.Name);
                 if(collection.Type !== 'contained') {
                     await this.createDataQueryRelations(collection);
                 }
-                return collection;
+                // DI-22303 after we create the collection, we need to update it's Data view to have all the fields, and then post the new object
+                collection = this.updateListView(collection);
+                collection = this.removeExtensionFields(collection, false);
+                return await this.utilities.papiClient.addons.data.schemes.post(collection) as Collection;
             }
             else {
                 for (const [key, value] of fieldsValid) {
@@ -231,9 +235,53 @@ export class CollectionsService {
         }
         for (const name of collectionNames) {
             const events = await service.getCollectionEvents(name);
+            // add events filter to the events returned from the relation
+            service.addEventFilter(events, collectionName);
             res.push(...events.Events);
         }
+
         return res;
+    }
+
+    private updateListView(collection: Collection): Collection {
+        const res: Collection = JSON.parse(JSON.stringify(collection));
+
+        // if there is no ListView, create an empty one
+        if(!res.ListView || !res.ListView!.Fields) {
+            res.ListView = {
+                Type: 'Grid',
+                Fields: [],
+                Columns: []
+            }
+        }
+        // remove fields that are deleted from the fields object
+        else {
+            res.ListView!.Fields = res.ListView!.Fields!.filter(element => {
+                return res.Fields!.hasOwnProperty(element.FieldID);
+            })    
+        }
+
+        // append to the end all the fields that are not part of the list view
+        Object.keys(collection.Fields || {}).forEach(fieldName => {
+            let dvField = res.ListView!.Fields!.find(x => x.FieldID === fieldName);
+            if(!dvField) {
+                dvField = this.utilities.getDataViewField(fieldName, collection.Fields![fieldName]);
+                res.ListView!.Fields!.push(dvField);
+                res.ListView!.Columns!.push({ Width: 10 });
+            }
+        })
+
+
+        return res;
+    }
+
+    private handleSyncForContained(collection: Collection): Collection {
+        if (collection.Type === 'contained') {
+            collection.SyncData = {
+                Sync: true
+            }
+        }
+        return collection;
     }
 }
 

@@ -97,8 +97,7 @@ export async function import_data_source(client: Client, request: Request) {
     const collectionName = request.query.collection_name || '';
     if (request.method == 'POST') {
         try {
-            const collection: Collection = await collectionsService.findByName(collectionName);
-            return await service.importDataSource(request.body, collection);
+            return await service.importDataSource(request.body, collectionName);
         }
         catch (error) {
             console.log(`import data for collection ${collectionName} failed with error ${JSON.stringify(error)}`);

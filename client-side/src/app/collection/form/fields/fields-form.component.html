@@ -64,6 +64,14 @@
                 [emptyOption]="false"
                 [disabled]="dialogData.Field.Indexed === true || supportIndexed == false"
             ></pep-select>
+            <pep-select
+                [(value)]="applySystemFilter"
+                [label]="'Fields_SystemFilter_Title' | translate"
+                type="select"
+                [options]="booleanOptions"
+                [emptyOption]="false"
+                [visible]="dialogData.Field.Type === 'Resource'"
+            ></pep-select>
         </div>
         <div class="form-row">
             <pep-textarea
@@ -76,7 +84,7 @@
                 [rowSpan]="3"
                 (valueChange)=saveOptionalValues($event)
             ></pep-textarea>
-            <!-- <div class="genericListContainer" *ngIf="dialogData.Field?.Type === 'Resource' && isIndexed === 'true'">
+            <div class="genericListContainer" *ngIf="dialogData.Field?.Type === 'Resource' && isIndexed === 'true'">
                 <pep-generic-list class="generic-list"
                     [title] = "'Fields_AdditionalFields_Title' | translate"
                     [showTopBar]="true" 
@@ -99,7 +107,7 @@
                         ></pep-button>
                     </ng-container>
                 </pep-generic-list>
-            </div> -->
+            </div>
         </div>
     </ng-container>
     <ng-container pep-dialog-actions>

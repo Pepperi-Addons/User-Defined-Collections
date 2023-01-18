@@ -142,14 +142,13 @@ export class GeneralTabComponent implements OnInit {
               value: translations[`SyncData_Options_${type}`],
           }
       })
-      this.updateListView();
       this.fieldsDataSource = this.getFieldsDataSource();
       this.utilitiesService.getReferenceResources().then(async (values) => {
         this.resources = values.filter(collection => collection.Name !== this.collection.Name);
         this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collection.Name);
         this.collectionLoaded = true;
         const documents: SearchData<AddonData> = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collection.Name): { Objects: [], Count: 0};
-        this.emptyCollection = documents.Count == 0;
+        this.emptyCollection = documents.Count == 0 || (documents.Count === -1 && documents.Objects.length === 0);
         if (this.uidList) {
             this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
             this.uidFieldsDataSource = this.getUIDFieldsDataSource();
@@ -349,6 +348,7 @@ openFieldForm(name: string) {
         AddonUUID: this.collection.Fields[name]?.AddonUUID || '',
         Indexed: this.collection.Fields[name]?.Indexed || false,
         IndexedFields: this.collection.Fields[name]?.IndexedFields || {},
+        ApplySystemFilter: this.collection.Fields[name]?.ApplySystemFilter || false,
     }
     let dialogConfig = this.dialogService.getDialogConfig({}, 'large');
     const dialogData: FieldsFormDialogData = {
@@ -596,19 +596,6 @@ changeSyncData(newSyncData: SyncType) {
             }
             break;
         }
-    }
-}
-
-updateListView() {
-    if(this.collection.Fields) {
-        Object.keys(this.collection.Fields).forEach(fieldName => {
-            let dvField = this.collection.ListView.Fields.find(x => x.FieldID === fieldName);
-            if(!dvField) {
-                dvField = this.getDataViewField(fieldName, this.collection.Fields[fieldName]);
-                this.collection.ListView.Fields.push(dvField);
-                this.collection.ListView.Columns.push({ Width: 10 });
-            }
-        })
     }
 }
 }
