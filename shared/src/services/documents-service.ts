@@ -86,6 +86,7 @@ export class DocumentsService {
         const errors: string[] = [];
         Object.keys(document).forEach(prop => {
             try {
+                let fieldValue = document[prop];
                 const refField = this.referencesService.referenceFields.find(item => item.FieldID === prop);
                 // if the property name include a dot, than we have reference with unique field.
                 // because we already populated all the referenced items, we can check for the existance of the reference field on the object
@@ -110,7 +111,7 @@ export class DocumentsService {
                     valid = true;
                 }
                 if (!valid) {
-                    errors.push(`Field ${prop} contains broken reference`);
+                    errors.push(`${prop} with value ${fieldValue} contains broken reference`);
                 }
             }
             catch (err) {

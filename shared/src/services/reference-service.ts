@@ -99,7 +99,8 @@ export class ReferenceService {
                         "ExternalID"
                     ],
                     UniqueFieldID: fieldName,
-                    UniqueFieldList: [...valuesForSearch]
+                    UniqueFieldList: [...valuesForSearch],
+                    PageSize: valuesForSearch.length
                 }
                 console.log(`about to call search on resource ${resourceName} with body ${JSON.stringify(searchBody)}`);
                 const items = await this.resourcesService.search(resourceName, searchBody);
