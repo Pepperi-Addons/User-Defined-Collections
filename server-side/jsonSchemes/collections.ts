@@ -216,6 +216,9 @@ export const fieldsSchema: Schema = {
                 },
                 ExtendedField: {
                     type: "boolean"
+                },
+                ApplySystemFilter: {
+                    type: "boolean"
                 }
             },
             required: ['Type', 'Mandatory'],

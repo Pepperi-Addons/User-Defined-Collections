@@ -15,19 +15,11 @@
     width: 99.7%;
 }
 
-.mat-tab-group {
-
-    height: inherit;
-    ::ng-deep {
-        .mat-tab-body {
-            padding-top: 0px !important;
-        }
-        .mat-tab-body-wrapper {
-            height: inherit;
-        }
+.pep-main-area {
+    .mat-tab-body {
+        padding-top: 0px;
         .mat-tab-body-content {
-            padding: 0 !important;
-            margin-top: -0.25rem;
+            padding: 0px;
         }
     }
 }

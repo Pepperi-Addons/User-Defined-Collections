@@ -1,4 +1,4 @@
-import { DataViewFieldType, AddonData, ApiFieldObject } from '@pepperi-addons/papi-sdk/';
+import { DataViewFieldType, AddonData, ApiFieldObject, AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk/';
 
 export const MappingFieldTypes: DataViewFieldType[] = [ 
     'TextBox',
@@ -16,6 +16,8 @@ export const MappingFieldTypes: DataViewFieldType[] = [
 export type MappingFieldType = typeof MappingFieldTypes[number]
 
 export type MappingResource = 'transactions' | 'transaction_lines' | 'activities'
+
+export type CollectionFields = Collection['Fields'];
 
 export interface MappingField {
     Title: string;
@@ -52,6 +54,28 @@ export interface FieldsResult {
 export interface ReferenceValidationResult {
     Errors: string[];
     Document: AddonData;
+}
+
+export interface EventsRelation {
+    Events: UserEvent[];
+}
+
+export interface UserEvent {
+    Title: string;
+    EventKey: string;
+    EventFilter: {
+        [key:string]: any;
+    };
+    Fields: [{
+        ApiName: string;
+        Title: string;
+    }];
+    EventData: AddonDataScheme['Fields'];
+}
+
+export interface ReferenceObject {
+    FieldID: string;
+    ResourceName: string;
 }
 
 export const existingErrorMessage = 'Object already Exist';

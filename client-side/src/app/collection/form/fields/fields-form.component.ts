@@ -31,6 +31,7 @@ export class FieldsFormComponent implements OnInit {
     supportIndexed: boolean = true;
     isIndexed: string = 'false';
     resourceFields: AddonDataScheme['Fields'];
+    applySystemFilter: string = 'true';
     additionalFieldsActions: IPepGenericListActions = {
         get: async (data: PepSelectionData) => {
             const actions = [];
@@ -70,6 +71,7 @@ export class FieldsFormComponent implements OnInit {
             this.isIndexed = this.dialogData.Field.Indexed ? 'true' : 'false';
             this.updateSupportIndex(this.dialogData.Field.Type);
             this.isMandatory = this.dialogData.Field.Mandatory ? 'true': 'false';
+            this.applySystemFilter = this.dialogData.Field.ApplySystemFilter ? 'true' : 'false'
             this.additionalFieldsDataSource = this.getAdditionalFieldsDataSource();
         }
         
@@ -107,6 +109,7 @@ export class FieldsFormComponent implements OnInit {
         saveField() {
             this.dialogData.Field.Indexed = this.isIndexed === 'true';
             this.dialogData.Field.Mandatory = this.isMandatory === 'true';
+            this.dialogData.Field.ApplySystemFilter = this.applySystemFilter === 'true' && this.dialogData.Field.Type === 'Resource';
             if (this.isArray === 'true') {
                 if(this.dialogData.Field.Type === 'Resource' || this.dialogData.Field.Type === 'ContainedResource') { // on resource array, the resource & addonUUID data should be on the Items.
                     this.dialogData.Field.Items.Resource = this.dialogData.Field.Resource;
@@ -127,7 +130,7 @@ export class FieldsFormComponent implements OnInit {
         }
         
         updateSupportIndex(type: SchemeFieldType) {
-            this.supportIndexed = ['String', 'Bool', 'Integer', 'Double', 'DateTime'].includes(type) == true;
+            this.supportIndexed = ['String', 'Bool', 'Integer', 'Double', 'DateTime', 'Resource'].includes(type) == true;
         }
         
         initResources(type: SchemeFieldType) {
@@ -208,7 +211,7 @@ export class FieldsFormComponent implements OnInit {
 
         async openFieldForm() {
             const config = this.dialogService.getDialogConfig({});
-            const fieldsToShow = Object.keys(this.resourceFields || {}).filter(fieldName => this.isNotIndexedField(fieldName));
+            const fieldsToShow = Object.keys(this.resourceFields || {}).filter(fieldName => this.isNotIndexedField(fieldName)).sort((a,b)=> {return a.localeCompare(b)});
             const fieldNames: SelectOptions<string> = fieldsToShow.map(field => {
                 return {
                     key: field,

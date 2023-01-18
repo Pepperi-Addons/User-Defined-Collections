@@ -37,45 +37,52 @@ export class DocumentsFormComponent implements OnInit {
     }
 
     async saveDocument() {
+        let errors: string[] = [];
         try {
-            await this.fixDataTypes();
-            if(this.incoming.Mode === 'Add') {
-                try {
-                    await this.documentsService.createDocument(this.incoming.CollectionName, this.item);
+            errors = await this.fixDataTypes();
+            if (errors.length === 0) {
+                if(this.incoming.Mode === 'Add') {
+                    try {
+                        await this.documentsService.createDocument(this.incoming.CollectionName, this.item);
+                        this.dialogRef.close(true);
+                    }
+                    catch (err) {
+                        let contentKey = '';
+                        if (err.indexOf(existingInRecycleBinErrorMessage) >= 0) {
+                            contentKey = 'Documents_ExistingRecycleBinError_Content'
+                        }
+                        else if(err.indexOf(existingErrorMessage) >= 0){
+                            contentKey = 'Documents_ExistingError_Content'
+                        }
+                        else {
+                            throw err;
+                        }
+                        const dataMsg = new PepDialogData({
+                            title: this.translate.instant('Documents_UpdateFailed_Title'),
+                            actionsType: 'close',
+                            content: this.translate.instant(contentKey, {collectionName: this.incoming.CollectionName})
+                        });
+                        this.dialogService.openDefaultDialog(dataMsg);
+                    }
+                }
+                else {
+                    await this.documentsService.upsertDocument(this.incoming.CollectionName, this.item);
                     this.dialogRef.close(true);
                 }
-                catch (err) {
-                    let contentKey = '';
-                    if (err.indexOf(existingInRecycleBinErrorMessage) >= 0) {
-                        contentKey = 'Documents_ExistingRecycleBinError_Content'
-                    }
-                    else if(err.indexOf(existingErrorMessage) >= 0){
-                        contentKey = 'Documents_ExistingError_Content'
-                    }
-                    else {
-                        throw err;
-                    }
-                    const dataMsg = new PepDialogData({
-                        title: this.translate.instant('Documents_UpdateFailed_Title'),
-                        actionsType: 'close',
-                        content: this.translate.instant(contentKey, {collectionName: this.incoming.CollectionName})
-                    });
-                    this.dialogService.openDefaultDialog(dataMsg);
-                }
-            }
-            else {
-                await this.documentsService.upsertDocument(this.incoming.CollectionName, this.item);
-                this.dialogRef.close(true);
             }
         }
         catch(error) {
-            const errors = this.utilitiesService.getErrors(error);
-            const dataMsg = new PepDialogData({
-                title: this.translate.instant('Documents_UpdateFailed_Title'),
-                actionsType: 'close',
-                content: errors.length > 1 ? this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)}) : error
-            });
-            this.dialogService.openDefaultDialog(dataMsg);
+            errors = this.utilitiesService.getErrors(error);
+        }
+        finally {
+            if (errors.length > 0) {
+                const dataMsg = new PepDialogData({
+                    title: this.translate.instant('Documents_UpdateFailed_Title'),
+                    actionsType: 'close',
+                    content: errors.length > 1 ? this.translate.instant('Documents_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)}) : errors[0]
+                });
+                this.dialogService.openDefaultDialog(dataMsg);
+            }
         }
     }
 
@@ -85,6 +92,7 @@ export class DocumentsFormComponent implements OnInit {
 
     async fixDataTypes() {
         const collection = await this.utilitiesService.getCollectionByName(this.incoming.CollectionName);
+        const errors: string[] = [];
         Object.keys(collection.Fields!).forEach(fieldName => {
             switch (collection.Fields[fieldName].Type) {
                 case 'Array': {
@@ -106,11 +114,19 @@ export class DocumentsFormComponent implements OnInit {
                             if(!this.item[fieldName] || this.item[fieldName] === '') {
                                 this.item[fieldName] = []
                             }
-                            else {
-                                this.item[fieldName] = JSON.parse(this.item[fieldName]);
+                            else if(typeof(this.item[fieldName]) === 'string') {
+                                const value = JSON.parse(this.item[fieldName]);
+                                if (typeof(value) === 'object') {
+                                    this.item[fieldName] = value;
+                                }
+                                else {
+                                    errors.push(`${fieldName} is not a valid array`)
+                                }
+                                
                             }
                         }
                         catch {
+                            errors.push(`${fieldName} is not a valid JSON`);
                         }
                     }
                     break;
@@ -120,11 +136,18 @@ export class DocumentsFormComponent implements OnInit {
                         if(!this.item[fieldName] || this.item[fieldName] === '') {
                             this.item[fieldName] = {}
                         }
-                        else {
-                            this.item[fieldName] = JSON.parse(this.item[fieldName]);
+                        else if(typeof(this.item[fieldName]) === 'string') {
+                            const value = JSON.parse(this.item[fieldName]);
+                            if (typeof(value) === 'object') {
+                                this.item[fieldName] = value;
+                            }
+                            else {
+                                errors.push(`${fieldName} is not a valid object`)
+                            }
                         }
                     }
                     catch {
+                        errors.push(`${fieldName} is not a valid JSON`);
                     }
                     break;
                 }
@@ -158,6 +181,7 @@ export class DocumentsFormComponent implements OnInit {
                 }
             }
         })
+        return errors;
     }
 
     onFormValidationChanged($event: any) {

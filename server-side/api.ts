@@ -97,8 +97,7 @@ export async function import_data_source(client: Client, request: Request) {
     const collectionName = request.query.collection_name || '';
     if (request.method == 'POST') {
         try {
-            const collection: Collection = await collectionsService.findByName(collectionName);
-            return await service.importDataSource(request.body, collection);
+            return await service.importDataSource(request.body, collectionName);
         }
         catch (error) {
             console.log(`import data for collection ${collectionName} failed with error ${JSON.stringify(error)}`);
@@ -443,6 +442,21 @@ export async function clean_rebuild(client: Client, request: Request) {
     switch(request.method) {
         case 'POST': {
             return await service.cleanRebuild(resourceName);
+        }
+        default: {
+            const err: any = new Error(`method ${request.method} is not allowed`);
+            err.code = 405;
+            throw err;
+        }
+    }
+}
+
+export async function collection_events(client: Client, request: Request) {
+    const collectionName = request.query.collection_name || '';
+    const service = new CollectionsService(client);
+    switch (request.method) {
+        case 'GET': {
+            return await service.getCollectionEvents(collectionName);
         }
         default: {
             const err: any = new Error(`method ${request.method} is not allowed`);
