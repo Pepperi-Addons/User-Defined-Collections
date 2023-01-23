@@ -126,10 +126,11 @@ export class DocumentsListComponent implements OnInit {
     getDataSource() {
         const noDataMessageKey = this.recycleBin ? 'RecycleBin_NoDataFound' : 'Documents_NoDataFound'
         const searchFields: string[] = Object.keys(this.collectionData.Fields).filter(field => this.collectionData.Fields[field].Type === 'String' && this.collectionData.Fields[field].Indexed);
+        const listViewFields: string[] = this.getViewFields();
         return {
             init: async (params: IPepGenericListParams) => {
                 try {
-                    this.documents = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin);
+                    this.documents = await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin, listViewFields);
                 }
                 catch (err) {
                     this.documents.Objects = [];
@@ -179,7 +180,7 @@ export class DocumentsListComponent implements OnInit {
                 });
             },
             update: async (params: IPepGenericListParams) => {
-                return (await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin)).Objects;
+                return (await this.utilitiesService.getCollectionDocuments(this.collectionName, params, searchFields, this.recycleBin, listViewFields)).Objects;
             },
             inputs: {
                 pager: {
@@ -377,5 +378,9 @@ export class DocumentsListComponent implements OnInit {
             content: this.translate.instant(messageTranslationKey)
         });
         this.dialogService.openDefaultDialog(dataMsg);
+    }
+
+    private getViewFields() {
+        return ['Key', 'CreationDateTime', 'ModificationDateTime', 'Hidden', ...this.collectionData.ListView?.Fields?.map(field => field.FieldID)];
     }
 }
