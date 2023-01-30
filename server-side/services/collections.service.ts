@@ -104,14 +104,19 @@ export class CollectionsService {
             relation.Name = collection.Name;
             relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${ADAL_UUID}/${collection.Name}`;
             relation.SchemaRelativeURL = `/addons/api/${this.client.AddonUUID}/api/collection_fields?collection_name=${collection.Name}`;
+            let accountFound = false;
+            let userFound = false;
             Object.keys(collection.Fields || {}).forEach((fieldName) => {
                 const collectionField = collection.Fields![fieldName];
                 if (collectionField.Type === 'Resource') {
-                    if (collectionField.Resource === 'accounts' && fieldName === 'account') {
+                    // we want to take the first account we found, so we are checking whether we already found one.
+                    if (collectionField.Resource === 'accounts' && collectionField.ApplySystemFilter && !accountFound) {
+                        accountFound = true;
                         relation.AccountFieldID = 'UUID',
                         relation.IndexedAccountFieldID = `${fieldName}.Key`
                     }
-                    if (collectionField.Resource === 'users' && fieldName === 'user') {
+                    if (collectionField.Resource === 'users' && collectionField.ApplySystemFilter && !userFound) {
+                        userFound = true;
                         relation.UserFieldID = 'UUID',
                         relation.IndexedUserFieldID = `${fieldName}.Key`
                     }
