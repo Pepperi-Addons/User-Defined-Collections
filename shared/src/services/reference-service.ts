@@ -15,6 +15,10 @@ export class ReferenceService {
         }
     } = {};
 
+    referenceSchemes: {
+        [key: string]: Collection
+    } = {};
+
     constructor(private resourcesService: IResourcesServices) { }
 
     getItemByUniqueField(resourceName: string, fieldName: string, fieldValue: string): AddonData | undefined {
@@ -128,7 +132,7 @@ export class ReferenceService {
     private async getReferenceFields(schemeFields: CollectionFields) {
         await Promise.all(Object.keys(schemeFields || {}).map(async (fieldName) => {
             if (schemeFields![fieldName].Type === 'Resource') {
-                const scheme: Collection = await this.resourcesService.getByKey('resources', schemeFields![fieldName].Resource || '') as Collection;
+                const scheme: Collection = await this.getResourceScheme(schemeFields![fieldName].Resource || '');
                 // TBD - remove once getByKey on abstract scheme will work
                 // if the reference is for schema of type 'abstract' don't add it as referenced field.
                 if (scheme && scheme.Type != 'abstract') {
@@ -176,10 +180,19 @@ export class ReferenceService {
 
     private async isUniqueField(resourceName, fieldID): Promise<boolean> {
         let unique = false;
-        const resourceScheme = await this.resourcesService.getByKey('resources', resourceName) as AddonDataScheme;
+        const resourceScheme = await this.getResourceScheme(resourceName);
         if(resourceScheme && resourceScheme.Fields && resourceScheme.Fields[fieldID]) {
             unique = resourceScheme.Fields[fieldID].Unique || false;
         }
         return unique
+    }
+    
+    private async getResourceScheme(resourceName: string): Promise<Collection> {
+        let resourceScheme = this.referenceSchemes[resourceName];
+        if(!resourceScheme) {
+            resourceScheme = await this.resourcesService.getByKey('resources', resourceName) as Collection;
+            this.referenceSchemes[resourceName] = resourceScheme;
+        }
+        return resourceScheme;
     }
 }
