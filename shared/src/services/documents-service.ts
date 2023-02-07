@@ -94,7 +94,7 @@ export class DocumentsService {
                 if(prop.indexOf('.') > 0) {
                     const parts = prop.split('.');
                     if (parts.length === 2) {
-                        valid = document[parts[0]] ? true : false;
+                        valid = document[parts[0]] && schemeFields![parts[0]].Mandatory ? true : false;
                         // after validation we can remove the dot annotation field so it won't stay on the document
                         delete document[prop];
                     }
