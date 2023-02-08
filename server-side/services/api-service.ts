@@ -14,8 +14,8 @@ export class ApiService extends IApiService {
         return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).find(options);
     }
 
-    async upsert(collectionName: string, document: AddonData): Promise<AddonData> {
-        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(document);
+    async upsert(collectionName: string, document: AddonData, awaitIndexing: boolean = false): Promise<AddonData> {
+        return await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(collectionName).upsert(document, awaitIndexing);
     }
 
     async getByKey(collectionName: string, docKey: string): Promise<AddonData> {

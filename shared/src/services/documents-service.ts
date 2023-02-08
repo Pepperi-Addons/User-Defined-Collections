@@ -23,9 +23,11 @@ export class DocumentsService {
     
     async upsert(collectionName: any, body: any): Promise<AddonData> {
         const updatingHidden = 'Hidden' in body && body.Hidden;
-        const item = (await this.processItemsToSave(collectionName, [body]))[0];
+        const collectionScheme = await this.apiService.findCollectionByName(collectionName);
+        const indexedCollection = this.globalService.isCollectionIndexed(collectionScheme)
+        const item = (await this.processItemsToSave(collectionScheme, [body]))[0];
         if (item.ValidationResult.valid || updatingHidden) {
-            return await this.apiService.upsert(collectionName, item.Item);
+            return await this.apiService.upsert(collectionName, item.Item, indexedCollection);
         }
         else {
             const errors = item.ValidationResult.errors.map(error => error.stack.replace("instance.", ""));
@@ -223,8 +225,7 @@ export class DocumentsService {
         return retVal;
     }
 
-    async processItemsToSave(collectionName: string, items: AddonData[]) {
-        const collectionScheme = await this.apiService.findCollectionByName(collectionName);
+    async processItemsToSave(collectionScheme: Collection, items: AddonData[]) {
         const collectionFields = collectionScheme.Fields || {};
         items = (await this.referencesService.handleDotAnnotationItems(collectionFields, items));
         return items.map(item => {

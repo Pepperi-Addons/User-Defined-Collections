@@ -5,7 +5,7 @@ export abstract class IApiService {
 
     abstract find(collectionName: string, options: FindOptions): Promise<AddonData[]>;
 
-    abstract upsert(collectionName: string, document: AddonData): Promise<AddonData>;
+    abstract upsert(collectionName: string, document: AddonData, awaitIndexing?: boolean): Promise<AddonData>;
 
     abstract getByKey(collectionName: string, documentKey: string): Promise<AddonData>;
 
