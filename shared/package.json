@@ -14,7 +14,7 @@
   },
   "license": "ISC",
   "dependencies": {
-    "@pepperi-addons/papi-sdk": "file:../../papi-sdk/pepperi-addons-papi-sdk-1.46.0.tgz",
+    "@pepperi-addons/papi-sdk": "^1.47.0",
     "@types/node": "^18.11.9",
     "jsonschema": "^1.4.0",
     "tslint": "^6.1.3",
