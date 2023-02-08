@@ -1,7 +1,7 @@
 import { UtilitiesService } from './utilities.service';
 import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { ADAL_UUID, AtdRelations, DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
+import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
 import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex, UserEvent } from 'udc-shared';
@@ -34,18 +34,17 @@ export class CollectionsService {
             await service.checkHidden(body);
             const fieldsValid = await this.validateFieldsType(collectionObj);
             if (fieldsValid.size === 0) {
+                // DI-22303 after we create the collection, we need to update it's Data view to have all the fields, and then post the new object
+                collectionObj = this.updateListView(collectionObj);
                 // before sending data to ADAL, remove extended fields, without changing the DV
                 collectionObj = this.removeExtensionFields(collectionObj, false);
                 collectionObj = this.handleSyncForContained(collectionObj);
                 let collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj) as Collection;
-                await this.createDIMXRelations(collection.Name);
+                await this.createDIMXRelations(collection);
                 if(collection.Type !== 'contained') {
                     await this.createDataQueryRelations(collection);
                 }
-                // DI-22303 after we create the collection, we need to update it's Data view to have all the fields, and then post the new object
-                collection = this.updateListView(collection);
-                collection = this.removeExtensionFields(collection, false);
-                return await this.utilities.papiClient.addons.data.schemes.post(collection) as Collection;
+                return collection
             }
             else {
                 for (const [key, value] of fieldsValid) {
@@ -89,12 +88,13 @@ export class CollectionsService {
         return collections.filter(collection => collection.Name !== UdcMappingsScheme.Name);
     }
 
-    async createDIMXRelations(collectionName: string) {
+    async createDIMXRelations(collection: AddonDataScheme) {
         await Promise.all(DimxRelations.map(async (singleRelation) => {
             // overide the name with the collectionName
             const functionName = singleRelation.RelationName == 'DataImportResource' ? IMPORT_FUNCTION_NAME : EXPORT_FUNCTION_NAME;
-            singleRelation.Name = collectionName;
-            singleRelation.AddonRelativeURL = `/api/${functionName}?collection_name=${collectionName}`
+            singleRelation.Name = collection.Name;
+            singleRelation.AddonRelativeURL = `/api/${functionName}?collection_name=${collection.Name}`
+            singleRelation.Hidden = collection.Hidden;
             await this.utilities.papiClient.addons.data.relations.upsert(singleRelation);
         }));
     }
@@ -102,7 +102,7 @@ export class CollectionsService {
     async createDataQueryRelations(collection: AddonDataScheme) {
         for (let relation of DataQueryRelation) {
             relation.Name = collection.Name;
-            relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${ADAL_UUID}/${collection.Name}`;
+            relation.AddonRelativeURL = await this.getQueryURL(collection.Name);
             relation.SchemaRelativeURL = `/addons/api/${this.client.AddonUUID}/api/collection_fields?collection_name=${collection.Name}`;
             let accountFound = false;
             let userFound = false;
@@ -287,6 +287,36 @@ export class CollectionsService {
             }
         }
         return collection;
+    }
+
+    async migrateDQRelations() {
+        try {
+            const collections = await this.find({page_size: -1});
+            for (const collection of collections) {
+                await this.createDataQueryRelations(collection);
+            }
+            return {
+                success:true,
+                resultObject: {}
+            }
+        } 
+        catch (err) {
+            return { 
+                success: false, 
+                resultObject: err , 
+                errorMessage: `Error in migrating data query relations. error - ${err}`
+            };
+        }
+    }
+
+    private async getQueryURL(collectionName: string): Promise<string> {
+        let res: string = '';
+        try {
+            res = await this.utilities.papiClient.get(`/addons/data/schemes/${collectionName}/query_url`);
+        }
+        // ignore crushes of the query_url function
+        catch {}
+        return res;
     }
 }
 
