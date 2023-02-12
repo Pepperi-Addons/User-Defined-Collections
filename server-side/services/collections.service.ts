@@ -4,11 +4,12 @@ import { Client } from '@pepperi-addons/debug-server';
 import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
-import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex, UserEvent } from 'udc-shared';
+import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex, UserEvent, GlobalService } from 'udc-shared';
 import { UserEventsService } from './user-events.service';
 export class CollectionsService {
         
     utilities: UtilitiesService = new UtilitiesService(this.client);
+    globalService: GlobalService = new GlobalService()
 
     constructor(private client: Client) {
     }
@@ -41,7 +42,8 @@ export class CollectionsService {
                 collectionObj = this.handleSyncForContained(collectionObj);
                 let collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj) as Collection;
                 await this.createDIMXRelations(collection);
-                if(collection.Type !== 'contained') {
+                // if the collection has no indexed fields (don't have data in elastic) or of type 'contained' don't create DQ relation
+                if(collection.Type !== 'contained' && this.globalService.isCollectionIndexed(collection)) {
                     await this.createDataQueryRelations(collection);
                 }
                 return collection
@@ -99,7 +101,7 @@ export class CollectionsService {
         }));
     }
     
-    async createDataQueryRelations(collection: AddonDataScheme) {
+    async createDataQueryRelations(collection: Collection) {
         for (let relation of DataQueryRelation) {
             relation.Name = collection.Name;
             relation.AddonRelativeURL = await this.getQueryURL(collection.Name);
@@ -291,9 +293,16 @@ export class CollectionsService {
 
     async migrateDQRelations() {
         try {
-            const collections = await this.find({page_size: -1});
+            const collections = await this.find({page_size: -1}) as Collection[];
             for (const collection of collections) {
-                await this.createDataQueryRelations(collection);
+                if (collection.Type != 'contained') {
+                    // if the collection has no indexed fields, we need to delete the relation.
+                    if (!this.globalService.isCollectionIndexed(collection)) {
+                        // we're making a hack by setting the collection as Hidden, the relation will be Hidden as well
+                        collection.Hidden = true;
+                    }
+                    await this.createDataQueryRelations(collection);
+                }
             }
             return {
                 success:true,
