@@ -115,5 +115,3 @@ export const UdcMappingsScheme: AddonDataScheme = {
     Name: 'UdcMappings',
     Type: 'meta_data',
 }
-
-export const ADAL_UUID = '00000000-0000-0000-0000-00000000ada1';

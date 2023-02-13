@@ -61,7 +61,7 @@ export class UtilitiesService {
         }
     }
 
-    async getCollectionDocuments(collectionName: string, params: IPepGenericListParams = {}, searchFields: string[] = [], hidden: boolean = false): Promise<SearchData<AddonData>> {
+    async getCollectionDocuments(collectionName: string, params: IPepGenericListParams = {}, searchFields: string[] = [], hidden: boolean = false, listViewFields: string[] = []): Promise<SearchData<AddonData>> {
         const pageSize = (params.toIndex - params.fromIndex) + 1 || API_PAGE_SIZE;
         const page = params.pageIndex || (params.fromIndex / pageSize) + 1 || 1;
         const options: any = {
@@ -84,6 +84,10 @@ export class UtilitiesService {
             else {
                 options.Where += this.getWhereClause(params.searchString, searchFields);
             }
+        }
+
+        if(listViewFields.length > 0) {
+            options.Fields = listViewFields;
         }
 
         const qs = UtilitiesService.encodeQueryParams({resource_name: collectionName});

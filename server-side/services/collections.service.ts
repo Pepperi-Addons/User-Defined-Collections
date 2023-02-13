@@ -1,14 +1,15 @@
 import { UtilitiesService } from './utilities.service';
 import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { ADAL_UUID, AtdRelations, DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
+import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
-import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex, UserEvent } from 'udc-shared';
+import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex, UserEvent, GlobalService } from 'udc-shared';
 import { UserEventsService } from './user-events.service';
 export class CollectionsService {
         
     utilities: UtilitiesService = new UtilitiesService(this.client);
+    globalService: GlobalService = new GlobalService()
 
     constructor(private client: Client) {
     }
@@ -34,18 +35,18 @@ export class CollectionsService {
             await service.checkHidden(body);
             const fieldsValid = await this.validateFieldsType(collectionObj);
             if (fieldsValid.size === 0) {
+                // DI-22303 after we create the collection, we need to update it's Data view to have all the fields, and then post the new object
+                collectionObj = this.updateListView(collectionObj);
                 // before sending data to ADAL, remove extended fields, without changing the DV
                 collectionObj = this.removeExtensionFields(collectionObj, false);
                 collectionObj = this.handleSyncForContained(collectionObj);
                 let collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj) as Collection;
-                await this.createDIMXRelations(collection.Name);
-                if(collection.Type !== 'contained') {
+                await this.createDIMXRelations(collection);
+                // if the collection has no indexed fields (don't have data in elastic) or of type 'contained' don't create DQ relation
+                if(collection.Type !== 'contained' && this.globalService.isCollectionIndexed(collection)) {
                     await this.createDataQueryRelations(collection);
                 }
-                // DI-22303 after we create the collection, we need to update it's Data view to have all the fields, and then post the new object
-                collection = this.updateListView(collection);
-                collection = this.removeExtensionFields(collection, false);
-                return await this.utilities.papiClient.addons.data.schemes.post(collection) as Collection;
+                return collection
             }
             else {
                 for (const [key, value] of fieldsValid) {
@@ -89,29 +90,35 @@ export class CollectionsService {
         return collections.filter(collection => collection.Name !== UdcMappingsScheme.Name);
     }
 
-    async createDIMXRelations(collectionName: string) {
+    async createDIMXRelations(collection: AddonDataScheme) {
         await Promise.all(DimxRelations.map(async (singleRelation) => {
             // overide the name with the collectionName
             const functionName = singleRelation.RelationName == 'DataImportResource' ? IMPORT_FUNCTION_NAME : EXPORT_FUNCTION_NAME;
-            singleRelation.Name = collectionName;
-            singleRelation.AddonRelativeURL = `/api/${functionName}?collection_name=${collectionName}`
+            singleRelation.Name = collection.Name;
+            singleRelation.AddonRelativeURL = `/api/${functionName}?collection_name=${collection.Name}`
+            singleRelation.Hidden = collection.Hidden;
             await this.utilities.papiClient.addons.data.relations.upsert(singleRelation);
         }));
     }
     
-    async createDataQueryRelations(collection: AddonDataScheme) {
+    async createDataQueryRelations(collection: Collection) {
         for (let relation of DataQueryRelation) {
             relation.Name = collection.Name;
-            relation.AddonRelativeURL = `/addons/shared_index/index/${this.client.AddonUUID}_data/search/${ADAL_UUID}/${collection.Name}`;
+            relation.AddonRelativeURL = await this.getQueryURL(collection.Name);
             relation.SchemaRelativeURL = `/addons/api/${this.client.AddonUUID}/api/collection_fields?collection_name=${collection.Name}`;
+            let accountFound = false;
+            let userFound = false;
             Object.keys(collection.Fields || {}).forEach((fieldName) => {
                 const collectionField = collection.Fields![fieldName];
                 if (collectionField.Type === 'Resource') {
-                    if (collectionField.Resource === 'accounts' && fieldName === 'account') {
+                    // we want to take the first account we found, so we are checking whether we already found one.
+                    if (collectionField.Resource === 'accounts' && collectionField.ApplySystemFilter && !accountFound) {
+                        accountFound = true;
                         relation.AccountFieldID = 'UUID',
                         relation.IndexedAccountFieldID = `${fieldName}.Key`
                     }
-                    if (collectionField.Resource === 'users' && fieldName === 'user') {
+                    if (collectionField.Resource === 'users' && collectionField.ApplySystemFilter && !userFound) {
+                        userFound = true;
                         relation.UserFieldID = 'UUID',
                         relation.IndexedUserFieldID = `${fieldName}.Key`
                     }
@@ -282,6 +289,43 @@ export class CollectionsService {
             }
         }
         return collection;
+    }
+
+    async migrateDQRelations() {
+        try {
+            const collections = await this.find({page_size: -1}) as Collection[];
+            for (const collection of collections) {
+                if (collection.Type != 'contained') {
+                    // if the collection has no indexed fields, we need to delete the relation.
+                    if (!this.globalService.isCollectionIndexed(collection)) {
+                        // we're making a hack by setting the collection as Hidden, the relation will be Hidden as well
+                        collection.Hidden = true;
+                    }
+                    await this.createDataQueryRelations(collection);
+                }
+            }
+            return {
+                success:true,
+                resultObject: {}
+            }
+        } 
+        catch (err) {
+            return { 
+                success: false, 
+                resultObject: err , 
+                errorMessage: `Error in migrating data query relations. error - ${err}`
+            };
+        }
+    }
+
+    private async getQueryURL(collectionName: string): Promise<string> {
+        let res: string = '';
+        try {
+            res = await this.utilities.papiClient.get(`/addons/data/schemes/${collectionName}/query_url`);
+        }
+        // ignore crushes of the query_url function
+        catch {}
+        return res;
     }
 }
 

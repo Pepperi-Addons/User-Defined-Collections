@@ -53,10 +53,11 @@ export class ServerDocumentsService {
     // for the AddonRelativeURL of the relation
     async importDataSource(body, collectionName) {
         console.log(`@@@@importing documents: ${JSON.stringify(body)}@@@@`);
+        const collectionScheme = await this.apiService.findCollectionByName(collectionName);
         let items = body.DIMXObjects.map(obj => {
             return obj.Object;
         })
-        const itemsWithValidation = await this.documentsService.processItemsToSave(collectionName, items);
+        const itemsWithValidation = await this.documentsService.processItemsToSave(collectionScheme, items);
         body.DIMXObjects = itemsWithValidation.map((element, index) => {
             const dimxObject = body.DIMXObjects[index];
             dimxObject.Object = {...element.Item};
