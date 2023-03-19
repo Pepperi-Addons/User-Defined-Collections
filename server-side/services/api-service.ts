@@ -23,12 +23,7 @@ export class ApiService extends IApiService {
     }
 
     async search(collectionName: string, params: SearchBody): Promise<SearchData<AddonData>> {
-        //DI-22105 - until ADAL will support string array, we are converting fields to string
-        const newParams: any = {...params}
-        if (params.Fields) {
-            newParams.Fields = params.Fields.join(',');
-        }
-        return await this.utilities.papiClient.addons.data.search.uuid(this.client.AddonUUID).table(collectionName).post(newParams);
+        return await this.utilities.papiClient.addons.data.search.uuid(this.client.AddonUUID).table(collectionName).post(params);
     }
 
     async findCollectionByName(collectionName: string): Promise<Collection> {

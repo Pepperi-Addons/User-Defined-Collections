@@ -66,12 +66,10 @@ export class DocumentsService {
             if (body.KeyList && body.KeyList.length > 0) {
                 whereClause = this.getWhereClaus('Key', body.KeyList);
             }
-            else if(body.UniqueFieldsList && body.UniqueFieldsList.length > 0) {
-                whereClause = this.getWhereClaus(body.UniqueFieldID!, body.UniqueFieldsList);
+            else if(body.UniqueFieldList && body.UniqueFieldList.length > 0) {
+                whereClause = this.getWhereClaus(body.UniqueFieldID!, body.UniqueFieldList);
             }
-        }
-        else {
-            whereClause = body.Where;
+            body.Where = whereClause;
         }
         return await this.apiService.search(collectionName, body);
     }
@@ -79,8 +77,8 @@ export class DocumentsService {
     getWhereClaus(fieldID: string, fieldValues: string[]): string{
         return fieldValues.reduce((previous, current, index) => {
             const clause = `${fieldID} = '${current}'`;
-            return index == 0 ? clause : previous + `OR ${clause}`;
-        })
+            return index == 0 ? clause : previous + ` OR ${clause}`;
+        }, '')
     }
 
     validateReference(schemeFields: CollectionFields, document: AddonData): ReferenceValidationResult {
