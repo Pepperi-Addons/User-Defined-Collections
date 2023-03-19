@@ -101,7 +101,7 @@ export class ReferenceService {
         try {
             if(this.referenceObjects.hasOwnProperty(resourceName) && this.referenceObjects[resourceName].UniqueField.hasOwnProperty(fieldName)) {
                 const valuesForSearch = Array.from(this.referenceObjects[resourceName].UniqueField[fieldName].Values.values());
-                let searchBody: any = {
+                let searchBody: SearchBody = {
                     Fields: [
                         "Key",
                         "InternalID",
