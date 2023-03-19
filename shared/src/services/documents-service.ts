@@ -22,11 +22,10 @@ export class DocumentsService {
     }
     
     async upsert(collectionName: any, body: any): Promise<AddonData> {
-        const updatingHidden = 'Hidden' in body && body.Hidden;
         const collectionScheme = await this.apiService.findCollectionByName(collectionName);
         const indexedCollection = this.globalService.isCollectionIndexed(collectionScheme)
         const item = (await this.processItemsToSave(collectionScheme, [body]))[0];
-        if (item.ValidationResult.valid || updatingHidden) {
+        if (item.ValidationResult.valid) {
             return await this.apiService.upsert(collectionName, item.Item, indexedCollection);
         }
         else {
@@ -66,8 +65,8 @@ export class DocumentsService {
             if (body.KeyList && body.KeyList.length > 0) {
                 whereClause = this.getWhereClaus('Key', body.KeyList);
             }
-            else if(body.UniqueFieldsList && body.UniqueFieldsList.length > 0) {
-                whereClause = this.getWhereClaus(body.UniqueFieldID!, body.UniqueFieldsList);
+            else if(body.UniqueFieldList && body.UniqueFieldList.length > 0) {
+                whereClause = this.getWhereClaus(body.UniqueFieldID!, body.UniqueFieldList);
             }
         }
         else {
@@ -229,11 +228,15 @@ export class DocumentsService {
         const collectionFields = collectionScheme.Fields || {};
         items = (await this.referencesService.handleDotAnnotationItems(collectionFields, items));
         return items.map(item => {
+            const updatingHidden = 'Hidden' in item && item.Hidden;
             item.Key = this.globalService.getItemKey(collectionScheme, item);
             const validationResult = this.validateDocument(collectionScheme, item, collectionFields);
             return {
                 Item: item,
-                ValidationResult: validationResult
+                ValidationResult: {
+                    ...validationResult,
+                    valid: validationResult.valid || updatingHidden
+                },
             }
         });
     }
