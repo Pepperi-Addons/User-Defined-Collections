@@ -62,13 +62,14 @@ export class DocumentsService {
     async search(collectionName: string, body: SearchBody): Promise<SearchData<AddonData>> {
         let whereClause = '';
         if(!body.Where) {
-            if (body.KeyList && body.KeyList.length > 0) {
-                whereClause = this.getWhereClaus('Key', body.KeyList);
-            }
-            else if(body.UniqueFieldList && body.UniqueFieldList.length > 0) {
+            // if (body.KeyList && body.KeyList.length > 0) {
+            //     whereClause = this.getWhereClaus('Key', body.KeyList);
+            // }
+            //else 
+            if(body.UniqueFieldList && body.UniqueFieldList.length > 0) {
                 whereClause = this.getWhereClaus(body.UniqueFieldID!, body.UniqueFieldList);
+                body.Where = whereClause;
             }
-            body.Where = whereClause;
         }
         return await this.apiService.search(collectionName, body);
     }
