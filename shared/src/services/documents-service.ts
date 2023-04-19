@@ -67,8 +67,14 @@ export class DocumentsService {
             // }
             //else 
             if(body.UniqueFieldList && body.UniqueFieldList.length > 0) {
-                whereClause = this.getWhereClaus(body.UniqueFieldID!, body.UniqueFieldList);
-                body.Where = whereClause;
+                // DI-23437 - because ADAL does not allow where clause on 'Key' to contain 'OR' operator, we are converting it to 'KeyList'
+                if(body.UniqueFieldID === 'Key') {
+                    body.KeyList = [...body.UniqueFieldList]
+                }
+                else {
+                    whereClause = this.getWhereClaus(body.UniqueFieldID!, body.UniqueFieldList);
+                    body.Where = whereClause;
+                }
             }
         }
         return await this.apiService.search(collectionName, body);
