@@ -44,10 +44,10 @@ export class DocumentsService {
         }
     }
 
-    validateDocument(collection: Collection, body: any, collectionFields: CollectionFields) {
+    async validateDocument(collection: Collection, body: any, collectionFields: CollectionFields) {
         const referenceResult = this.validateReference(collectionFields, body);
         body = { ...referenceResult.Document };
-        const schema = this.createSchema(collection);
+        const schema = await this.createSchema(collection);
         console.log(`validating document ${JSON.stringify(body)} for collection ${collection.Name}. schema is ${JSON.stringify(schema)}`);
         const validator = new Validator();
         const result = validator.validate(body, schema);
@@ -130,32 +130,35 @@ export class DocumentsService {
         };
     }
 
-    createSchema(collection: Collection): Schema {
+    async createSchema(collection: Collection): Promise<Schema> {
         const schema: Schema = {
             $id: DocumentSchema.$id,
             description: DocumentSchema.description,
             type: 'object',
             properties: {
                 ...DocumentSchema.properties,
-                ...this.createObjectScheme(collection.Fields!)
+                ...await this.createObjectScheme(collection.Fields!)
             }
         };
         
         return schema;
     }
     
-    createObjectScheme(fields: { [key: string]:CollectionField}) {
+    async createObjectScheme(fields: { [key: string]:CollectionField}) {
         const propertiesScheme = {};
-        Object.keys(fields || {}).forEach(fieldName => {
+        for(let fieldName of Object.keys(fields || {})) {
             const field = fields[fieldName];
             // validate only fields that are not coming from base schema
             if (!field.ExtendedField) {
                 if (field.Type === 'ContainedResource') {
+                    const collectionScheme = await this.apiService.findCollectionByName(field.Resource!);
+                    const properties = await this.createObjectScheme(collectionScheme.Fields || {})
+
                     propertiesScheme[fieldName] = {
                         type: 'object',
                         required: field.Mandatory,
                         properties: {
-                            ...this.createObjectScheme(field.Fields || {})
+                            ...properties
                         }
                     }
                 }
@@ -166,7 +169,7 @@ export class DocumentsService {
                         items:{
                             type: 'object',
                             properties: {
-                                ...this.createObjectScheme(field.Items!.Fields || {})
+                                ...await this.createObjectScheme(field.Items!.Fields || {})
                             }
                         }
                     }
@@ -186,7 +189,7 @@ export class DocumentsService {
                     }
                 }
             }
-        })
+        }
 
         return propertiesScheme;
     }
@@ -232,10 +235,11 @@ export class DocumentsService {
     async processItemsToSave(collectionScheme: Collection, items: AddonData[]) {
         const collectionFields = collectionScheme.Fields || {};
         items = (await this.referencesService.handleDotAnnotationItems(collectionFields, items));
-        return items.map(item => {
+        const promises = items.map(async item => {
             const updatingHidden = 'Hidden' in item && item.Hidden;
             item.Key = this.globalService.getItemKey(collectionScheme, item);
-            const validationResult = this.validateDocument(collectionScheme, item, collectionFields);
+            const validationResult = await this.validateDocument(collectionScheme, item, collectionFields);
+
             return {
                 Item: item,
                 ValidationResult: {
@@ -244,6 +248,8 @@ export class DocumentsService {
                 },
             }
         });
+
+        return Promise.all(promises);
     }
     
 }
