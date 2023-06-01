@@ -6,12 +6,17 @@ import { IApiService } from "./api-service";
 import { GlobalService } from "./global-service";
 import { ReferenceService } from "./reference-service";
 import { IResourcesServices } from "./resources-service";
+import { SchemesService } from "./schemes-service";
+
 
 export class DocumentsService {
     globalService = new GlobalService();
     referencesService: ReferenceService = new ReferenceService(this.resourcesService);
+    private schemesService: SchemesService;
 
-    constructor(private apiService: IApiService, private resourcesService: IResourcesServices) {}
+    constructor(private apiService: IApiService, private resourcesService: IResourcesServices) {
+        this.schemesService = new SchemesService(apiService);
+    }
 
     async find(collectionName: any, options: any): Promise<AddonData> {
         return await this.apiService.find(collectionName, options);
@@ -151,8 +156,8 @@ export class DocumentsService {
             // validate only fields that are not coming from base schema
             if (!field.ExtendedField) {
                 if (field.Type === 'ContainedResource') {
-                    const collectionScheme = await this.apiService.findCollectionByName(field.Resource!);
-                    const properties = await this.createObjectScheme(collectionScheme.Fields || {})
+                    const collectionScheme = await this.schemesService.getResource(field.Resource!);
+                    const properties = await this.createObjectScheme(collectionScheme.Fields || {});
 
                     propertiesScheme[fieldName] = {
                         type: 'object',
@@ -163,13 +168,16 @@ export class DocumentsService {
                     }
                 }
                 else if((field.Type === 'Array' && field.Items!.Type === 'ContainedResource')) {
+                    const collectionScheme = await this.schemesService.getResource(field.Resource!);
+                    const properties = await this.createObjectScheme(collectionScheme.Fields || {});
+
                     propertiesScheme[fieldName] = {
                         type: 'array',
                         required: field.Mandatory,
                         items:{
                             type: 'object',
                             properties: {
-                                ...await this.createObjectScheme(field.Items!.Fields || {})
+                                ...properties
                             }
                         }
                     }
