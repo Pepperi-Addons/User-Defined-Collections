@@ -13,6 +13,9 @@ import { AddonDataScheme, Collection } from "@pepperi-addons/papi-sdk";
 import { FormMode, EMPTY_OBJECT_NAME } from "../entities";
 import { config } from "../addon.config";
 import { AddCollectionDialogComponent } from "./form/add-collection-dialog/add-collection-dialog.component";
+import { FileStatusPanelComponent } from "@pepperi-addons/ngx-composite-lib/file-status-panel";
+import { MatSnackBarRef } from "@angular/material/snack-bar";
+import { PepSnackBarService } from "@pepperi-addons/ngx-lib/snack-bar";
 
 @Component({
     selector: 'collection-list',
@@ -44,6 +47,9 @@ export class CollectionListComponent implements OnInit {
 
     abstractSchemes: AddonDataScheme[] = [];
 
+    private currentSnackBar: MatSnackBarRef<FileStatusPanelComponent> | null = null
+
+
     constructor(
         public collectionsService: CollectionsService,
         public layoutService: PepLayoutService,
@@ -51,7 +57,9 @@ export class CollectionListComponent implements OnInit {
         public activateRoute: ActivatedRoute,
         public dialogService: PepDialogService,
         private router: Router,
-        private utilitiesService:UtilitiesService
+        private utilitiesService:UtilitiesService,
+        private snackBarService: PepSnackBarService,
+
 
     ) {
         this.layoutService.onResize$.subscribe(size => {
@@ -166,6 +174,30 @@ export class CollectionListComponent implements OnInit {
                                     });
                                     this.dialogService.openDefaultDialog(dataMsg);
                                 }
+                            }
+                        }
+                    });
+                    actions.push({
+                        title: this.translate.instant('Delete'),
+                        handler: async (objs) => {
+                            try{
+                                debugger
+                                const res = await this.collectionsService.deleteCollection(objs.rows[0]);
+                                
+                                if(res['ExecutionUUID']){
+                                    debugger
+                                    await this.pollAuditResult(res['ExecutionUUID']);
+                                }
+                                debugger
+                                this.dataSource = this.getDataSource();
+                            }
+                            catch(error){
+                                const dataMsg = new PepDialogData({
+                                    title: this.translate.instant('Collection_DeleteDialogTitle'),
+                                    actionsType: 'close',
+                                    content: this.translate.instant('Collection_DeleteDialogError')
+                                });
+                                this.dialogService.openDefaultDialog(dataMsg);
                             }
                         }
                     })
@@ -314,5 +346,36 @@ export class CollectionListComponent implements OnInit {
                 this.collectionsService.handleCleanRebuild(collectionName);
             }
         }));
+    }
+
+    // polling audit log until getting success or failure
+    async pollAuditResult(auditLogUUID: string): Promise<any> {
+        return new Promise<any>((resolve) => {
+            const interval = setInterval(async () => {
+                const logRes = await this.collectionsService.getAuditLog(auditLogUUID);
+                if (logRes && logRes.Status && logRes.Status.Name !== 'InProgress' && logRes.Status.Name !== 'InRetry') {
+                    this.updateSnackbar();
+                    clearInterval(interval);
+                    const resultObj = JSON.parse(logRes.AuditInfo.ResultObject);
+                    resolve(resultObj);
+                }
+                else {
+                    this.updateSnackbar();
+                    clearInterval(interval);
+                    resolve(undefined);
+                }
+            }, 600000);
+        });
+    }
+
+    updateSnackbar() {
+            this.currentSnackBar = this.snackBarService.openSnackBarFromComponent(FileStatusPanelComponent, {
+                title: "DIMX Process",
+                content: "data"
+            })
+            this.currentSnackBar.instance.closeClick.subscribe(() => {
+                this.currentSnackBar = null;
+
+            });
     }
 }

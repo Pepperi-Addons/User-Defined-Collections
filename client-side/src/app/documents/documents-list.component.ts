@@ -68,9 +68,24 @@ export class DocumentsListComponent implements OnInit {
                                     this.dialogService.openDefaultDialog(dataMsg);
                                 }
                             }
-    
                         }
-                    })
+                    });
+                    actions.push({
+                        title: this.translate.instant('Delete'),
+                        handler: async (objs) => {
+                            try{
+                                await this.documentsService.deleteDocument(this.collectionName, objs.rows[0]);
+                            }
+                            catch(error){
+                                const dataMsg = new PepDialogData({
+                                    title: this.translate.instant('Documents_DeleteDialogTitle'),
+                                    actionsType: 'close',
+                                    content: this.translate.instant('Documents_DeleteDialogError')
+                                });
+                                this.dialogService.openDefaultDialog(dataMsg);
+                            }
+                        }
+                    });  
                 }
                 else {
                     actions.push({
