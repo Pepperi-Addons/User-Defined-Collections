@@ -89,7 +89,7 @@ You can add as many files as you like in both typescript & javascript. These can
 
 To debug these api's locally, just press F5, and call:
 http://localhost:4400/api/foo
-
+ 
 
 ## Addon Editor
 ---
