@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid';
-import { Collection, CollectionField, DataViewFieldType, GridDataViewField, PapiClient, SchemeFieldType } from '@pepperi-addons/papi-sdk';
-import { UdcMappingsScheme } from '../metadata';
+import { AddonData, AddonDataScheme, Collection, CollectionField, DataViewFieldType, GridDataViewField, PapiClient, SchemeFieldType } from '@pepperi-addons/papi-sdk';
+import { DataLimitationMapping, SoftLimitsDeaultValues } from '../entities';
+import jwtDecode from "jwt-decode";
 import { Client } from '@pepperi-addons/debug-server';
 
 export class UtilitiesService {
@@ -83,6 +84,93 @@ export class UtilitiesService {
             type = 'ComboBox'
         }
         return type;
+    }
+
+    // used to define UDC items limitations
+    async createSettingsTable(){
+        let fields: any = {};
+        for(const element of DataLimitationMapping.keys()){
+            fields[element] = { Type: 'Integer' } // create field for each key
+        }
+       
+        await this.papiClient.addons.data.schemes.post({
+            Name: 'UserDefinedCollectionsSettings', 
+            Type: 'data', 
+            Fields: {
+                metadata: { 
+                    Type:'Integer'
+                },
+                documents: { 
+                    Type:'Integer'
+                },
+                documentsNotIndexed: { 
+                    Type:'Integer'
+                },
+                containedArrayItems: {
+                    Type:'Integer'
+                },
+                fields: {
+                    Type:'Integer'
+                },
+                fieldsOfContained: {
+                    Type:'Integer'
+                }
+            } 
+        });
+
+        await this.insertSettingsDefaultValues(); // initialize settings with default values
+    }
+
+    async insertSettingsDefaultValues(){
+        const distributorID: string = this.getDistributorID()
+        const settingsBody: AddonData = {
+            Key: distributorID,
+            metadata: SoftLimitsDeaultValues.get('Metadata'),
+            documents: SoftLimitsDeaultValues.get('Documents'),
+            documentsNotIndexed: SoftLimitsDeaultValues.get('DocumentsNotIndexed'),
+            containedArrayItems: SoftLimitsDeaultValues.get('ContainedArrayItems'),
+            fields: SoftLimitsDeaultValues.get('Fields'),
+            fieldsOfContained: SoftLimitsDeaultValues.get('FieldsOfContained')
+        };
+
+        await this.upsertSettings(settingsBody);
+    }
+
+    getDistributorID(): string{
+        return jwtDecode(this.client.OAuthAccessToken)['pepperi.distributorid'].toString();
+    }
+
+    async getSettings(): Promise<AddonData>{
+        try{
+            const distributorID = this.getDistributorID();
+            console.log(`About to get settings table`);
+            const res = await this.papiClient.addons.data.uuid(this.client.AddonUUID).table('UserDefinedCollectionsSettings').key(distributorID).get();
+            console.log(`Got data from settings table.`);
+            return res;
+
+        } catch(err){
+            console.log(`Error get settings table: ${err}`);
+            throw new Error(`Error get settings table: ${err}`);
+        }
+    }
+
+    async upsertSettings(settingsBody){
+        try{
+            console.log(`About to upsert data to settings table`);
+            await this.papiClient.addons.data.uuid(this.client.AddonUUID).table('UserDefinedCollectionsSettings').upsert(settingsBody);
+            console.log(`Post data to settings table.`);
+
+        } catch(err){
+            console.log(`Error get settings table: ${err}`);
+            throw new Error(`Error get settings table: ${err}`);
+        }
+    }
+    
+    // check if soft limit is compatible with hard limit- throw error if not
+    isValidValue(element, value){ 
+        if(value > DataLimitationMapping.get(element)!.hardLimit){
+            throw new Error(`Cannot set ${element} new value`)
+        }
     }
 }
 

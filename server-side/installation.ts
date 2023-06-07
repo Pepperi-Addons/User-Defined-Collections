@@ -9,16 +9,26 @@ The error Message is importent! it will be written in the audit log and help the
 */
 
 import { Client, Request } from '@pepperi-addons/debug-server'
-import { AtdRelations, SettingsRelation, UsageMonitorRelations } from './metadata';
+import { AtdRelations, SettingsRelation, UsageMonitorRelations, VarSettingsRelation } from './metadata';
 import { UtilitiesService } from './services/utilities.service';
 import semver from 'semver'
 import { CollectionsService } from './services/collections.service';
+import { VarSettingsService } from './var-settings.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
     // For page block template uncomment this.
     // const res = await createPageBlockRelation(client);
     // return res;
-    return await createObjects(client);
+    let res;
+    const varSettingsRes = await createVarSettingsRelationAndTable(client);
+    const objectsRes = await createObjects(client);
+    if(varSettingsRes.success && objectsRes.success){
+        res = {success:true,resultObject:{}}
+    }
+    else{
+        res = {success:false, resultObject: varSettingsRes.errorMessage || objectsRes.errorMessage }
+    }
+    return res;
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
@@ -37,6 +47,10 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
     if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.8.22') < 0) { 
         const service = new CollectionsService(client);
         return await service.migrateDQRelations();
+    }
+    // if we are upgrading from a version before 0.9.10, create a relation to var settings and settings table
+    else if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.10') < 0) {
+        return await createVarSettingsRelationAndTable(client);
     }
     else {
         return {success:true,resultObject:{}}
@@ -66,3 +80,26 @@ async function createObjects(client: Client) {
     }
 }
 
+async function createVarSettingsRelationAndTable(client: Client){
+    try {
+        const service = new UtilitiesService(client);
+        const varSettingsService = new VarSettingsService();
+        const dataView = varSettingsService.getDataView(); // set var settings DataView
+        VarSettingsRelation[0]['DataView'] = dataView;
+        
+        await service.createRelations(VarSettingsRelation); // create var settings relation
+        await service.createSettingsTable(); // create settings table with default values
+
+        return {
+            success:true,
+            resultObject: {}
+        }
+    } 
+    catch (err) {
+        return { 
+            success: false, 
+            resultObject: err , 
+            errorMessage: `Error in creating var settings objects . error - ${err}`
+        };
+    }
+}

@@ -4,6 +4,17 @@ const relationName = 'CollectionList';
 export const IMPORT_FUNCTION_NAME = 'import_data_source';
 export const EXPORT_FUNCTION_NAME = 'export_data_source';
 
+
+export let VarSettingsRelation: Relation[] = [{
+    Name: "UDCLimitationsVarSettings",
+    AddonUUID: config.AddonUUID,
+    RelationName: "VarSettings",
+    Type: "AddonAPI",
+    Description: "UDC relation to Var Settings, Var users can edit UDC limitations with the Var addon",
+    AddonRelativeURL: "/api/var_settings",
+    Title: "User Defined Colections", //The title of the tab in which the fields will appear
+}]
+
 export const DimxRelations: Relation[] = [{
     AddonUUID: config.AddonUUID,
     Name: '{collection_name}',

@@ -10,6 +10,30 @@ import { ApiService } from './services/api-service';
 import { ResourcesService } from './services/resources-service';
 import { ServerDocumentsService } from './services/documents.service';
 
+import { VarSettingsService } from './var-settings.service';
+
+export async function var_settings(client: Client, request: Request) {
+    const varRelationService: VarSettingsService = new VarSettingsService();
+
+    try {
+        if (request.method === 'POST') {
+            // Getting updated values from Var settings
+            return varRelationService.getUpdatedVarSettings(client, request);
+        }
+        else if (request.method === 'GET') {
+            // Sending updated values to Var settings
+            return varRelationService.setVarSettingsConfiguration(client, request);
+        }
+        else {
+            throw new Error(`Method ${request.method} is not supported`)
+        }
+    }
+    catch (error) {
+        console.error(`var_settings: ${error}`);
+        throw error;
+    }
+}
+
 
 export async function schemes(client: Client, request: Request) {
     
