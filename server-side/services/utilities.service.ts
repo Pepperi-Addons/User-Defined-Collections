@@ -1,6 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { Collection, CollectionField, DataViewFieldType, GridDataViewField, PapiClient, SchemeFieldType } from '@pepperi-addons/papi-sdk';
-import { UdcMappingsScheme } from '../metadata';
+import { AddonData, AddonDataScheme, Collection, CollectionField, DataViewFieldType, GridDataViewField, PapiClient, SchemeFieldType } from '@pepperi-addons/papi-sdk';
 import { Client } from '@pepperi-addons/debug-server';
 
 export class UtilitiesService {
