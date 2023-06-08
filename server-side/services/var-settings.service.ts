@@ -83,11 +83,10 @@ export class VarSettingsService{
     }
     
     // POST - get the requested change from var settings, and set the table accordingly
-    async setVarSettingsUpdatedValues(client: Client, request: Request){
+    async setVarSettingsUpdatedValues(settings){
         const distributorUUID: string = this.getDistributorUUID();
 
         let settingsBody = { Key: distributorUUID };
-        const settings = request.body;
 
         for(const element of DataLimitationMapping.keys()){
             this.isValidValue(element, settings[element]);

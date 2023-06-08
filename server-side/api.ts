@@ -18,7 +18,7 @@ export async function var_settings(client: Client, request: Request) {
     try {
         if (request.method === 'POST') {
             // SET settings data according user change - getting updated values from Var settings (on value changed)
-            return varRelationService.setVarSettingsUpdatedValues(client, request);
+            return varRelationService.setVarSettingsUpdatedValues(request.body);
         }
         else if (request.method === 'GET') {
             // GET settings data - sending updated values to Var settings (on var settings page reload)
