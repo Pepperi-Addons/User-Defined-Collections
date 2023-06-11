@@ -1,10 +1,11 @@
-import { AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk'
+import { AddonData, AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
 import { existingErrorMessage, existingInRecycleBinErrorMessage, GlobalService, DocumentsService } from 'udc-shared';
 import { ApiService } from './api-service';
 import { ResourcesService } from './resources-service';
+import { VarSettingsService } from '../services/var-settings.service';
 
 export class ServerDocumentsService {
     
@@ -13,6 +14,7 @@ export class ServerDocumentsService {
     apiService = new ApiService(this.client);
     resourcesService = new ResourcesService(this.client);
     documentsService = new DocumentsService(this.apiService, this.resourcesService);
+    varRelationService: VarSettingsService = new VarSettingsService(this.client, this.utilities);
     
     constructor(private client: Client) {
     }
@@ -35,9 +37,11 @@ export class ServerDocumentsService {
             try {
                 const documents = await this.utilities.papiClient.userDefinedCollections.documents(item.Name).find({fields: ['Hidden'], page_size: -1});
                 if (documents) {
+                    const description: string = await this.assertDocumentsNumber(item, documents); // check number of documents
+
                     retVal.push ({
                         Data: item.Name,
-                        Description: `Number of documents in ${item.Name}`,
+                        Description: description,
                         Size: documents.length,
                     })
                 }
@@ -47,6 +51,20 @@ export class ServerDocumentsService {
             }
         }))
         return retVal;
+    }
+
+    async assertDocumentsNumber(collection, documents): Promise<string>{
+        const settings: AddonData = await this.varRelationService.getSettings();
+        const indexedCollection = this.globalService.isCollectionIndexed(collection);
+
+        const description: string = `Number of documents in ${collection.Name}`;
+        let errorDescription: string;
+        if(indexedCollection && documents.length > settings['documents']){ // indexed collection
+            errorDescription = description + ` - Documents number is above limit`
+        } else if(!indexedCollection && documents.length > settings['documentsNotIndexed']){ // non indexed collection
+            errorDescription = description + ` - Non-indexed documents number is above limit`
+        }
+        return description;
     }
 
     //DIMX
@@ -98,7 +116,8 @@ export class ServerDocumentsService {
         catch (error) {
             if(error instanceof Error) {
                 if (error?.message?.indexOf('Object ID does not exist') >= 0) {
-                    const result = await this.documentsService.upsert(collectionName, body)
+                    const containedArrayLimit = (await this.varRelationService.getSettings())['containedArrayItems'];
+                    const result = await this.documentsService.upsert(collectionName, body, containedArrayLimit)
                     return result;
                 }
             }

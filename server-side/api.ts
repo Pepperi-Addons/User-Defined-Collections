@@ -13,12 +13,13 @@ import { ServerDocumentsService } from './services/documents.service';
 import { VarSettingsService } from './services/var-settings.service';
 
 export async function var_settings(client: Client, request: Request) {
-    const varRelationService: VarSettingsService = new VarSettingsService(client);
+    const utilities = new UtilitiesService(client);
+    const varRelationService: VarSettingsService = new VarSettingsService(client, utilities);
 
     try {
         if (request.method === 'POST') {
             // SET settings data according user change - getting updated values from Var settings (on value changed)
-            return varRelationService.setVarSettingsUpdatedValues(client, request);
+            return varRelationService.setVarSettingsUpdatedValues(request.body);
         }
         else if (request.method === 'GET') {
             // GET settings data - sending updated values to Var settings (on var settings page reload)
@@ -71,6 +72,9 @@ export async function documents(client: Client, request: Request) {
     const apiService = new ApiService(client);
     const resourcesService = new ResourcesService(client);
     const documentsService = new DocumentsService(apiService, resourcesService);
+    const utilities = new UtilitiesService(client);
+    const varRelationService: VarSettingsService = new VarSettingsService(client, utilities);
+
 
     let result;
 
@@ -93,7 +97,8 @@ export async function documents(client: Client, request: Request) {
             break;
         }
         case 'POST': {
-            result = await documentsService.upsert(collectionName, request.body);
+            const containedArrayLimit: number = (await varRelationService.getSettings())['containedArrayItems'];
+            result = await documentsService.upsert(collectionName, request.body, containedArrayLimit);
             break;
         }
         default: {

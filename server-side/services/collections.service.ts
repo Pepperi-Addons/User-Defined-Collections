@@ -6,16 +6,23 @@ import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
 import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex, UserEvent, GlobalService } from 'udc-shared';
 import { UserEventsService } from './user-events.service';
+import { VarSettingsService } from '../services/var-settings.service';
+import { AddonData } from '@pepperi-addons/papi-sdk/dist/entities';
+
 export class CollectionsService {
         
     utilities: UtilitiesService = new UtilitiesService(this.client);
-    globalService: GlobalService = new GlobalService()
+    globalService: GlobalService = new GlobalService();
+    varRelationService: VarSettingsService = new VarSettingsService(this.client, this.utilities);
 
     constructor(private client: Client) {
     }
 
-    
+
     async upsert(service: DocumentsService, body: Collection) {
+        const collections = await this.find();
+        await this.assertObjectCount("metadata", collections.length); // collections count validation
+
         let collectionObj: any = {
             Type: body.Type || 'data',
             GenericResource: true,
@@ -169,10 +176,12 @@ export class CollectionsService {
 
     async validateFieldsType(collectionObj: Collection) {
         let validMap = new Map();
+        let fieldsCount = 0;
         const collections = await this.find({ include_deleted: true, where: `Name != ${collectionObj.Name}` });
         // only check for field's type when there are Fields on the collection
         if (collectionObj.Fields) {
             for (const fieldID of Object.keys(collectionObj.Fields!)) {
+                fieldsCount++;
                 collections.forEach((collection => {
                     if (collection.Fields && collection.Fields[fieldID]) {
                         // if one of the collection has a field with the same ID, check to see if it's the same type.
@@ -187,9 +196,27 @@ export class CollectionsService {
                 }));
             }
         }
+
+        await this.validateCollectionField(collectionObj, fieldsCount);
         return validMap;
     }
     
+    async validateCollectionField(collectionObj, fieldsCount){
+        if(collectionObj.Type == 'contained'){
+            await this.assertObjectCount('fieldsOfContained', fieldsCount);
+        } else{
+            await this.assertObjectCount('fields', fieldsCount);
+        }
+    }
+
+    async assertObjectCount(element: string, elementCount: number){
+        const settings: AddonData = await this.varRelationService.getSettings();
+
+        if(elementCount > settings[element]){
+            throw new Error(`${element} number is above limit`);
+        }
+    }
+
     addFieldToMap(map, fieldID, collectionName) {
         const list = map.get(fieldID);
         if (!list) {

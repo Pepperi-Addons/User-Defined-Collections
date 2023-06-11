@@ -43,7 +43,7 @@ export async function downgrade(client: Client, request: Request): Promise<any> 
 async function createObjects(client: Client) {
     try {
         const service = new UtilitiesService(client);
-        const varSettingsService = new VarSettingsService(client);
+        const varSettingsService = new VarSettingsService(client, service);
 
         await service.createRelations(UsageMonitorRelations);
         await service.createRelations(SettingsRelation);

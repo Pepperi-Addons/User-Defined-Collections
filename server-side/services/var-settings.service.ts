@@ -4,12 +4,13 @@ import { AddonData, PapiClient } from '@pepperi-addons/papi-sdk';
 import { DataLimitationMapping, limitationField, SoftLimitsDeaultValues } from '../entities';
 import { UtilitiesService } from './utilities.service';
 import jwtDecode from "jwt-decode";
-import { settingsTable } from '../metadata';
+import { settingsTable, SettingsTableName } from '../metadata';
 
 export class VarSettingsService{
-    utilities: UtilitiesService = new UtilitiesService(this.client);
+    utilities: UtilitiesService;
 
-    constructor(private client: Client){
+    constructor(private client: Client, utilities: UtilitiesService){
+        this.utilities = utilities;
     }
 
     // data view
@@ -83,11 +84,10 @@ export class VarSettingsService{
     }
     
     // POST - get the requested change from var settings, and set the table accordingly
-    async setVarSettingsUpdatedValues(client: Client, request: Request){
+    async setVarSettingsUpdatedValues(settings){
         const distributorUUID: string = this.getDistributorUUID();
 
         let settingsBody = { Key: distributorUUID };
-        const settings = request.body;
 
         for(const element of DataLimitationMapping.keys()){
             this.isValidValue(element, settings[element]);
@@ -135,7 +135,7 @@ export class VarSettingsService{
         try{
             const distributorUUID: string = this.getDistributorUUID();
             console.log(`About to get settings table`);
-            const res = await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table('UserDefinedCollectionsSettings').key(distributorUUID).get();
+            const res = await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(SettingsTableName).key(distributorUUID).get();
             console.log(`Got data from settings table.`);
             return res;
 
@@ -148,7 +148,7 @@ export class VarSettingsService{
     async upsertSettings(settingsBody){
         try{
             console.log(`About to upsert data to settings table`);
-            await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table('UserDefinedCollectionsSettings').upsert(settingsBody);
+            await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(SettingsTableName).upsert(settingsBody);
             console.log(`Post data to settings table.`);
 
         } catch(err){
