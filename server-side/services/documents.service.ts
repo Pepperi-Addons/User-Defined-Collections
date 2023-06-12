@@ -6,6 +6,7 @@ import { existingErrorMessage, existingInRecycleBinErrorMessage, GlobalService, 
 import { ApiService } from './api-service';
 import { ResourcesService } from './resources-service';
 import { VarSettingsService } from '../services/var-settings.service';
+import { limitationTypes } from '../metadata';
 
 export class ServerDocumentsService {
     
@@ -14,7 +15,7 @@ export class ServerDocumentsService {
     apiService = new ApiService(this.client);
     resourcesService = new ResourcesService(this.client);
     documentsService = new DocumentsService(this.apiService, this.resourcesService);
-    varRelationService: VarSettingsService = new VarSettingsService(this.client, this.utilities);
+    varRelationService: VarSettingsService = new VarSettingsService(this.utilities);
     
     constructor(private client: Client) {
     }
@@ -59,10 +60,9 @@ export class ServerDocumentsService {
 
         const description: string = `Number of documents in ${collection.Name}`;
         let errorDescription: string;
-        if(indexedCollection && documents.length > settings['documents']){ // indexed collection
+        if((indexedCollection && documents.length > settings[limitationTypes.Documents]) || 
+            (!indexedCollection && documents.length > settings[limitationTypes.NotIndexedDocument])){
             errorDescription = description + ` - Documents number is above limit`
-        } else if(!indexedCollection && documents.length > settings['documentsNotIndexed']){ // non indexed collection
-            errorDescription = description + ` - Non-indexed documents number is above limit`
         }
         return description;
     }
@@ -116,7 +116,7 @@ export class ServerDocumentsService {
         catch (error) {
             if(error instanceof Error) {
                 if (error?.message?.indexOf('Object ID does not exist') >= 0) {
-                    const containedArrayLimit = (await this.varRelationService.getSettings())['containedArrayItems'];
+                    const containedArrayLimit = await this.varRelationService.getSettingsByName(limitationTypes.ItemsOfContainedArray);
                     const result = await this.documentsService.upsert(collectionName, body, containedArrayLimit)
                     return result;
                 }

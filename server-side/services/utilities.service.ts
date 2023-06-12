@@ -16,6 +16,10 @@ export class UtilitiesService {
         });
     }
 
+    getClient(){
+        return this.client;
+    }
+
     async createRelations(relations) {
         await Promise.all(relations.map(async (singleRelation) => {
             await this.papiClient.addons.data.relations.upsert(singleRelation);

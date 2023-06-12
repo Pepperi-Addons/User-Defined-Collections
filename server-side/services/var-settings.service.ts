@@ -1,15 +1,14 @@
 import { IPepGenericFormDataView, IPepGenericFormDataViewField } from '@pepperi-addons/ngx-composite-lib/generic-form';
-import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonData, PapiClient } from '@pepperi-addons/papi-sdk';
 import { DataLimitationMapping, limitationField, SoftLimitsDeaultValues } from '../entities';
 import { UtilitiesService } from './utilities.service';
 import jwtDecode from "jwt-decode";
-import { settingsTable, SettingsTableName } from '../metadata';
+import { limitationTypes, settingsTable, SettingsTableName } from '../metadata';
 
 export class VarSettingsService{
     utilities: UtilitiesService;
 
-    constructor(private client: Client, utilities: UtilitiesService){
+    constructor(utilities: UtilitiesService){
         this.utilities = utilities;
     }
 
@@ -116,26 +115,28 @@ export class VarSettingsService{
         const distributorUUID: string = this.getDistributorUUID()
         const settingsBody: AddonData = {
             Key: distributorUUID,
-            metadata: SoftLimitsDeaultValues.get('metadata'),
-            documents: SoftLimitsDeaultValues.get('documents'),
-            documentsNotIndexed: SoftLimitsDeaultValues.get('documentsNotIndexed'),
-            containedArrayItems: SoftLimitsDeaultValues.get('containedArrayItems'),
-            fields: SoftLimitsDeaultValues.get('fields'),
-            fieldsOfContained: SoftLimitsDeaultValues.get('fieldsOfContained')
+            metadata: SoftLimitsDeaultValues.get(limitationTypes.Metadata),
+            documents: SoftLimitsDeaultValues.get(limitationTypes.Documents),
+            documentsNotIndexed: SoftLimitsDeaultValues.get(limitationTypes.NotIndexedDocument),
+            containedArrayItems: SoftLimitsDeaultValues.get(limitationTypes.ItemsOfContainedArray),
+            fields: SoftLimitsDeaultValues.get(limitationTypes.Fields),
+            fieldsOfContained: SoftLimitsDeaultValues.get(limitationTypes.ContainedSchemaFields)
         };
 
         await this.upsertSettings(settingsBody);
     }
 
     getDistributorUUID(): string{
-        return jwtDecode(this.client.OAuthAccessToken)['pepperi.distributoruuid'].toString();
+        const token = this.utilities.getClient().OAuthAccessToken;
+        return jwtDecode(token)['pepperi.distributoruuid'].toString();
     }
 
     async getSettings(): Promise<AddonData>{
         try{
+            const addonUUID = this.utilities.getClient().AddonUUID;
             const distributorUUID: string = this.getDistributorUUID();
             console.log(`About to get settings table`);
-            const res = await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(SettingsTableName).key(distributorUUID).get();
+            const res = await this.utilities.papiClient.addons.data.uuid(addonUUID).table(SettingsTableName).key(distributorUUID).get();
             console.log(`Got data from settings table.`);
             return res;
 
@@ -145,10 +146,22 @@ export class VarSettingsService{
         }
     }
 
+    async getSettingsByName(element: string): Promise<number>{
+        let elementCount: number;
+        const settings = await this.getSettings();
+        if(settings){
+            elementCount = settings[element];
+        } else{
+            elementCount = SoftLimitsDeaultValues.get(element)!;
+        }
+        return elementCount;
+    }
+
     async upsertSettings(settingsBody){
         try{
+            const addonUUID = this.utilities.getClient().AddonUUID;
             console.log(`About to upsert data to settings table`);
-            await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table(SettingsTableName).upsert(settingsBody);
+            await this.utilities.papiClient.addons.data.uuid(addonUUID).table(SettingsTableName).upsert(settingsBody);
             console.log(`Post data to settings table.`);
 
         } catch(err){

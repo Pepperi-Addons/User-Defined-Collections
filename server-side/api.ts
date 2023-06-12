@@ -11,10 +11,11 @@ import { ResourcesService } from './services/resources-service';
 import { ServerDocumentsService } from './services/documents.service';
 
 import { VarSettingsService } from './services/var-settings.service';
+import { limitationTypes } from './metadata';
 
 export async function var_settings(client: Client, request: Request) {
     const utilities = new UtilitiesService(client);
-    const varRelationService: VarSettingsService = new VarSettingsService(client, utilities);
+    const varRelationService: VarSettingsService = new VarSettingsService(utilities);
 
     try {
         if (request.method === 'POST') {
@@ -73,7 +74,7 @@ export async function documents(client: Client, request: Request) {
     const resourcesService = new ResourcesService(client);
     const documentsService = new DocumentsService(apiService, resourcesService);
     const utilities = new UtilitiesService(client);
-    const varRelationService: VarSettingsService = new VarSettingsService(client, utilities);
+    const varRelationService: VarSettingsService = new VarSettingsService(utilities);
 
 
     let result;
@@ -97,7 +98,7 @@ export async function documents(client: Client, request: Request) {
             break;
         }
         case 'POST': {
-            const containedArrayLimit: number = (await varRelationService.getSettings())['containedArrayItems'];
+            const containedArrayLimit: number = await varRelationService.getSettingsByName(limitationTypes.ItemsOfContainedArray);
             result = await documentsService.upsert(collectionName, request.body, containedArrayLimit);
             break;
         }
