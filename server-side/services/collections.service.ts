@@ -1,21 +1,28 @@
 import { UtilitiesService } from './utilities.service';
 import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, UdcMappingsScheme} from '../metadata';
+import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, limitationTypes, UdcMappingsScheme} from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
 import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex, UserEvent, GlobalService } from 'udc-shared';
 import { UserEventsService } from './user-events.service';
+import { VarSettingsService } from '../services/var-settings.service';
+import { AddonData } from '@pepperi-addons/papi-sdk/dist/entities';
+
 export class CollectionsService {
         
     utilities: UtilitiesService = new UtilitiesService(this.client);
-    globalService: GlobalService = new GlobalService()
+    globalService: GlobalService = new GlobalService();
+    varRelationService: VarSettingsService = new VarSettingsService(this.utilities);
 
     constructor(private client: Client) {
     }
 
-    
+
     async upsert(service: DocumentsService, body: Collection) {
+        const collections = await this.find();
+        await this.assertObjectCount(limitationTypes.Metadata, collections.length); // collections count validation
+
         let collectionObj: any = {
             Type: body.Type || 'data',
             GenericResource: true,
@@ -167,12 +174,24 @@ export class CollectionsService {
         }
     }
 
+    async getCollectionFieldsLength(collectionName: string){
+        const res = await this.findByName(collectionName);
+        return Object.keys(res.Fields!).length;
+    }
+
     async validateFieldsType(collectionObj: Collection) {
         let validMap = new Map();
+        let fieldsCount = 0;
         const collections = await this.find({ include_deleted: true, where: `Name != ${collectionObj.Name}` });
         // only check for field's type when there are Fields on the collection
         if (collectionObj.Fields) {
             for (const fieldID of Object.keys(collectionObj.Fields!)) {
+                if(collectionObj.Fields![fieldID].Type === 'ContainedResource'){ // if field type is contained, count contained schema fields
+                    const collectionFieldsCount = await this.getCollectionFieldsLength(collectionObj.Fields![fieldID].Resource!);
+                    fieldsCount += collectionFieldsCount;
+                } else{
+                    fieldsCount++;
+                }
                 collections.forEach((collection => {
                     if (collection.Fields && collection.Fields[fieldID]) {
                         // if one of the collection has a field with the same ID, check to see if it's the same type.
@@ -187,9 +206,27 @@ export class CollectionsService {
                 }));
             }
         }
+
+        await this.validateCollectionField(collectionObj, fieldsCount);
         return validMap;
     }
     
+    async validateCollectionField(collectionObj, fieldsCount){
+        if(collectionObj.Type == 'contained'){
+            await this.assertObjectCount(limitationTypes.ContainedSchemaFields, fieldsCount);
+        } else{
+            await this.assertObjectCount(limitationTypes.Fields, fieldsCount);
+        }
+    }
+
+    async assertObjectCount(element: string, elementCount: number){
+        const softLimit: number = await this.varRelationService.getSettingsByName(element);
+
+        if(elementCount > softLimit){
+            throw new Error(`${element} should not have more than ${softLimit} fields`);
+        }
+    }
+
     addFieldToMap(map, fieldID, collectionName) {
         const list = map.get(fieldID);
         if (!list) {

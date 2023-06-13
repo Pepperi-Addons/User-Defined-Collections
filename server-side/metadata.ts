@@ -154,3 +154,11 @@ export const settingsTable: AddonDataScheme= {
     } 
 }
 
+export const limitationTypes = {
+    Metadata : "metadata",
+    Documents : "documents",
+    NotIndexedDocument : "documentsNotIndexed",
+    ItemsOfContainedArray: "containedArrayItems",
+    Fields : "fields",
+    ContainedSchemaFields : "fieldsOfContained"
+}

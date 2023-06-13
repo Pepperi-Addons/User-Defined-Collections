@@ -1,15 +1,16 @@
 import { IPepGenericFormDataView, IPepGenericFormDataViewField } from '@pepperi-addons/ngx-composite-lib/generic-form';
-import { Client, Request } from '@pepperi-addons/debug-server'
 import { AddonData, PapiClient } from '@pepperi-addons/papi-sdk';
 import { DataLimitationMapping, limitationField, SoftLimitsDeaultValues } from '../entities';
 import { UtilitiesService } from './utilities.service';
 import jwtDecode from "jwt-decode";
-import { settingsTable } from '../metadata';
+import { limitationTypes, settingsTable, SettingsTableName } from '../metadata';
+import config from '../../addon.config.json'
 
 export class VarSettingsService{
-    utilities: UtilitiesService = new UtilitiesService(this.client);
+    utilities: UtilitiesService;
 
-    constructor(private client: Client){
+    constructor(utilities: UtilitiesService){
+        this.utilities = utilities;
     }
 
     // data view
@@ -74,10 +75,11 @@ export class VarSettingsService{
     // GET - on var settings reload, get the relevant data
     async getVarSettingsConfiguration(): Promise<limitationField>{
         let settingsBody: any = {};
-        const res: AddonData = await this.getSettings()
-
-        for(const element of DataLimitationMapping.keys()){ // create the list of items returned to var settings
-            settingsBody[element] = res[element];
+        const res: AddonData | undefined = await this.getSettings()
+        if(res){
+            for(const element of DataLimitationMapping.keys()){ // create the list of items returned to var settings
+                settingsBody[element] = res[element];
+            }            
         }
         return settingsBody;
     }
@@ -115,39 +117,51 @@ export class VarSettingsService{
         const distributorUUID: string = this.getDistributorUUID()
         const settingsBody: AddonData = {
             Key: distributorUUID,
-            metadata: SoftLimitsDeaultValues.get('metadata'),
-            documents: SoftLimitsDeaultValues.get('documents'),
-            documentsNotIndexed: SoftLimitsDeaultValues.get('documentsNotIndexed'),
-            containedArrayItems: SoftLimitsDeaultValues.get('containedArrayItems'),
-            fields: SoftLimitsDeaultValues.get('fields'),
-            fieldsOfContained: SoftLimitsDeaultValues.get('fieldsOfContained')
+            metadata: SoftLimitsDeaultValues.get(limitationTypes.Metadata),
+            documents: SoftLimitsDeaultValues.get(limitationTypes.Documents),
+            documentsNotIndexed: SoftLimitsDeaultValues.get(limitationTypes.NotIndexedDocument),
+            containedArrayItems: SoftLimitsDeaultValues.get(limitationTypes.ItemsOfContainedArray),
+            fields: SoftLimitsDeaultValues.get(limitationTypes.Fields),
+            fieldsOfContained: SoftLimitsDeaultValues.get(limitationTypes.ContainedSchemaFields)
         };
 
         await this.upsertSettings(settingsBody);
     }
 
     getDistributorUUID(): string{
-        return jwtDecode(this.client.OAuthAccessToken)['pepperi.distributoruuid'].toString();
+        const token = this.utilities.getToken();
+        return jwtDecode(token)['pepperi.distributoruuid'].toString();
     }
 
-    async getSettings(): Promise<AddonData>{
+    async getSettings(): Promise<AddonData | undefined>{
         try{
             const distributorUUID: string = this.getDistributorUUID();
             console.log(`About to get settings table`);
-            const res = await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table('UserDefinedCollectionsSettings').key(distributorUUID).get();
+            const res = await this.utilities.papiClient.addons.data.uuid(config.AddonUUID).table(SettingsTableName).key(distributorUUID).get();
             console.log(`Got data from settings table.`);
             return res;
 
         } catch(err){
-            console.log(`Error get settings table: ${err}`);
-            throw new Error(`Error get settings table: ${err}`);
+            console.log(`Error getting settings table: ${err}`);
+            return undefined;
         }
+    }
+
+    async getSettingsByName(element: string): Promise<number>{
+        let elementCount: number;
+        const settings: AddonData | undefined = await this.getSettings();
+        if(settings){
+            elementCount = settings[element];
+        } else{
+            elementCount = SoftLimitsDeaultValues.get(element)!;
+        }
+        return elementCount;
     }
 
     async upsertSettings(settingsBody){
         try{
             console.log(`About to upsert data to settings table`);
-            await this.utilities.papiClient.addons.data.uuid(this.client.AddonUUID).table('UserDefinedCollectionsSettings').upsert(settingsBody);
+            await this.utilities.papiClient.addons.data.uuid(config.AddonUUID).table(SettingsTableName).upsert(settingsBody);
             console.log(`Post data to settings table.`);
 
         } catch(err){
