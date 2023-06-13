@@ -13,7 +13,7 @@ export class DocumentsService {
     globalService = new GlobalService();
     referencesService: ReferenceService = new ReferenceService(this.resourcesService);
     private schemesService: SchemesService;
-    private containedLimit: number = 0;
+    private containedLimit: number | undefined;
 
     constructor(private apiService: IApiService, private resourcesService: IResourcesServices) {
         this.schemesService = new SchemesService(apiService);
@@ -27,7 +27,7 @@ export class DocumentsService {
         return await this.apiService.getByKey(collectionName, key);
     }
     
-    async upsert(collectionName: any, body: any, containedLimit: number): Promise<AddonData> {
+    async upsert(collectionName: any, body: any, containedLimit?: number): Promise<AddonData> {
         const collectionScheme = await this.apiService.findCollectionByName(collectionName);
         const indexedCollection = this.globalService.isCollectionIndexed(collectionScheme)
         this.containedLimit = containedLimit;
@@ -175,7 +175,6 @@ export class DocumentsService {
 
                     propertiesScheme[fieldName] = {
                         type: 'array',
-                        maxItems: this.containedLimit,
                         required: field.Mandatory,
                         items:{
                             type: 'object',
@@ -183,6 +182,9 @@ export class DocumentsService {
                                 ...properties
                             }
                         }
+                    }
+                    if(this.containedLimit){
+                        propertiesScheme[fieldName]['maxItems'] = this.containedLimit;
                     }
                 }
                 else {
