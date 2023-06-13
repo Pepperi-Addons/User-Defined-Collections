@@ -12,7 +12,7 @@ export let VarSettingsRelation: Relation[] = [{
     Type: "AddonAPI",
     Description: "UDC relation to Var Settings, Var users can edit UDC limitations with the Var addon",
     AddonRelativeURL: "/api/var_settings",
-    Title: "User Defined Colections", //The title of the tab in which the fields will appear
+    Title: "User Defined Collections", //The title of the tab in which the fields will appear
 }]
 
 export const DimxRelations: Relation[] = [{
