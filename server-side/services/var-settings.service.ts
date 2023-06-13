@@ -1,5 +1,4 @@
-import { IPepGenericFormDataView, IPepGenericFormDataViewField } from '@pepperi-addons/ngx-composite-lib/generic-form';
-import { AddonData, PapiClient } from '@pepperi-addons/papi-sdk';
+import { AddonData, BaseFormDataViewField, FormDataView } from '@pepperi-addons/papi-sdk';
 import { DataLimitationMapping, limitationField, SoftLimitsDeaultValues } from '../entities';
 import { UtilitiesService } from './utilities.service';
 import jwtDecode from "jwt-decode";
@@ -14,8 +13,8 @@ export class VarSettingsService{
     }
 
     // data view
-    getDataViewFields(): IPepGenericFormDataViewField[] { // create list of data view fields
-        let dataViewObject: IPepGenericFormDataViewField[] = [];
+    getDataViewFields(): BaseFormDataViewField[] { // create list of data view fields
+        let dataViewObject: BaseFormDataViewField[] = [];
         
         DataLimitationMapping.forEach( (value, key) =>{
             dataViewObject.push(this.getDataViewFieldsData(key, value['title']));
@@ -23,7 +22,7 @@ export class VarSettingsService{
         return dataViewObject;
     }
 
-    getDataViewFieldsData(field, title): IPepGenericFormDataViewField{ // create a single field data view
+    getDataViewFieldsData(field, title): BaseFormDataViewField{ // create a single field data view
         return {
             FieldID: field,
             Type: 'TextBox',
@@ -45,13 +44,11 @@ export class VarSettingsService{
                     Horizontal: 'Stretch',
                     Vertical: 'Stretch'
                 }
-            },
-            OptionalValues: [],
-            AdditionalProps: []
+            }
         }
     }
 
-    getDataView(): IPepGenericFormDataView{ // create the data view
+    getDataView(): FormDataView{ // create the data view
         return {
             Type: 'Form',
             Hidden: false,
