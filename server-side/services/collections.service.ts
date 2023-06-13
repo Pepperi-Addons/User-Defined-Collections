@@ -174,6 +174,11 @@ export class CollectionsService {
         }
     }
 
+    async getCollectionFieldsLength(collectionName: string){
+        const res = await this.findByName(collectionName);
+        return Object.keys(res.Fields!).length;
+    }
+
     async validateFieldsType(collectionObj: Collection) {
         let validMap = new Map();
         let fieldsCount = 0;
@@ -181,9 +186,9 @@ export class CollectionsService {
         // only check for field's type when there are Fields on the collection
         if (collectionObj.Fields) {
             for (const fieldID of Object.keys(collectionObj.Fields!)) {
-                if(collectionObj.Fields![fieldID].Type = 'ContainedResource'){ // if field type is contained, count contained schema fields
-                    const res = await this.findByName(collectionObj.Fields![fieldID].Resource!);
-                    fieldsCount += Object.keys(res.Fields!).length;
+                if(collectionObj.Fields![fieldID].Type === 'ContainedResource'){ // if field type is contained, count contained schema fields
+                    const collectionFieldsCount = await this.getCollectionFieldsLength(collectionObj.Fields![fieldID].Resource!);
+                    fieldsCount += collectionFieldsCount;
                 } else{
                     fieldsCount++;
                 }

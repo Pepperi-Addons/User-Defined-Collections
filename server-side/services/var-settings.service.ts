@@ -4,6 +4,7 @@ import { DataLimitationMapping, limitationField, SoftLimitsDeaultValues } from '
 import { UtilitiesService } from './utilities.service';
 import jwtDecode from "jwt-decode";
 import { limitationTypes, settingsTable, SettingsTableName } from '../metadata';
+import config from '../../addon.config.json'
 
 export class VarSettingsService{
     utilities: UtilitiesService;
@@ -74,10 +75,11 @@ export class VarSettingsService{
     // GET - on var settings reload, get the relevant data
     async getVarSettingsConfiguration(): Promise<limitationField>{
         let settingsBody: any = {};
-        const res: AddonData = await this.getSettings()
-
-        for(const element of DataLimitationMapping.keys()){ // create the list of items returned to var settings
-            settingsBody[element] = res[element];
+        const res: AddonData | undefined = await this.getSettings()
+        if(res){
+            for(const element of DataLimitationMapping.keys()){ // create the list of items returned to var settings
+                settingsBody[element] = res[element];
+            }            
         }
         return settingsBody;
     }
@@ -127,28 +129,27 @@ export class VarSettingsService{
     }
 
     getDistributorUUID(): string{
-        const token = this.utilities.getClient().OAuthAccessToken;
+        const token = this.utilities.getToken();
         return jwtDecode(token)['pepperi.distributoruuid'].toString();
     }
 
-    async getSettings(): Promise<AddonData>{
+    async getSettings(): Promise<AddonData | undefined>{
         try{
-            const addonUUID = this.utilities.getClient().AddonUUID;
             const distributorUUID: string = this.getDistributorUUID();
             console.log(`About to get settings table`);
-            const res = await this.utilities.papiClient.addons.data.uuid(addonUUID).table(SettingsTableName).key(distributorUUID).get();
+            const res = await this.utilities.papiClient.addons.data.uuid(config.AddonUUID).table(SettingsTableName).key(distributorUUID).get();
             console.log(`Got data from settings table.`);
             return res;
 
         } catch(err){
-            console.log(`Error get settings table: ${err}`);
-            throw new Error(`Error get settings table: ${err}`);
+            console.log(`Error getting settings table: ${err}`);
+            return undefined;
         }
     }
 
     async getSettingsByName(element: string): Promise<number>{
         let elementCount: number;
-        const settings = await this.getSettings();
+        const settings: AddonData | undefined = await this.getSettings();
         if(settings){
             elementCount = settings[element];
         } else{
@@ -159,9 +160,8 @@ export class VarSettingsService{
 
     async upsertSettings(settingsBody){
         try{
-            const addonUUID = this.utilities.getClient().AddonUUID;
             console.log(`About to upsert data to settings table`);
-            await this.utilities.papiClient.addons.data.uuid(addonUUID).table(SettingsTableName).upsert(settingsBody);
+            await this.utilities.papiClient.addons.data.uuid(config.AddonUUID).table(SettingsTableName).upsert(settingsBody);
             console.log(`Post data to settings table.`);
 
         } catch(err){

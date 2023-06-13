@@ -55,13 +55,13 @@ export class ServerDocumentsService {
     }
 
     async assertDocumentsNumber(collection, documents): Promise<string>{
-        const settings: AddonData = await this.varRelationService.getSettings();
+        const settings: AddonData | undefined = await this.varRelationService.getSettings();
         const indexedCollection = this.globalService.isCollectionIndexed(collection);
 
         const description: string = `Number of documents in ${collection.Name}`;
         let errorDescription: string;
-        if((indexedCollection && documents.length > settings[limitationTypes.Documents]) || 
-            (!indexedCollection && documents.length > settings[limitationTypes.NotIndexedDocument])){
+        if(settings && ((indexedCollection && documents.length > settings[limitationTypes.Documents]) || 
+            (!indexedCollection && documents.length > settings[limitationTypes.NotIndexedDocument]))){
             errorDescription = description + ` - Documents number is above limit`
         }
         return description;

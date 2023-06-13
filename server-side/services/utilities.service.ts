@@ -16,8 +16,8 @@ export class UtilitiesService {
         });
     }
 
-    getClient(){
-        return this.client;
+    getToken(){
+        return this.client.OAuthAccessToken;
     }
 
     async createRelations(relations) {
