@@ -3,6 +3,17 @@ import { AddonDataScheme, Relation } from "@pepperi-addons/papi-sdk";
 const relationName = 'CollectionList';
 export const IMPORT_FUNCTION_NAME = 'import_data_source';
 export const EXPORT_FUNCTION_NAME = 'export_data_source';
+export const VAR_SETTINGS_RELATION_NAME = 'VarSettingsLimitationsRelation';
+
+export let VarSettingsRelation: Relation[] = [{
+    Name: VAR_SETTINGS_RELATION_NAME,
+    AddonUUID: config.AddonUUID,
+    RelationName: "VarSettings",
+    Type: "AddonAPI",
+    Description: "UDC relation to Var Settings, Var users can edit UDC limitations with the Var addon",
+    AddonRelativeURL: "/api/var_settings",
+    Title: "User Defined Collections", //The title of the tab in which the fields will appear
+}]
 
 export const DimxRelations: Relation[] = [{
     AddonUUID: config.AddonUUID,
@@ -114,4 +125,40 @@ export const DataQueryRelation: Relation[] = [{
 export const UdcMappingsScheme: AddonDataScheme = {
     Name: 'UdcMappings',
     Type: 'meta_data',
+}
+
+export const SettingsTableName = 'UserDefinedCollectionsSettings';
+
+export const settingsTable: AddonDataScheme= {
+    Name: SettingsTableName, 
+    Type: 'meta_data', 
+    Fields: {
+        metadata: { 
+            Type:'Integer'
+        },
+        documents: { 
+            Type:'Integer'
+        },
+        documentsNotIndexed: { 
+            Type:'Integer'
+        },
+        containedArrayItems: {
+            Type:'Integer'
+        },
+        fields: {
+            Type:'Integer'
+        },
+        fieldsOfContained: {
+            Type:'Integer'
+        }
+    } 
+}
+
+export const limitationTypes = {
+    Metadata : "metadata",
+    Documents : "documents",
+    NotIndexedDocument : "documentsNotIndexed",
+    ItemsOfContainedArray: "containedArrayItems",
+    Fields : "fields",
+    ContainedSchemaFields : "fieldsOfContained"
 }

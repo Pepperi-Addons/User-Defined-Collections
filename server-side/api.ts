@@ -10,6 +10,32 @@ import { ApiService } from './services/api-service';
 import { ResourcesService } from './services/resources-service';
 import { ServerDocumentsService } from './services/documents.service';
 
+import { VarSettingsService } from './services/var-settings.service';
+import { limitationTypes } from './metadata';
+
+export async function var_settings(client: Client, request: Request) {
+    const utilities = new UtilitiesService(client);
+    const varRelationService: VarSettingsService = new VarSettingsService(utilities);
+
+    try {
+        if (request.method === 'POST') {
+            // SET settings data according user change - getting updated values from Var settings (on value changed)
+            return varRelationService.setVarSettingsUpdatedValues(request.body);
+        }
+        else if (request.method === 'GET') {
+            // GET settings data - sending updated values to Var settings (on var settings page reload)
+            return varRelationService.getVarSettingsConfiguration();
+        }
+        else {
+            throw new Error(`Method ${request.method} is not supported`)
+        }
+    }
+    catch (error) {
+        console.error(`var_settings: ${error}`);
+        throw error;
+    }
+}
+
 
 export async function schemes(client: Client, request: Request) {
     
@@ -47,6 +73,9 @@ export async function documents(client: Client, request: Request) {
     const apiService = new ApiService(client);
     const resourcesService = new ResourcesService(client);
     const documentsService = new DocumentsService(apiService, resourcesService);
+    const utilities = new UtilitiesService(client);
+    const varRelationService: VarSettingsService = new VarSettingsService(utilities);
+
 
     let result;
 
@@ -69,7 +98,8 @@ export async function documents(client: Client, request: Request) {
             break;
         }
         case 'POST': {
-            result = await documentsService.upsert(collectionName, request.body);
+            const containedArrayLimit: number = await varRelationService.getSettingsByName(limitationTypes.ItemsOfContainedArray);
+            result = await documentsService.upsert(collectionName, request.body, containedArrayLimit);
             break;
         }
         default: {
