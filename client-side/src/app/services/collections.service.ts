@@ -7,7 +7,7 @@ import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-add
 
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 import { UtilitiesService } from './utilities.service';
-import { API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, EVENTS_FUNCTION_NAME, DELETE_COLLECTION_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
+import { API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, DELETE_FUNCTION_NAME, EVENTS_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
 import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
@@ -139,14 +139,8 @@ export class CollectionsService {
     }
 
     async deleteCollection(collectionName: string): Promise<string>{
-        debugger
-        const url = this.utilities.getFunctionURL(DELETE_COLLECTION_FUNCTION_NAME, {collection_name: collectionName});
-        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, {Force: true}).toPromise();//TODO: delete force
-    }
-
-    async getAuditLog(auditLogUUID){
-        const logRes = await this.papiClient.get(`/audit_logs/${auditLogUUID}`);
-        return logRes;
+        const url = this.utilities.getFunctionURL(DELETE_FUNCTION_NAME, {collection_name: collectionName});
+        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
     }
     
 }

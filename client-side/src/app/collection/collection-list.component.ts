@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
-import { IPepFieldClickEvent, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
+import { IPepFieldClickEvent, PepHttpService, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { TranslateService } from '@ngx-translate/core';
 
 import { UtilitiesService } from "../services/utilities.service";
@@ -9,8 +9,8 @@ import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
-import { AddonDataScheme, Collection } from "@pepperi-addons/papi-sdk";
-import { FormMode, EMPTY_OBJECT_NAME } from "../entities";
+import { AddonDataScheme, AuditLog, Collection } from "@pepperi-addons/papi-sdk";
+import { FormMode, EMPTY_OBJECT_NAME, DeletionStatus } from "../entities";
 import { config } from "../addon.config";
 import { AddCollectionDialogComponent } from "./form/add-collection-dialog/add-collection-dialog.component";
 import { FileStatusPanelComponent } from "@pepperi-addons/ngx-composite-lib/file-status-panel";
@@ -49,6 +49,9 @@ export class CollectionListComponent implements OnInit {
 
     private currentSnackBar: MatSnackBarRef<FileStatusPanelComponent> | null = null
 
+    private deletionIndex = 0;
+    private deletionStatus: DeletionStatus[] = []
+
 
     constructor(
         public collectionsService: CollectionsService,
@@ -59,8 +62,7 @@ export class CollectionListComponent implements OnInit {
         private router: Router,
         private utilitiesService:UtilitiesService,
         private snackBarService: PepSnackBarService,
-
-
+        private httpService: PepHttpService,
     ) {
         this.layoutService.onResize$.subscribe(size => {
             this.screenSize = size;
@@ -180,18 +182,25 @@ export class CollectionListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Delete'),
                         handler: async (objs) => {
+                            const collectionName = objs.rows[0];
+                            let deletionStatus = this.createDeleteStatusObject(collectionName);
                             try{
-                                debugger
-                                const res = await this.collectionsService.deleteCollection(objs.rows[0]);
+                                this.deletionStatus.push(deletionStatus);
+                                this.updateSnackbar();
+
+                                const res = await this.collectionsService.deleteCollection(collectionName); // if hard_delete takes less than 30 seconds, deletedCounter is returned, else- executionUUID of async operation
                                 
                                 if(res['ExecutionUUID']){
-                                    debugger
-                                    await this.pollAuditResult(res['ExecutionUUID']);
+                                    await this.pollAuditLog(res['ExecutionUUID'], deletionStatus);
+                                } else{
+                                    deletionStatus.status = 'done';
+                                    this.updateSnackbar();
                                 }
-                                debugger
                                 this.dataSource = this.getDataSource();
                             }
                             catch(error){
+                                deletionStatus.status = 'failed';
+                                this.updateSnackbar();
                                 const dataMsg = new PepDialogData({
                                     title: this.translate.instant('Collection_DeleteDialogTitle'),
                                     actionsType: 'close',
@@ -348,34 +357,70 @@ export class CollectionListComponent implements OnInit {
         }));
     }
 
-    // polling audit log until getting success or failure
-    async pollAuditResult(auditLogUUID: string): Promise<any> {
-        return new Promise<any>((resolve) => {
-            const interval = setInterval(async () => {
-                const logRes = await this.collectionsService.getAuditLog(auditLogUUID);
-                if (logRes && logRes.Status && logRes.Status.Name !== 'InProgress' && logRes.Status.Name !== 'InRetry') {
-                    this.updateSnackbar();
-                    clearInterval(interval);
-                    const resultObj = JSON.parse(logRes.AuditInfo.ResultObject);
-                    resolve(resultObj);
+    private async pollAuditLog(auditLog: string, statusObj: DeletionStatus): Promise<string> {
+        console.log(`polling delete process with executionUUID: ${auditLog}`);
+        const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+        const waitingTime = 3000;
+        try {
+            let result: AuditLog;
+            while (true) {
+                result = await this.httpService.getPapiApiCall(`/audit_logs/${auditLog}`).toPromise();
+                if (!result || result.Status.ID === 2 || result.Status.ID === 4 || result.Status.ID === 5) {
+                    await delay(waitingTime);
                 }
                 else {
-                    this.updateSnackbar();
-                    clearInterval(interval);
-                    resolve(undefined);
+                    break;
                 }
-            }, 600000);
-        });
+            }
+            switch (result.Status.Name) {
+                case 'Failure':
+                    statusObj.status = "failed";
+                    console.log(`operation failed with error: ${result.AuditInfo.ErrorMessage}`);
+                    this.updateSnackbar();
+                    break;
+                case 'Success':
+                    statusObj.status = "done";
+                    console.log(`operation succeeded`);
+                    this.updateSnackbar();
+                    break;
+                default:
+                    statusObj.status = "failed";
+                    console.log(`operation failed with an unknown audit log type: ${result["Status"]}`);
+                    this.updateSnackbar();
+            }
+        }
+        catch (ex) {
+            console.error(`delete collection exception: ${JSON.stringify(ex)}`);
+            statusObj.status = "failed";
+            this.updateSnackbar();
+            return 'Unknown error occured';
+        }
+    }
+
+    private createDeleteStatusObject(collectionName): DeletionStatus {
+        return {
+            key: this.deletionIndex++,
+            name: collectionName,
+            status: 'deleting'
+        }
     }
 
     updateSnackbar() {
+        if (!this.currentSnackBar?.instance) {
             this.currentSnackBar = this.snackBarService.openSnackBarFromComponent(FileStatusPanelComponent, {
-                title: "DIMX Process",
-                content: "data"
+                title: "Delete Process",
+                content: this.deletionStatus
             })
             this.currentSnackBar.instance.closeClick.subscribe(() => {
                 this.currentSnackBar = null;
-
             });
+        }
+        else {
+            this.currentSnackBar.instance.data.content = this.deletionStatus;
+            if (this.deletionStatus.length === 0) {
+                this.currentSnackBar.instance.snackBarRef.dismiss();
+                this.currentSnackBar = null;
+            }
+        }
     }
 }

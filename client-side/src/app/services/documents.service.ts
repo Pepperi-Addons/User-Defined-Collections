@@ -29,7 +29,7 @@ export class DocumentsService {
     }
 
     async deleteDocument(collectionName: string, key: string){
-        const url = this.UtilitiesService.getFunctionURL(DELETE_FUNCTION_NAME, {name: collectionName});
-        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, {key}).toPromise();
+        const url = this.UtilitiesService.getFunctionURL(DELETE_FUNCTION_NAME, {collection_name: collectionName, key: key});
+        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
     }
 }

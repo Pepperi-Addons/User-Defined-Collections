@@ -75,6 +75,7 @@ export class DocumentsListComponent implements OnInit {
                         handler: async (objs) => {
                             try{
                                 await this.documentsService.deleteDocument(this.collectionName, objs.rows[0]);
+                                this.dataSource = this.getDataSource();
                             }
                             catch(error){
                                 const dataMsg = new PepDialogData({

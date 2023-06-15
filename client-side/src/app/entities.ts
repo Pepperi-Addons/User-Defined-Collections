@@ -45,6 +45,12 @@ export class RebuildStatus {
     statusMessage?: string | undefined;
 }
 
+export class DeletionStatus {
+    key: number;
+    name: string;
+    status = 'deleting' || 'done' || 'failed';
+}
+
 export const API_FILE_NAME = 'api';
 export const ADDONS_BASE_URL = '/addons/api';
 export const COLLECTIONS_FUNCTION_NAME = 'schemes';
@@ -57,6 +63,5 @@ export const FIELDS_FUNCTION_NAME = 'fields';
 export const ATD_FUNCTION_NAME = 'get_atd';
 export const REBUILD_FUNCTION_NAME = 'clean_rebuild';
 export const EVENTS_FUNCTION_NAME = 'collection_events';
-export const DELETE_COLLECTION_FUNCTION_NAME = 'hard_delete';
 export const GL_PAGE_SIZE = 20;
 export const API_PAGE_SIZE = 100;
