@@ -12,18 +12,6 @@ import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
-    accessToken = '';
-    parsedToken: any
-    papiBaseURL = ''
-
-    get papiClient(): PapiClient {
-        return new PapiClient({
-            baseURL: this.papiBaseURL,
-            token: this.session.getIdpToken(),
-            suppressLogging: true
-        })
-    }
-
     constructor(
         public session:  PepSessionService,
         private httpService: PepHttpService,
@@ -31,10 +19,6 @@ export class CollectionsService {
         private utilities: UtilitiesService,
         private translate: TranslateService,
     ) {
-        const accessToken = this.session.getIdpToken();
-
-        this.parsedToken = jwt(accessToken);
-        this.papiBaseURL = this.parsedToken["pepperi.baseurl"]
     }
 
     async getCollections(hidden: boolean = false, params: any = {}): Promise<Collection[]> {
