@@ -404,7 +404,7 @@ export class CollectionListComponent implements OnInit {
             status: 'deleting'
         }
     }
-
+ 
     updateSnackbar() {
         if (!this.currentSnackBar?.instance) {
             this.currentSnackBar = this.snackBarService.openSnackBarFromComponent(FileStatusPanelComponent, {
