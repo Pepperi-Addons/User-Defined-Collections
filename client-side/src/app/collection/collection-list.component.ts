@@ -408,7 +408,7 @@ export class CollectionListComponent implements OnInit {
     updateSnackbar() {
         if (!this.currentSnackBar?.instance) {
             this.currentSnackBar = this.snackBarService.openSnackBarFromComponent(FileStatusPanelComponent, {
-                title: "Delete Process",
+                title: "Deletion Process",
                 content: this.deletionStatus
             })
             this.currentSnackBar.instance.closeClick.subscribe(() => {
