@@ -13,24 +13,17 @@ import { PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
 
 import { FileStatusPanelComponent } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
 
-import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME, API_PAGE_SIZE, SEARCH_DOCUMENTS_FUNCTION_NAME} from '../entities';
+import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME, API_PAGE_SIZE, SEARCH_DOCUMENTS_FUNCTION_NAME, DeletionStatus} from '../entities';
 import { config } from '../addon.config';
 import { IPepGenericListParams } from '@pepperi-addons/ngx-composite-lib/generic-list';
 
 @Injectable({ providedIn: 'root' })
 export class UtilitiesService {
-    
-    private currentSnackBar: MatSnackBarRef<FileStatusPanelComponent> | null = null;
-    private cleanRebuilds: RebuildStatus[] = []
-    private cleanRebuildsIndex = 0;
-
     constructor(
         public session:  PepSessionService,
         private httpService: PepHttpService,
         private addonService: PepAddonService,
-        private translate: TranslateService,
         private dialogService: PepDialogService,
-        private snackBarService: PepSnackBarService
     ) { }
 
     async getCollectionByName(collectionName: string): Promise<Collection> {
@@ -158,86 +151,6 @@ export class UtilitiesService {
                 callback(value);
             }
         })
-    }
-
-    private updateSnackBar() {
-        if (!this.currentSnackBar?.instance) {
-            this.currentSnackBar = this.snackBarService.openSnackBarFromComponent(FileStatusPanelComponent, {
-                title: this.translate.instant('CleanRebuild_SnackBar_Title'),
-                content: this.cleanRebuilds
-            })
-            this.currentSnackBar.instance.closeClick.subscribe(() => {
-                this.currentSnackBar = null;
-
-            });
-        }
-        else {
-            this.currentSnackBar.instance.data.content = this.cleanRebuilds;
-            if (this.cleanRebuilds.length === 0) {
-                this.currentSnackBar.instance.snackBarRef.dismiss();
-                this.currentSnackBar = null;
-            }
-        }
-    }
-
-    private async pollAuditLog(auditLog: string, statusObj: RebuildStatus): Promise<string> {
-        
-        console.log(`polling clean rebuild process with URI: ${auditLog}`);
-        const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-        const waitingTime = 1000; //in ms
-        try {
-            let result: AuditLog;
-            while (true) {
-                result = await this.httpService.getPapiApiCall(auditLog).toPromise();
-
-                if (!result || result.Status.ID === 2 || result.Status.ID === 4 || result.Status.ID === 5) {
-                    await delay(waitingTime);
-                }
-                else {
-                    break;
-                }
-            }
-            switch (result.Status.Name) {
-                case 'Failure':
-                    statusObj.status = "failed";
-                    console.log(`operation failed with error: ${result.AuditInfo.ErrorMessage}`);
-                    this.updateSnackBar();
-                    break;
-                case 'Success':
-                    console.log(`operation succeeded`);
-                    break;
-                default:
-                    statusObj.status = "failed";
-                    console.log(`operation failed with an unknown audit log type: ${result["Status"]}`);
-                    this.updateSnackBar();
-            }
-            return result.AuditInfo.ErrorMessage;
-        }
-        catch (ex) {
-            console.error(`clean rebuild exception: ${JSON.stringify(ex)}`);
-            statusObj.status = "failed";
-            this.updateSnackBar();
-            return 'Unknown error occured';
-        }
-    }
-
-    private createRebuildStatusObject(collectionName): RebuildStatus {
-        return {
-            key: this.cleanRebuildsIndex++,
-            name: collectionName,
-            status: 'indexing',
-        }
-    }
-
-    async handleCleanRebuild(auditLog: string, collectionName: string) {
-        let status = this.createRebuildStatusObject(collectionName)
-        this.cleanRebuilds.push(status);
-        this.updateSnackBar();
-        const error = await this.pollAuditLog(auditLog, status);
-        if (error === undefined) {
-            status.status = 'done';
-            this.updateSnackBar();
-        }
     }
     
     getFunctionURL(functionName: string, params: any = {}) {
