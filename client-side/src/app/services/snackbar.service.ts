@@ -60,7 +60,6 @@ export class SnackbarService {
         try {
             let result: AuditLog;
             while (true) {
-                debugger
                 result = await this.httpService.getPapiApiCall(auditLog).toPromise();
 
                 if (!result || result.Status.ID === 2 || result.Status.ID === 4 || result.Status.ID === 5) {
@@ -123,7 +122,7 @@ export class SnackbarService {
         this.updateSnackBar( this.deletionStatus, deleteCollectionSnackBarTitle);
 
         const res = await this.collectionsService.deleteCollection(collectionName); // if hard_delete takes less than 30 seconds, deletedCounter is returned, else- executionUUID of async operation
-        debugger
+
         if(res['ExecutionUUID']){
             const error = await this.pollAuditLog(res['URI'], deletionStatus, deleteCollectionSnackBarTitle, this.cleanRebuilds);
             if (error === undefined) {
