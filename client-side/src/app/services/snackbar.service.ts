@@ -52,6 +52,7 @@ export class SnackbarService {
         }
     }
 
+    
     private async pollAuditLog(auditLog: string, statusObj: RebuildStatus | DeletionStatus, title: string, statusObjects: RebuildStatus[] | DeletionStatus[] ): Promise<string> {
         
         console.log(`polling clean rebuild process with URI: ${auditLog}`);
