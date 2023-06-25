@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
-import { IPepFieldClickEvent, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
+import { IPepFieldClickEvent, PepHttpService, PepLayoutService, PepScreenSizeType } from '@pepperi-addons/ngx-lib';
 import { TranslateService } from '@ngx-translate/core';
 
 import { UtilitiesService } from "../services/utilities.service";
@@ -9,10 +9,15 @@ import { PepSelectionData } from "@pepperi-addons/ngx-lib/list";
 import { PepMenuItem } from "@pepperi-addons/ngx-lib/menu";
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from "@angular/router";
 import { PepDialogData, PepDialogService } from "@pepperi-addons/ngx-lib/dialog";
-import { AddonDataScheme, Collection } from "@pepperi-addons/papi-sdk";
-import { FormMode, EMPTY_OBJECT_NAME } from "../entities";
+import { AddonDataScheme, AuditLog, Collection } from "@pepperi-addons/papi-sdk";
+import { FormMode, EMPTY_OBJECT_NAME, DeletionStatus } from "../entities";
 import { config } from "../addon.config";
 import { AddCollectionDialogComponent } from "./form/add-collection-dialog/add-collection-dialog.component";
+import { FileStatusPanelComponent } from "@pepperi-addons/ngx-composite-lib/file-status-panel";
+import { MatSnackBarRef } from "@angular/material/snack-bar";
+import { PepSnackBarService } from "@pepperi-addons/ngx-lib/snack-bar";
+import { SnackbarService } from "../services/snackbar.service";
+
 
 @Component({
     selector: 'collection-list',
@@ -51,7 +56,9 @@ export class CollectionListComponent implements OnInit {
         public activateRoute: ActivatedRoute,
         public dialogService: PepDialogService,
         private router: Router,
-        private utilitiesService:UtilitiesService
+        private utilitiesService: UtilitiesService,
+        private snackbarService: SnackbarService,
+
 
     ) {
         this.layoutService.onResize$.subscribe(size => {
@@ -166,6 +173,20 @@ export class CollectionListComponent implements OnInit {
                                     });
                                     this.dialogService.openDefaultDialog(dataMsg);
                                 }
+                            }
+                        }
+                    });
+                    actions.push({
+                        title: this.translate.instant('Delete'),
+                        handler: async (objs) => {
+                            const collectionName = objs.rows[0];
+                            try{
+                                await this.snackbarService.handleCollectionDeletion(collectionName);
+                                this.dataSource = this.getDataSource();
+                            }
+                            catch(error){
+                                this.utilitiesService.showMessageDialog(this.translate.instant('Collection_DeleteRecycleBinDialogTitle'),
+                                    error, 'close');
                             }
                         }
                     })
@@ -311,8 +332,21 @@ export class CollectionListComponent implements OnInit {
         const content = this.translate.instant('Collection_RebuildDialog_Content');
         this.utilitiesService.showMessageDialog(title, content, 'cancel-continue', (continuePressed => {
             if (continuePressed) {
-                this.collectionsService.handleCleanRebuild(collectionName);
+                this.handleCleanRebuild(collectionName);
             }
         }));
     }
+
+    async handleCleanRebuild(collectionName: string) {
+        try {
+            const auditLog = await this.collectionsService.cleanRebuild(collectionName);
+            if (auditLog) {
+                this.snackbarService.handleCleanRebuild(auditLog, collectionName);
+            }
+        }
+        catch (error) {
+            console.log(`clean rebuild for ${collectionName} failed with error: ${error}`);
+        }
+    }
+
 }

@@ -34,6 +34,7 @@ import { UtilitiesService } from './../services/utilities.service'
 import { PepCheckboxModule } from '@pepperi-addons/ngx-lib/checkbox';
 import { GeneralTabComponent } from './form/tabs/general/general-tab.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { SnackbarService } from '../services/snackbar.service';
 
 
 const pepIcons = [
@@ -84,7 +85,8 @@ export const routes: Routes = [
         TranslateStore,
         // When loading this module from route we need to add this here (because only this module is loading).
         CollectionsService,
-        UtilitiesService
+        UtilitiesService,
+        SnackbarService
     ]
 })
 export class CollectionListModule {

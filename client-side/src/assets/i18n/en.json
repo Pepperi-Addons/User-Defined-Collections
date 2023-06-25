@@ -94,6 +94,7 @@
     "AdditionalField_Field_Title": "Field Name",
     "DeleteAdditionalField_DialogTitle": "Delete Field",
     "DeleteAdditionalField_DialogContent": "Are you sure you want to delete {{field_name}} field?",
+    "DeleteCollection_SnackBar_Title": "Deletion Process",
     "Collection_ExtensionField_Title": "Inherit fields from",
     "Collection_NameField_Title": "Key",
     "Collection_DescriptionField_Title": "Description",
@@ -110,5 +111,6 @@
     "Collection_SchemeOnly_Description": "check the 'Scheme Only' checkbox to create a definition object to be used later inside other collections. this collection cannot have data of it's own.",
     "Collection_SchemeOnly_Title": "Scheme Only",
     "Collection_GeneralTab_Title": "Edit collection data",
-    "Fields_SystemFilter_Title": "Apply system level filtering on this field"
+    "Fields_SystemFilter_Title": "Apply system level filtering on this field",
+    "Collection_DeleteRecycleBinDialogTitle": "Could not delete collection"
 }

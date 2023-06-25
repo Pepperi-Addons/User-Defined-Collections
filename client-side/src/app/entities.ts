@@ -45,12 +45,19 @@ export class RebuildStatus {
     statusMessage?: string | undefined;
 }
 
+export class DeletionStatus {
+    key: number;
+    name: string;
+    status = 'deleting' || 'done' || 'failed';
+}
+
 export const API_FILE_NAME = 'api';
 export const ADDONS_BASE_URL = '/addons/api';
 export const COLLECTIONS_FUNCTION_NAME = 'schemes';
 export const DOCUMENTS_FUNCTION_NAME = 'documents';
 export const SEARCH_DOCUMENTS_FUNCTION_NAME = 'search';
 export const CREATE_FUNCTION_NAME = 'create';
+export const DELETE_FUNCTION_NAME = 'hard_delete'  
 export const MAPPINGS_FUNCTION_NAME = 'mappings';
 export const FIELDS_FUNCTION_NAME = 'fields';
 export const ATD_FUNCTION_NAME = 'get_atd';
