@@ -103,12 +103,13 @@ export class ReferenceService {
                 const valuesForSearch = Array.from(this.referenceObjects[resourceName].UniqueField[fieldName].Values.values());
                 let searchBody: SearchBody = {
                     Fields: [
-                        "Key",
-                        "InternalID",
-                        "ExternalID"
+                        fieldName
                     ],
                     UniqueFieldID: fieldName,
                     UniqueFieldList: [...valuesForSearch]
+                }
+                if (fieldName != 'Key') {
+                    searchBody.Fields?.push('Key');
                 }
                 console.log(`about to call search on resource ${resourceName} with body ${JSON.stringify(searchBody)}`);
                 const items = await this.resourcesService.search(resourceName, searchBody);
