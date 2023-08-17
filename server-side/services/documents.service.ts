@@ -1,4 +1,4 @@
-import { AddonData, AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk'
+import { AddonData, AddonDataScheme, Collection, SearchData } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
 import { UtilitiesService } from './utilities.service';
 import { CollectionsService } from './collections.service';
@@ -7,6 +7,8 @@ import { ApiService } from './api-service';
 import { ResourcesService } from './resources-service';
 import { VarSettingsService } from '../services/var-settings.service';
 import { limitationTypes } from '../metadata';
+
+import config from '../../addon.config.json'
 
 export class ServerDocumentsService {
     
@@ -22,28 +24,33 @@ export class ServerDocumentsService {
     
     
     async getAllDocumentsCount(collectionsService: CollectionsService): Promise<number> {
-        const collections = await collectionsService.find();
+        const collections = await collectionsService.find() as Collection[];
         let count = 0;
-        await Promise.all(collections.map(async (collection) => {
-            const documents = await this.utilities.papiClient.userDefinedCollections.documents(collection.Name).iter().toArray()
-            count += documents.length;
-        }));
+        await Promise.all(collections.map(async (item) => {
+            try {
+                if(item.Type === 'data') {
+                    const documentsCount = await this.getDocumentsCountForSingleCollection(item)
+                    count += documentsCount
+                }
+            }
+            catch (err) {
+                console.log(`could not get documents for collection ${item.Name}. error: ${err}`)
+            }
+        }))
 
         return count;
     }
 
-    async getDocumentsCountForCollection(collections: AddonDataScheme[]) {
+    async getDocumentsCountForCollection(collections: Collection[]) {
         const retVal: any[] = []
         await Promise.all(collections.map(async (item) => {
             try {
-                const documents = await this.utilities.papiClient.userDefinedCollections.documents(item.Name).find({fields: ['Hidden'], page_size: -1});
-                if (documents) {
-                    const description: string = await this.assertDocumentsNumber(item, documents); // check number of documents
-
+                if(item.Type === 'data') {
+                    const documentsCount = await this.getDocumentsCountForSingleCollection(item)
                     retVal.push ({
                         Data: item.Name,
-                        Description: description,
-                        Size: documents.length,
+                        Description: `Number of documents in ${item.Name}`,
+                        Size: documentsCount
                     })
                 }
             }
@@ -51,7 +58,25 @@ export class ServerDocumentsService {
                 console.log(`could not get documents for collection ${item.Name}. error: ${err}`)
             }
         }))
-        return retVal;
+        return retVal.sort(((prev,curr) => prev.Data.localeCompare(curr.Data)));
+    }
+
+    async getDocumentsCountForSingleCollection(collectionScheme: Collection): Promise<number> {
+        const isCollectionIndexed = this.globalService.isCollectionIndexed(collectionScheme);
+        let documents: SearchData<AddonData>;
+
+        if (isCollectionIndexed) {
+            documents = await this.utilities.papiClient.addons.data.search.uuid(config.AddonUUID).table(collectionScheme.Name).post({IncludeCount: true, Fields: ['Hidden'], Where: 'Hidden = false'});
+        }
+        else {
+            const objects = await this.utilities.papiClient.userDefinedCollections.documents(collectionScheme.Name).find({fields: ['Hidden'], page_size: -1});
+            documents = {
+                Objects: objects || [],
+                Count: objects?.length || 0
+            }
+        }
+
+        return documents.Count || 0;
     }
 
     async assertDocumentsNumber(collection, documents): Promise<string>{

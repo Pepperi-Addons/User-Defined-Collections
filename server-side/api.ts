@@ -179,7 +179,7 @@ export async function total_documents(client: Client, request: Request) {
 export async function documents_per_collection(client: Client, request: Request) {
     const collectionsService = new CollectionsService(client);
     const documentsService = new ServerDocumentsService(client);
-    const collections = await collectionsService.find({page_size: -1});
+    const collections = await collectionsService.find({page_size: -1}) as Collection[];
     const documentsPerCollection = await documentsService.getDocumentsCountForCollection(collections);
     
     return {
