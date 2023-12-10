@@ -35,6 +35,6 @@
     ]
   },
   "AddonPackage": {
-    "ClientZip": false,
+    "ClientZip": false
   }
 }
