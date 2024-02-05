@@ -21,7 +21,8 @@ export const DimxRelations: Relation[] = [{
     RelationName: 'DataImportResource',
     Type: 'AddonAPI',
     Description: 'relation for importing documents to collection',
-    AddonRelativeURL: '/api/import_data_source?collection_name={collection_name}'
+    AddonRelativeURL: '/api/import_data_source?collection_name={collection_name}',
+    InitRelationDataRelativeURL: '/api/init_import_data_source?collection_name={collection_name}'
 },
 {
     AddonUUID: config.AddonUUID,
