@@ -101,10 +101,14 @@ export class ServerDocumentsService {
     // for the AddonRelativeURL of the relation
     async importDataSource(body, collectionName) {
         console.log(`@@@@importing documents: ${JSON.stringify(body)}@@@@`);
-            const collectionScheme = this.initData
-            ? this.initData.CollectionScheme
-            : (console.log(`Collection ${collectionName} not provided in Init. GETting it now`), 
-               await this.apiService.findCollectionByName(collectionName));
+
+        let collectionScheme;
+        if (this.initData) {
+            collectionScheme = this.initData.CollectionScheme;
+        } else {
+            console.log(`Collection ${collectionName} not provided in Init. GETting it now`);
+            collectionScheme = await this.apiService.findCollectionByName(collectionName);
+        }
           
         let items = body.DIMXObjects.map(obj => {
             return obj.Object;
