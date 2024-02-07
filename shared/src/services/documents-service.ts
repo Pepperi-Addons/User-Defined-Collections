@@ -1,6 +1,6 @@
 import { AddonData, AddonDataScheme, Collection, CollectionField, SearchData, SchemeFieldType, SearchBody } from "@pepperi-addons/papi-sdk";
 import { Schema, Validator } from "jsonschema";
-import { CollectionFields, ReferenceValidationResult } from "../entities";
+import { CollectionFields, DIMXImportInitData, ReferenceSchemes, ReferenceValidationResult } from "../entities";
 import { DocumentSchema } from "../jsonSchemes/documents";
 import { IApiService } from "./api-service";
 import { GlobalService } from "./global-service";
@@ -11,12 +11,13 @@ import { SchemesService } from "./schemes-service";
 
 export class DocumentsService {
     globalService = new GlobalService();
-    referencesService: ReferenceService = new ReferenceService(this.resourcesService);
+    referencesService: ReferenceService;
     private schemesService: SchemesService;
     private containedLimit: number | undefined;
 
-    constructor(private apiService: IApiService, private resourcesService: IResourcesServices) {
+    constructor(private apiService: IApiService, private resourcesService: IResourcesServices, private initData?: DIMXImportInitData) {
         this.schemesService = new SchemesService(apiService);
+        this.referencesService = new ReferenceService(resourcesService, initData?.ReferenceSchemes);
     }
 
     async find(collectionName: any, options: any): Promise<AddonData> {
@@ -243,6 +244,11 @@ export class DocumentsService {
             }
         }
         return retVal;
+    }
+
+    async getReferenceSchemes(collectionScheme: Collection): Promise<ReferenceSchemes> {
+        const collectionFields = collectionScheme.Fields || {};
+        return await this.referencesService.getReferenceSchemes(collectionFields);
     }
 
     async processItemsToSave(collectionScheme: Collection, items: AddonData[]) {

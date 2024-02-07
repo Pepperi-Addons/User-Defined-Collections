@@ -1,25 +1,15 @@
 import { AddonData, AddonDataScheme, Collection, SearchBody } from "@pepperi-addons/papi-sdk"
-import { CollectionFields, ReferenceObject } from "../entities";
+import { CollectionFields, ReferenceField, ReferenceObjects, ReferenceSchemes } from "../entities";
 import { IResourcesServices } from "./resources-service";
-
 export class ReferenceService {
-    referenceFields: ReferenceObject[] = [];
-    referenceObjects: {
-        [key: string]: {
-            UniqueField: {
-                [FieldID: string]: {
-                    Values: Set<string>
-                }
-            }
-            Items: AddonData[];   
-        }
-    } = {};
+    referenceFields: ReferenceField[] = [];
+    referenceObjects: ReferenceObjects = {};
+    referenceSchemes: ReferenceSchemes;
 
-    referenceSchemes: {
-        [key: string]: Collection
-    } = {};
-
-    constructor(private resourcesService: IResourcesServices) { }
+    constructor(private resourcesService: IResourcesServices, referenceSchemes?: ReferenceSchemes) {
+        console.log(referenceSchemes ? `${Object.keys(referenceSchemes).length} reference schemes were provided` : 'no reference schemes were provided');
+        this.referenceSchemes = referenceSchemes || {};
+    }
 
     getItemByUniqueField(resourceName: string, fieldName: string, fieldValue: string): AddonData | undefined {
         let item: AddonData | undefined;
@@ -32,7 +22,7 @@ export class ReferenceService {
     async handleDotAnnotationItems(schemeFields: CollectionFields, documents: AddonData[]) {
         await this.handleReferences(schemeFields, documents);
         return await Promise.all(documents.map(async (doc) => {
-            await Promise.all(Object.keys(doc).map(async(prop) => {
+            await Promise.all(Object.keys(doc).map(async (prop) => {
                 // if the property name has '.' in it, the we need to split it and get referenced object by it's unique field
                 // i.e. if we have a field called myAccount.ExternalID, and myAccount referenced to accounts, then we need
                 // to delete myAccountExternalID from the object, and insert 'myAccount' instead with the key of the account
@@ -41,10 +31,10 @@ export class ReferenceService {
                     const parts = prop.split('.');
                     if (parts.length === 2) {
                         const field = schemeFields![parts[0]];
-                        if(field) {
+                        if (field) {
                             // if the referenced field is not unique, ignore it
                             const unique = await this.isUniqueField(field.Resource, parts[1]);
-                            if(unique) {
+                            if (unique) {
                                 const item = this.getItemByUniqueField(field.Resource || '', parts[1], doc[prop]);
                                 doc[parts[0]] = item ? item.Key : '';
                             }
@@ -55,10 +45,10 @@ export class ReferenceService {
             return doc;
         }))
     }
-    
+
     private async handleReferences(schemeFields: CollectionFields, documents: AddonData[]) {
         await this.getReferenceFields(schemeFields);
-        await Promise.all(documents.map(async(doc) => {
+        await Promise.all(documents.map(async (doc) => {
             await this.collectItemReferences(doc, schemeFields);
         }));
         await this.popualateAllResources();
@@ -80,7 +70,7 @@ export class ReferenceService {
             }
         }
 
-        if(Array.isArray(fieldValue)) {
+        if (Array.isArray(fieldValue)) {
             fieldValue.forEach(value => {
                 this.addValueToUniqueField(resourceName, fieldName, value);
             });
@@ -89,7 +79,7 @@ export class ReferenceService {
             this.addValueToUniqueField(resourceName, fieldName, fieldValue);
         }
     }
-    
+
     private addValueToUniqueField(resourceName, fieldName, value) {
         // to avoid duplicates, check if the field value already exists
         if (!this.referenceObjects[resourceName].UniqueField[fieldName].Values.has(value)) {
@@ -99,7 +89,7 @@ export class ReferenceService {
 
     private async populateItemsForResource(resourceName: string, fieldName: string) {
         try {
-            if(this.referenceObjects.hasOwnProperty(resourceName) && this.referenceObjects[resourceName].UniqueField.hasOwnProperty(fieldName)) {
+            if (this.referenceObjects.hasOwnProperty(resourceName) && this.referenceObjects[resourceName].UniqueField.hasOwnProperty(fieldName)) {
                 const valuesForSearch = Array.from(this.referenceObjects[resourceName].UniqueField[fieldName].Values.values());
                 let searchBody: SearchBody = {
                     Fields: [
@@ -138,7 +128,7 @@ export class ReferenceService {
                 // if the reference is for schema of type 'abstract' don't add it as referenced field.
                 if (scheme && scheme.Type != 'abstract') {
                     this.referenceFields.push({
-                        FieldID: fieldName, 
+                        FieldID: fieldName,
                         ResourceName: schemeFields![fieldName].Resource || ''
                     });
                 }
@@ -146,9 +136,14 @@ export class ReferenceService {
         }));
     }
 
+    async getReferenceSchemes(schemeFields: CollectionFields): Promise<ReferenceSchemes> { 
+        await this.getReferenceFields(schemeFields);
+        return this.referenceSchemes;
+    }
+
     private async collectItemReferences(doc: AddonData, schemeFields: CollectionFields) {
-        if(doc) {
-            await Promise.all(Object.keys(doc || {}).map(async(prop) => {
+        if (doc) {
+            await Promise.all(Object.keys(doc || {}).map(async (prop) => {
                 const refField = this.referenceFields.find(item => item.FieldID === prop);
                 const field = schemeFields![prop];
                 // property has unique field of resource
@@ -163,15 +158,15 @@ export class ReferenceService {
         }
     }
 
-    private async handleDotAnnotationFields(doc:AddonData, fieldName: string, referenceFields: ReferenceObject[]) {
+    private async handleDotAnnotationFields(doc: AddonData, fieldName: string, referenceFields: ReferenceField[]) {
         const parts = fieldName.split('.');
         // we are not supporting nested references
-        if(parts.length == 2) {
+        if (parts.length == 2) {
             const field = referenceFields.find(item => item.FieldID === parts[0]);
             if (field) {
                 if (field.ResourceName) {
                     const unique = await this.isUniqueField(field.ResourceName, parts[1]);
-                    if(unique) {
+                    if (unique) {
                         this.addValueToResource(field.ResourceName, parts[1], doc[fieldName]);
                     }
                 }
@@ -182,15 +177,16 @@ export class ReferenceService {
     private async isUniqueField(resourceName, fieldID): Promise<boolean> {
         let unique = false;
         const resourceScheme = await this.getResourceScheme(resourceName);
-        if(resourceScheme && resourceScheme.Fields && resourceScheme.Fields[fieldID]) {
+        if (resourceScheme && resourceScheme.Fields && resourceScheme.Fields[fieldID]) {
             unique = resourceScheme.Fields[fieldID].Unique || false;
         }
         return unique
     }
-    
+
     private async getResourceScheme(resourceName: string): Promise<Collection> {
         let resourceScheme = this.referenceSchemes[resourceName];
-        if(!resourceScheme) {
+        if (!resourceScheme) {
+            console.log(`resource scheme for ${resourceName} was not found, GETting it now`);
             resourceScheme = await this.resourcesService.getByKey('resources', resourceName) as Collection;
             this.referenceSchemes[resourceName] = resourceScheme;
         }
