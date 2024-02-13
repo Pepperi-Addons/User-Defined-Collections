@@ -7,6 +7,7 @@ import { ApiService } from './api-service';
 import { ResourcesService } from './resources-service';
 import { VarSettingsService } from '../services/var-settings.service';
 import { limitationTypes } from '../metadata';
+import { DIMXImportInitData } from '../../shared/src/entities';
 
 import config from '../../addon.config.json'
 
@@ -16,10 +17,14 @@ export class ServerDocumentsService {
     globalService = new GlobalService();
     apiService = new ApiService(this.client);
     resourcesService = new ResourcesService(this.client);
-    documentsService = new DocumentsService(this.apiService, this.resourcesService);
+    documentsService: DocumentsService;
     varRelationService: VarSettingsService = new VarSettingsService(this.utilities);
     
-    constructor(private client: Client) {
+    constructor(private client: Client, private initData?: DIMXImportInitData) {
+        if (!initData) {
+            console.log('ServerDocumentService: initData not provided.');
+        }
+        this.documentsService = new DocumentsService(this.apiService, this.resourcesService, initData);
     }
     
     
@@ -96,7 +101,15 @@ export class ServerDocumentsService {
     // for the AddonRelativeURL of the relation
     async importDataSource(body, collectionName) {
         console.log(`@@@@importing documents: ${JSON.stringify(body)}@@@@`);
-        const collectionScheme = await this.apiService.findCollectionByName(collectionName);
+
+        let collectionScheme;
+        if (this.initData) {
+            collectionScheme = this.initData.CollectionScheme;
+        } else {
+            console.log(`Collection ${collectionName} not provided in Init. GETting it now`);
+            collectionScheme = await this.apiService.findCollectionByName(collectionName);
+        }
+          
         let items = body.DIMXObjects.map(obj => {
             return obj.Object;
         })
@@ -147,6 +160,16 @@ export class ServerDocumentsService {
                 }
             }
             throw error;
+        }
+    }
+
+    async getDIMXImportInitData(collectionName: string): Promise<DIMXImportInitData> {
+        const collectionScheme = await this.apiService.findCollectionByName(collectionName);
+        const referenceSchemes = await this.documentsService.getReferenceSchemes(collectionScheme);
+
+        return {
+            ReferenceSchemes: referenceSchemes,
+            CollectionScheme: collectionScheme
         }
     }
 

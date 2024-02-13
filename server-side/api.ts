@@ -5,7 +5,7 @@ import { FieldsService } from './services/fields.service';
 import { CollectionsService } from './services/collections.service'
 import { MappingsService } from './services/mappings.service';
 import { UtilitiesService } from './services/utilities.service';
-import { UdcMapping, FieldsResult, DocumentsService } from 'udc-shared';
+import { UdcMapping, FieldsResult, DocumentsService, DIMXImportInitData, ReferenceSchemes } from 'udc-shared';
 import { ApiService } from './services/api-service';
 import { ResourcesService } from './services/resources-service';
 import { ServerDocumentsService } from './services/documents.service';
@@ -121,9 +121,26 @@ export async function export_data_source(client: Client, request: Request) {
     }
 }
 
+export async function init_import_data_source(client: Client, request: Request) {
+    try {
+        console.log('init_import_data_source started');
+        const collectionName = request.query.collection_name || '';
+        const service = new ServerDocumentsService(client)
+        const initData: DIMXImportInitData = await service.getDIMXImportInitData(collectionName);
+        console.log(`init_import_data_source collected ${Object.keys(initData).length} resources`);
+        return initData;
+        
+    }
+    catch (ex) {
+        console.error(`import_init_source: ${ex}`);
+        throw ex;
+    }
+}
+
 export async function import_data_source(client: Client, request: Request) {
-    const service = new ServerDocumentsService(client)
-    const collectionsService = new CollectionsService(client)
+    const initData: DIMXImportInitData = request.body.RelationData || undefined;
+    console.log(`import_data_source init data${initData ? `: ${JSON.stringify(initData)}` : ' not provided'}`);
+    const service = new ServerDocumentsService(client, initData)
     const collectionName = request.query.collection_name || '';
     if (request.method == 'POST') {
         try {

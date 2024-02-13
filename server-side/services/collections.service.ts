@@ -99,11 +99,12 @@ export class CollectionsService {
 
     async createDIMXRelations(collection: AddonDataScheme) {
         await Promise.all(DimxRelations.map(async (singleRelation) => {
-            // overide the name with the collectionName
+            // override the name with the collectionName
             const functionName = singleRelation.RelationName == 'DataImportResource' ? IMPORT_FUNCTION_NAME : EXPORT_FUNCTION_NAME;
             singleRelation.Name = collection.Name;
             singleRelation.AddonRelativeURL = `/api/${functionName}?collection_name=${collection.Name}`
             singleRelation.Hidden = collection.Hidden;
+            singleRelation.InitRelationDataRelativeURL = singleRelation.RelationName == 'DataImportResource' ? `/api/init_import_data_source?collection_name=${collection.Name}` : undefined;
             await this.utilities.papiClient.addons.data.relations.upsert(singleRelation);
         }));
     }
