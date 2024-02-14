@@ -27,19 +27,23 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
-    
-    // if we are upgrading from a version before 0.9.20, create a relation to var settings and settings table and also migrate DIMX relations
-    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.20') < 0) {
-        await createObjects(client);
-        return await migrateDIMXRelations(client);
+    let result = { success: true, resultObject: {} }; // Initialize the result object
+
+    try {
+        if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.20') < 0) {
+            result = await createObjects(client);
+        }
+
+        // Check for the next condition only if the previous operation was successful
+        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.27') < 0) {
+            const collectionsService = new CollectionsService(client);
+            result = await collectionsService.migrateDIMXRelations();
+        }
+    } catch (err) {
+        result = { success: false, resultObject: err as Error };
     }
-        // if we are upgrading from a version before 0.9.27 but later than 0.9.20, migrate only DIMX relations
-    else if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.27') < 0) {
-        return await migrateDIMXRelations(client);
-    }
-    else {
-        return {success:true,resultObject:{}}
-    }
+
+    return result; // Return the (potentially modified) result object
 }
 
 export async function downgrade(client: Client, request: Request): Promise<any> {
@@ -73,26 +77,8 @@ async function createObjects(client: Client) {
     catch (err) {
         return { 
             success: false, 
-            resultObject: err , 
+            resultObject: err as Error, 
             errorMessage: `Error in creating necessary objects . error - ${err}`
-        };
-    }
-}
-
-async function migrateDIMXRelations(client: Client) {
-    try {
-        const service = new CollectionsService(client);
-        await service.migrateDIMXRelations();
-        return {
-            success:true,
-            resultObject: {}
-        }
-    } 
-    catch (err) {
-        return { 
-            success: false, 
-            resultObject: err , 
-            errorMessage: `Error in migrating DIMX relations . error - ${err}`
         };
     }
 }

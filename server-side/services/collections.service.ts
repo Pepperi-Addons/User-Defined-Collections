@@ -332,18 +332,15 @@ export class CollectionsService {
     async migrateDIMXRelations() {
         try {
             const collections = await this.find({ page_size: -1 }) as Collection[];
-            for (const collection of collections) {
-                await this.createDIMXRelations(collection);
-            }
+            await Promise.all(collections.map(collection => this.createDIMXRelations(collection)));
             return {
                 success: true,
                 resultObject: {}
-            }
-        }
-        catch (err) {
+            };
+        } catch (err) {
             return {
                 success: false,
-                resultObject: err,
+                resultObject: err as Error,
                 errorMessage: `Error in migrating DIMX relations. error - ${err}`
             };
         }
@@ -352,15 +349,14 @@ export class CollectionsService {
     async unmigrateDIMXRelations() {
         try {
             const relations = await this.utilities.papiClient.addons.data.relations.find({ where: `RelationName='DataImportResource' and AddonUUID='${this.client.AddonUUID}'` });
-            // for each relation we need to set the InitRelationDataRelativeURL to undefined
-            for (const relation of relations) {
+            await Promise.all(relations.map(async (relation) => {
                 relation.InitRelationDataRelativeURL = '';
                 await this.utilities.papiClient.addons.data.relations.upsert(relation);
-            }
+            }));
             return {
                 success: true,
                 resultObject: {}
-            }
+            };
         }
         catch (ex) {
             return {
