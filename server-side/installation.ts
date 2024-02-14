@@ -13,6 +13,7 @@ import { AtdRelations, SettingsRelation, UsageMonitorRelations, VarSettingsRelat
 import { UtilitiesService } from './services/utilities.service';
 import semver from 'semver'
 import { VarSettingsService } from './services/var-settings.service';
+import { CollectionsService } from './services/collections.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
     // For page block template uncomment this.
@@ -26,18 +27,34 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
-    
-    // if we are upgrading from a version before 0.9.20, create a relation to var settings and settings table
-    if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.20') < 0) {
-        return await createObjects(client);
+    let result = { success: true, resultObject: {} }; // Initialize the result object
+
+    try {
+        if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.20') < 0) {
+            result = await createObjects(client);
+        }
+
+        // Check for the next condition only if the previous operation was successful
+        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.27') < 0) {
+            const collectionsService = new CollectionsService(client);
+            result = await collectionsService.migrateDIMXRelations();
+        }
+    } catch (err) {
+        result = { success: false, resultObject: err as Error };
+    }
+
+    return result; // Return the (potentially modified) result object
+}
+
+export async function downgrade(client: Client, request: Request): Promise<any> {
+    // if we are downgrading from a version after 0.9.24, remove initDataRelativeURL
+    if (request.body.ToVersion && semver.compare(request.body.ToVersion, '0.9.24') < 0) {
+        const collectionsService = new CollectionsService(client);
+        return await collectionsService.unmigrateDIMXRelations();
     }
     else {
         return {success:true,resultObject:{}}
     }
-}
-
-export async function downgrade(client: Client, request: Request): Promise<any> {
-    return {success:true,resultObject:{}}
 }
 
 async function createObjects(client: Client) {
@@ -60,7 +77,7 @@ async function createObjects(client: Client) {
     catch (err) {
         return { 
             success: false, 
-            resultObject: err , 
+            resultObject: err as Error, 
             errorMessage: `Error in creating necessary objects . error - ${err}`
         };
     }

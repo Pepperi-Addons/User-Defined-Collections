@@ -1,7 +1,7 @@
 import { UtilitiesService } from './utilities.service';
 import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
 import { Client } from '@pepperi-addons/debug-server';
-import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, limitationTypes, UdcMappingsScheme} from '../metadata';
+import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, limitationTypes, UdcMappingsScheme } from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
 import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsService, collectionNameRegex, UserEvent, GlobalService } from 'udc-shared';
@@ -10,7 +10,7 @@ import { VarSettingsService } from '../services/var-settings.service';
 import { AddonData } from '@pepperi-addons/papi-sdk/dist/entities';
 
 export class CollectionsService {
-        
+
     utilities: UtilitiesService = new UtilitiesService(this.client);
     globalService: GlobalService = new GlobalService();
     varRelationService: VarSettingsService = new VarSettingsService(this.utilities);
@@ -50,7 +50,7 @@ export class CollectionsService {
                 let collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj) as Collection;
                 await this.createDIMXRelations(collection);
                 // if the collection has no indexed fields (don't have data in elastic) or of type 'contained' don't create DQ relation
-                if(collection.Type !== 'contained' && this.globalService.isCollectionIndexed(collection)) {
+                if (collection.Type !== 'contained' && this.globalService.isCollectionIndexed(collection)) {
                     await this.createDataQueryRelations(collection);
                 }
                 return collection
@@ -87,11 +87,11 @@ export class CollectionsService {
         const result = validator.validate(collection, collectionSchema);
         return result;
     }
-    
-    async findByName(tableName:string): Promise<Collection> {
+
+    async findByName(tableName: string): Promise<Collection> {
         return await this.utilities.papiClient.addons.data.schemes.name(tableName).get() as Collection;
     }
-    
+
     async find(options: FindOptions = {}): Promise<AddonDataScheme[]> {
         let collections = await this.utilities.papiClient.addons.data.schemes.get(options);
         return collections.filter(collection => collection.Name !== UdcMappingsScheme.Name);
@@ -108,7 +108,7 @@ export class CollectionsService {
             await this.utilities.papiClient.addons.data.relations.upsert(singleRelation);
         }));
     }
-    
+
     async createDataQueryRelations(collection: Collection) {
         for (let relation of DataQueryRelation) {
             relation.Name = collection.Name;
@@ -123,12 +123,12 @@ export class CollectionsService {
                     if (collectionField.Resource === 'accounts' && collectionField.ApplySystemFilter && !accountFound) {
                         accountFound = true;
                         relation.AccountFieldID = 'UUID',
-                        relation.IndexedAccountFieldID = `${fieldName}.Key`
+                            relation.IndexedAccountFieldID = `${fieldName}.Key`
                     }
                     if (collectionField.Resource === 'users' && collectionField.ApplySystemFilter && !userFound) {
                         userFound = true;
                         relation.UserFieldID = 'UUID',
-                        relation.IndexedUserFieldID = `${fieldName}.Key`
+                            relation.IndexedUserFieldID = `${fieldName}.Key`
                     }
                 }
             })
@@ -147,11 +147,11 @@ export class CollectionsService {
             throw new Error('Cannot delete non hidden collection.')
         }
     }
-    
+
     async create(documentsService: DocumentsService, collectionName: string, body: any) {
         try {
             const regex = new RegExp(collectionNameRegex);
-            if(regex.test(collectionName)) {
+            if (regex.test(collectionName)) {
                 const collection = await this.findByName(collectionName);
                 if (collection.Hidden) {
                     throw new Error(existingInRecycleBinErrorMessage);
@@ -161,11 +161,11 @@ export class CollectionsService {
                 }
             }
             else {
-               throw new Error('collection name must begin with capital letter, and can only contains URL safe characters') 
+                throw new Error('collection name must begin with capital letter, and can only contains URL safe characters')
             }
         }
         catch (error) {
-            if(error instanceof Error) {
+            if (error instanceof Error) {
                 if (error?.message?.indexOf('Object ID does not exist') >= 0) {
                     const result = await this.upsert(documentsService, body)
                     return result;
@@ -175,7 +175,7 @@ export class CollectionsService {
         }
     }
 
-    async getCollectionFieldsLength(collectionName: string){
+    async getCollectionFieldsLength(collectionName: string) {
         const res = await this.findByName(collectionName);
         return Object.keys(res.Fields!).length;
     }
@@ -187,21 +187,21 @@ export class CollectionsService {
         // only check for field's type when there are Fields on the collection
         if (collectionObj.Fields) {
             for (const fieldID of Object.keys(collectionObj.Fields!)) {
-                if(collectionObj.Fields![fieldID].Type === 'ContainedResource'){ // if field type is contained, count contained schema fields
+                if (collectionObj.Fields![fieldID].Type === 'ContainedResource') { // if field type is contained, count contained schema fields
                     const collectionFieldsCount = await this.getCollectionFieldsLength(collectionObj.Fields![fieldID].Resource!);
                     fieldsCount += collectionFieldsCount;
-                } else{
+                } else {
                     fieldsCount++;
                 }
                 collections.forEach((collection => {
                     if (collection.Fields && collection.Fields[fieldID]) {
                         // if one of the collection has a field with the same ID, check to see if it's the same type.
-                        if (collectionObj.Fields![fieldID].Type != collection.Fields![fieldID].Type) { 
+                        if (collectionObj.Fields![fieldID].Type != collection.Fields![fieldID].Type) {
                             this.addFieldToMap(validMap, fieldID, collection.Name);
                         }
                         // If they both of type 'Array' check their item's type.
                         else if (collectionObj.Fields![fieldID].Type === 'Array' && collectionObj.Fields![fieldID].Items!.Type != collection.Fields![fieldID].Items!.Type) {
-                            this.addFieldToMap(validMap, fieldID, collection.Name);                    
+                            this.addFieldToMap(validMap, fieldID, collection.Name);
                         }
                     }
                 }));
@@ -211,19 +211,19 @@ export class CollectionsService {
         await this.validateCollectionField(collectionObj, fieldsCount);
         return validMap;
     }
-    
-    async validateCollectionField(collectionObj, fieldsCount){
-        if(collectionObj.Type == 'contained'){
+
+    async validateCollectionField(collectionObj, fieldsCount) {
+        if (collectionObj.Type == 'contained') {
             await this.assertObjectCount(limitationTypes.ContainedSchemaFields, fieldsCount);
-        } else{
+        } else {
             await this.assertObjectCount(limitationTypes.Fields, fieldsCount);
         }
     }
 
-    async assertObjectCount(element: string, elementCount: number){
+    async assertObjectCount(element: string, elementCount: number) {
         const softLimit: number = await this.varRelationService.getSettingsByName(element);
 
-        if(elementCount > softLimit){
+        if (elementCount > softLimit) {
             throw new Error(`${element} should not have more than ${softLimit} fields`);
         }
     }
@@ -249,7 +249,7 @@ export class CollectionsService {
         Object.keys(collection.Fields || {}).forEach(field => {
             if (!collection.Fields![field].ExtendedField) {
                 ret.Fields![field] = collection.Fields![field];
-                if(collection.ListView && collection.ListView.Fields && changeDV) {
+                if (collection.ListView && collection.ListView.Fields && changeDV) {
                     const dvField = collection.ListView.Fields.find(x => x.FieldID === field);
                     if (dvField) {
                         ret.ListView!.Fields!.push(dvField);
@@ -273,9 +273,9 @@ export class CollectionsService {
         const service = new UserEventsService(this.client);
         const collectionNames: string[] = [collectionName];
         const res: UserEvent[] = [];
-        
+
         // if the collection is extending other collections, get their events as well
-        if(collection.SuperTypes) {
+        if (collection.SuperTypes) {
             collectionNames.push(...collection.SuperTypes);
         }
         for (const name of collectionNames) {
@@ -292,7 +292,7 @@ export class CollectionsService {
         const res: Collection = JSON.parse(JSON.stringify(collection));
 
         // if there is no ListView, create an empty one
-        if(!res.ListView || !res.ListView!.Fields) {
+        if (!res.ListView || !res.ListView!.Fields) {
             res.ListView = {
                 Type: 'Grid',
                 Fields: [],
@@ -303,13 +303,13 @@ export class CollectionsService {
         else {
             res.ListView!.Fields = res.ListView!.Fields!.filter(element => {
                 return res.Fields!.hasOwnProperty(element.FieldID);
-            })    
+            })
         }
 
         // append to the end all the fields that are not part of the list view
         Object.keys(collection.Fields || {}).forEach(fieldName => {
             let dvField = res.ListView!.Fields!.find(x => x.FieldID === fieldName);
-            if(!dvField) {
+            if (!dvField) {
                 dvField = this.utilities.getDataViewField(fieldName, collection.Fields![fieldName]);
                 res.ListView!.Fields!.push(dvField);
                 res.ListView!.Columns!.push({ Width: 10 });
@@ -329,29 +329,40 @@ export class CollectionsService {
         return collection;
     }
 
-    async migrateDQRelations() {
+    async migrateDIMXRelations() {
         try {
-            const collections = await this.find({page_size: -1}) as Collection[];
-            for (const collection of collections) {
-                if (collection.Type != 'contained') {
-                    // if the collection has no indexed fields, we need to delete the relation.
-                    if (!this.globalService.isCollectionIndexed(collection)) {
-                        // we're making a hack by setting the collection as Hidden, the relation will be Hidden as well
-                        collection.Hidden = true;
-                    }
-                    await this.createDataQueryRelations(collection);
-                }
-            }
+            const collections = await this.find({ page_size: -1 }) as Collection[];
+            await Promise.all(collections.map(collection => this.createDIMXRelations(collection)));
             return {
-                success:true,
+                success: true,
                 resultObject: {}
-            }
-        } 
-        catch (err) {
-            return { 
-                success: false, 
-                resultObject: err , 
-                errorMessage: `Error in migrating data query relations. error - ${err}`
+            };
+        } catch (err) {
+            return {
+                success: false,
+                resultObject: err as Error,
+                errorMessage: `Error in migrating DIMX relations. error - ${err}`
+            };
+        }
+    }
+
+    async unmigrateDIMXRelations() {
+        try {
+            const relations = await this.utilities.papiClient.addons.data.relations.find({ where: `RelationName='DataImportResource' and AddonUUID='${this.client.AddonUUID}'` });
+            await Promise.all(relations.map(async (relation) => {
+                relation.InitRelationDataRelativeURL = '';
+                return await this.utilities.papiClient.addons.data.relations.upsert(relation);
+            }));
+            return {
+                success: true,
+                resultObject: {}
+            };
+        }
+        catch (ex) {
+            return {
+                success: false,
+                resultObject: ex,
+                errorMessage: `Error in unmigrating DIMX relations. error - ${ex}`
             };
         }
     }
@@ -362,7 +373,7 @@ export class CollectionsService {
             res = await this.utilities.papiClient.get(`/addons/data/schemes/${collectionName}/query_url`);
         }
         // ignore crushes of the query_url function
-        catch {}
+        catch { }
         return res;
     }
 }
