@@ -351,7 +351,7 @@ export class CollectionsService {
             const relations = await this.utilities.papiClient.addons.data.relations.find({ where: `RelationName='DataImportResource' and AddonUUID='${this.client.AddonUUID}'` });
             await Promise.all(relations.map(async (relation) => {
                 relation.InitRelationDataRelativeURL = '';
-                await this.utilities.papiClient.addons.data.relations.upsert(relation);
+                return await this.utilities.papiClient.addons.data.relations.upsert(relation);
             }));
             return {
                 success: true,
