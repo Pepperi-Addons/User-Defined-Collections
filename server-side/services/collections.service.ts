@@ -148,6 +148,16 @@ export class CollectionsService {
         }
     }
 
+    async truncate(collectionName: string) {
+        try {
+            return await this.utilities.papiClient.post(`/addons/data/schemes/${collectionName}/truncate`);
+        }
+        catch (ex) {
+            console.error(`Error in truncate collection ${collectionName}. error: ${ex}`);
+            throw ex;
+        }
+    }
+
     async create(documentsService: DocumentsService, collectionName: string, body: any) {
         try {
             const regex = new RegExp(collectionNameRegex);

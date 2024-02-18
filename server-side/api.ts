@@ -431,6 +431,29 @@ export async function hard_delete(client: Client, request: Request) {
     }
 }
 
+// truncates the collection
+export async function truncate(client: Client, request: Request) {
+    const collectionsService = new CollectionsService(client);
+    switch (request.method) {
+        case 'POST': {
+            const collectionName = request.query.collection_name || '';
+            console.log(`truncating collection ${collectionName}`);
+            if (collectionName) {
+                return await collectionsService.truncate(collectionName);
+            }
+            else {
+                throw new Error(`collection_name is mandatory`);
+            }
+        }
+        default: {
+            let err: any = new Error(`Method ${request.method} not allowed`);
+            err.code = 405;
+            throw err;
+        }
+    }
+}
+
+
 export function unique(client: Client, request: Request) {
     const error: any = new Error("this method is not supported by this resource");
     error.code = 405;
