@@ -76,7 +76,7 @@ export class CollectionListComponent implements OnInit {
         this.utilitiesService.getAbstractSchemes().then(schemes => {
             this.abstractSchemes = schemes;
         }).catch(error => {
-            console.log(`caould not get abstract schemes. error:${error}`);
+            console.log(`could not get abstract schemes. error:${error}`);
         })
     }
 
@@ -219,6 +219,12 @@ export class CollectionListComponent implements OnInit {
                             handler: async (objs) => {
                                 this.navigateToDocumentsView(objs.rows[0]);
                             },
+                        })
+                        actions.push({
+                            title: this.translate.instant('Truncate'),
+                            handler: async (objs) => {
+                                this.showTruncateWarning(objs.rows[0]);
+                            }
                         });
                     }
                 }
@@ -349,4 +355,24 @@ export class CollectionListComponent implements OnInit {
         }
     }
 
+    showTruncateWarning(collectionName: string) {
+        const title = this.translate.instant('Collection_TruncateDialog_Title');
+        const content = this.translate.instant('Collection_TruncateDialog_Content');
+        this.utilitiesService.showMessageDialog(title, content, 'cancel-continue', (continuePressed => {
+            if (continuePressed) {
+                this.handleTruncateCollection(collectionName);
+            }
+        }));
+    }
+
+    async handleTruncateCollection(collectionName: string) {
+        try {
+            const auditLog = await this.collectionsService.truncateCollection(collectionName); // Assuming this function exists and returns an auditLog
+            if (auditLog) {
+                this.snackbarService.handleTruncateCollection(auditLog, collectionName); // You'll need to implement this function in your snackbar service
+            }
+        } catch (error) {
+            console.log(`Truncate collection for ${collectionName} failed with error: ${error}`);
+        }
+    }
 }

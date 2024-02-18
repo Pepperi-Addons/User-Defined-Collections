@@ -9,7 +9,7 @@ import { PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
 
 import { FileStatusPanelComponent } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
 
-import {  RebuildStatus, DeletionStatus} from '../entities';
+import {  RebuildStatus, DeletionStatus, TruncateStatus} from '../entities';
 import { CollectionsService } from "../services/collections.service";
 import { AuditLog } from '@pepperi-addons/papi-sdk';
 
@@ -20,6 +20,9 @@ export class SnackbarService {
     private currentSnackBar: MatSnackBarRef<FileStatusPanelComponent> | null = null;
     private cleanRebuilds: RebuildStatus[] = []
     private cleanRebuildsIndex = 0;
+
+    private truncateCollections: TruncateStatus[] = []
+    private truncateCollectionsIndex = 0;
 
     private deletionIndex = 0;
     private deletionStatus: DeletionStatus[] = []
@@ -94,14 +97,15 @@ export class SnackbarService {
         }
     }
 
-    private createRebuildStatusObject(collectionName): RebuildStatus {
+    
+    private createTruncateStatusObject(collectionName): TruncateStatus {
         return {
-            key: this.cleanRebuildsIndex++,
+            key: this.truncateCollectionsIndex++,
             name: collectionName,
-            status: 'indexing',
+            status: 'truncating',
         }
     }
-
+    
     async handleCleanRebuild(auditLog: string, collectionName: string) {
         let status = this.createRebuildStatusObject(collectionName)
         this.cleanRebuilds.push(status);
@@ -111,6 +115,26 @@ export class SnackbarService {
         if (error === undefined) {
             status.status = 'done';
             this.updateSnackBar(this.cleanRebuilds, cleanRebuildSnackBarTitle);
+        }
+    }
+    
+    private createRebuildStatusObject(collectionName): RebuildStatus {
+        return {
+            key: this.cleanRebuildsIndex++,
+            name: collectionName,
+            status: 'indexing',
+        }
+    }
+
+    async handleTruncateCollection(auditLog: string, collectionName: string) {
+        let status = this.createTruncateStatusObject(collectionName); // Assuming you can reuse or adapt this function for truncating as well
+        this.truncateCollections.push(status); // Assuming you have a similar array for tracking truncate operations
+        const truncateSnackBarTitle = this.translate.instant('Truncate Collection');
+        this.updateSnackBar(this.truncateCollections, truncateSnackBarTitle); // You might need to adapt this function to handle different types of operations
+        const error = await this.pollAuditLog(auditLog, status, truncateSnackBarTitle, this.truncateCollections); // Reuse your polling logic here
+        if (error === undefined) {
+            status.status = 'done';
+            this.updateSnackBar(this.truncateCollections, truncateSnackBarTitle);
         }
     }
 

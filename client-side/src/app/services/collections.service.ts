@@ -7,7 +7,7 @@ import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-add
 
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 import { UtilitiesService } from './utilities.service';
-import { API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, DELETE_FUNCTION_NAME, EVENTS_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
+import { API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, DELETE_FUNCTION_NAME, EVENTS_FUNCTION_NAME, REBUILD_FUNCTION_NAME, TRUNCATE_FUNCTION_NAME } from '../entities';
 import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
@@ -52,6 +52,11 @@ export class CollectionsService {
     async upsertCollection(obj: Collection) {
         
         return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, obj).toPromise();
+    }
+
+    async truncateCollection(collectionName: string) {
+        const url = this.utilities.getFunctionURL(TRUNCATE_FUNCTION_NAME, {collection_name: collectionName});
+        return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
     }
     
     async createCollection(obj: Collection) {
