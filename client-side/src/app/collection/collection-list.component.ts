@@ -204,7 +204,13 @@ export class CollectionListComponent implements OnInit {
                         handler: async (objs) => {
                             this.showDeleteDialog(objs.rows[0]);
                         }
-                    })
+                    });
+                    actions.push({
+                        title: this.translate.instant('Collection_TruncateAction_Title'),
+                        handler: async (objs) => {
+                            this.showTruncateWarning(objs.rows[0]);
+                        }
+                    });
                     if (selectedCollection && selectedCollection.Type != 'contained') {
                         if (this.collectionsService.isCollectionIndexed(selectedCollection)) {
                             actions.push({
@@ -212,19 +218,13 @@ export class CollectionListComponent implements OnInit {
                                 handler: async (objs) => {
                                     this.showCleanRebuildMessage(objs.rows[0]);
                                 }
-                            })
+                            });
                         }
                         actions.push({
                             title: this.translate.instant('Edit data'),
                             handler: async (objs) => {
                                 this.navigateToDocumentsView(objs.rows[0]);
                             },
-                        })
-                        actions.push({
-                            title: this.translate.instant('Collection_TruncateAction_Title'),
-                            handler: async (objs) => {
-                                this.showTruncateWarning(objs.rows[0]);
-                            }
                         });
                     }
                 }
