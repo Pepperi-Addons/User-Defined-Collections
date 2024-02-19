@@ -26,9 +26,9 @@ import { SnackbarService } from "../services/snackbar.service";
 })
 export class CollectionListComponent implements OnInit {
     @Input() hostObject: any;
-    
+
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
-    
+
     screenSize: PepScreenSizeType;
 
     dataSource: IPepGenericListDataSource;
@@ -38,8 +38,8 @@ export class CollectionListComponent implements OnInit {
     };
 
     collections: Collection[] = []
-    
-    EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
+
+    EMPTY_OBJECT_NAME: string = EMPTY_OBJECT_NAME;
 
     recycleBin: boolean = false;
 
@@ -69,7 +69,7 @@ export class CollectionListComponent implements OnInit {
     ngOnInit() {
         this.recycleBin = this.activateRoute.snapshot.queryParams.recycle_bin == 'true' || false;
         this.menuItems = this.getMenuItems();
-        this.translate.get(['RecycleBin_NoDataFound', 'Collection_List_NoDataFound']).subscribe(translations=> {
+        this.translate.get(['RecycleBin_NoDataFound', 'Collection_List_NoDataFound']).subscribe(translations => {
             this.listMessages = translations;
             this.dataSource = this.getDataSource();
         })
@@ -82,22 +82,22 @@ export class CollectionListComponent implements OnInit {
 
     getMenuItems() {
         return [
-        {
-            key: 'RecycleBin',
-            text: this.translate.instant('Recycle Bin'),
-            hidden: this.recycleBin
-        },
-        {
-            key: 'BackToList',
-            text: this.translate.instant('Back to list'),
-            hidden: !this.recycleBin
-        }]
+            {
+                key: 'RecycleBin',
+                text: this.translate.instant('Recycle Bin'),
+                hidden: this.recycleBin
+            },
+            {
+                key: 'BackToList',
+                text: this.translate.instant('Back to list'),
+                hidden: !this.recycleBin
+            }]
     }
 
     getDataSource() {
         const noDataMessageKey = this.recycleBin ? 'RecycleBin_NoDataFound' : 'Collection_List_NoDataFound'
         return {
-            init: async(params:any) => {
+            init: async (params: any) => {
                 this.collections = await this.collectionsService.getCollections(this.recycleBin, params);
                 return Promise.resolve({
                     dataView: {
@@ -132,7 +132,7 @@ export class CollectionListComponent implements OnInit {
                                 Width: 50
                             }
                         ],
-        
+
                         FrozenColumnsCount: 0,
                         MinimumColumnWidth: 0
                     },
@@ -154,12 +154,12 @@ export class CollectionListComponent implements OnInit {
         get: async (data: PepSelectionData) => {
             const actions = [];
             if (data && data.rows.length == 1) {
-                if(this.recycleBin) {
+                if (this.recycleBin) {
                     actions.push({
                         title: this.translate.instant('Restore'),
                         handler: async (objs) => {
                             let collection = this.collections.find(item => item.Name === objs.rows[0])
-                            if(collection) {
+                            if (collection) {
                                 try {
                                     collection.Hidden = false;
                                     await this.collectionsService.upsertCollection(collection);
@@ -180,11 +180,11 @@ export class CollectionListComponent implements OnInit {
                         title: this.translate.instant('Delete'),
                         handler: async (objs) => {
                             const collectionName = objs.rows[0];
-                            try{
+                            try {
                                 await this.snackbarService.handleCollectionDeletion(collectionName);
                                 this.dataSource = this.getDataSource();
                             }
-                            catch(error){
+                            catch (error) {
                                 this.utilitiesService.showMessageDialog(this.translate.instant('Collection_DeleteRecycleBinDialogTitle'),
                                     error, 'close');
                             }
@@ -192,7 +192,7 @@ export class CollectionListComponent implements OnInit {
                     })
                 }
                 else {
-                    const selectedCollection = this.collections.find(x=>x.Name === data.rows[0]);
+                    const selectedCollection = this.collections.find(x => x.Name === data.rows[0]);
                     actions.push({
                         title: this.translate.instant('Edit'),
                         handler: async (objs) => {
@@ -205,8 +205,8 @@ export class CollectionListComponent implements OnInit {
                             this.showDeleteDialog(objs.rows[0]);
                         }
                     })
-                    if(selectedCollection && selectedCollection.Type != 'contained') {
-                        if(this.collectionsService.isCollectionIndexed(selectedCollection)) {
+                    if (selectedCollection && selectedCollection.Type != 'contained') {
+                        if (this.collectionsService.isCollectionIndexed(selectedCollection)) {
                             actions.push({
                                 title: this.translate.instant('Collections_RebuildAction_Title'),
                                 handler: async (objs) => {
@@ -221,7 +221,7 @@ export class CollectionListComponent implements OnInit {
                             },
                         })
                         actions.push({
-                            title: this.translate.instant('Truncate'),
+                            title: this.translate.instant('Collections_TruncateAction_Title'),
                             handler: async (objs) => {
                                 this.showTruncateWarning(objs.rows[0]);
                             }
@@ -233,7 +233,7 @@ export class CollectionListComponent implements OnInit {
         }
     }
 
-    menuItems:PepMenuItem[] = []
+    menuItems: PepMenuItem[] = []
 
     navigateToCollectionForm(name: string) {
         this.router.navigate([name], {
@@ -267,8 +267,8 @@ export class CollectionListComponent implements OnInit {
                         relativeTo: this.activateRoute,
                         replaceUrl: true
                     })
-                }, 0); 
-                this.dataSource = this.getDataSource(); 
+                }, 0);
+                this.dataSource = this.getDataSource();
                 this.menuItems = this.getMenuItems();
                 break;
             }
@@ -294,14 +294,13 @@ export class CollectionListComponent implements OnInit {
                     catch (error) {
                         const title = this.translate.instant('Collection_DeleteDialogTitle');
                         let content = this.translate.instant('Collection_DeleteDialogGeneralError', { message: error });
-                        if (error.indexOf(this.deleteError) > 0)
-                        {
+                        if (error.indexOf(this.deleteError) > 0) {
                             content = this.translate.instant('Collection_DeleteDialogError');
                         }
                         this.utilitiesService.showMessageDialog(title, content);
                     }
                 }
-        });      
+            });
     }
 
     navigateToDocumentsView(collectionName: string) {
@@ -317,10 +316,10 @@ export class CollectionListComponent implements OnInit {
         return {
             ...route,
             ...route.children.reduce((acc, child) =>
-                ({ ...this.getCurrentRoute(child), ...acc }), {}) 
+                ({ ...this.getCurrentRoute(child), ...acc }), {})
         };
     }
-    
+
     onFieldClick(event: IPepFieldClickEvent) {
         const collection = this.collections.find(c => c.Name === event.value);
         if (collection && collection.Type != 'contained') {
@@ -332,7 +331,7 @@ export class CollectionListComponent implements OnInit {
             this.utilitiesService.showMessageDialog(title, content);
         }
     }
-    
+
     showCleanRebuildMessage(collectionName) {
         const title = this.translate.instant('Collection_RebuildDialog_Title');
         const content = this.translate.instant('Collection_RebuildDialog_Content');

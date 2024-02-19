@@ -132,7 +132,7 @@ export class SnackbarService {
         const truncateSnackBarTitle = this.translate.instant('Truncate Collection');
         this.updateSnackBar(this.truncateCollections, truncateSnackBarTitle); // You might need to adapt this function to handle different types of operations
         const error = await this.pollAuditLog(auditLog, status, truncateSnackBarTitle, this.truncateCollections); // Reuse your polling logic here
-        if (error === undefined) {
+        if (error === undefined || error === '') {
             status.status = 'done';
             this.updateSnackBar(this.truncateCollections, truncateSnackBarTitle);
         }
