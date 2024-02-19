@@ -126,16 +126,29 @@ export class SnackbarService {
         }
     }
 
-    async handleTruncateCollection(auditLog: string, collectionName: string) {
+    pushTruncateCollectionSnackbar( collectionName: string) {
         let status = this.createTruncateStatusObject(collectionName); // Assuming you can reuse or adapt this function for truncating as well
         this.truncateCollections.push(status); // Assuming you have a similar array for tracking truncate operations
-        const truncateSnackBarTitle = this.translate.instant('Truncate Collection');
+        const truncateSnackBarTitle = this.translate.instant('Collection_TruncateSnack_Title');
         this.updateSnackBar(this.truncateCollections, truncateSnackBarTitle); // You might need to adapt this function to handle different types of operations
-        const error = await this.pollAuditLog(auditLog, status, truncateSnackBarTitle, this.truncateCollections); // Reuse your polling logic here
+        return status;
+    }
+
+    completeTruncateCollectionSnackbar(status: TruncateStatus, error?: string) {
+        const truncateSnackBarTitle = this.translate.instant('Collection_TruncateSnack_Title');
         if (error === undefined || error === '') {
             status.status = 'done';
             this.updateSnackBar(this.truncateCollections, truncateSnackBarTitle);
+        } else {
+            status.status = 'failed';
+            this.updateSnackBar(this.truncateCollections, truncateSnackBarTitle);
         }
+    }
+
+    async handleTruncateCollection(auditLog: string, status: TruncateStatus){
+        const truncateSnackBarTitle = this.translate.instant('Collection_TruncateSnack_Title');
+        const error = await this.pollAuditLog(auditLog, status, truncateSnackBarTitle, this.truncateCollections); // Reuse your polling logic here
+        this.completeTruncateCollectionSnackbar(status, error);
     }
 
     async handleCollectionDeletion(collectionName: string){

@@ -221,7 +221,7 @@ export class CollectionListComponent implements OnInit {
                             },
                         })
                         actions.push({
-                            title: this.translate.instant('Collections_TruncateAction_Title'),
+                            title: this.translate.instant('Collection_TruncateAction_Title'),
                             handler: async (objs) => {
                                 this.showTruncateWarning(objs.rows[0]);
                             }
@@ -365,11 +365,18 @@ export class CollectionListComponent implements OnInit {
     }
 
     async handleTruncateCollection(collectionName: string) {
+        let status = this.snackbarService.pushTruncateCollectionSnackbar(collectionName);
         try {
-            const auditLog = await this.collectionsService.truncateCollection(collectionName); // Assuming this function exists and returns an auditLog
-            if (auditLog) {
-                this.snackbarService.handleTruncateCollection(auditLog, collectionName); // You'll need to implement this function in your snackbar service
-            }
+            this.collectionsService.truncateCollection(collectionName).then(auditLog => {
+
+                if (auditLog) {
+                    this.snackbarService.handleTruncateCollection(auditLog, status); // if this is a large collection we will end up getting an audit log, so we need to poll for it
+                }
+                // if not, update the snackbar to done
+                else {
+                    this.snackbarService.completeTruncateCollectionSnackbar(status);
+                }
+            })
         } catch (error) {
             console.log(`Truncate collection for ${collectionName} failed with error: ${error}`);
         }
