@@ -205,12 +205,14 @@ export class CollectionListComponent implements OnInit {
                             this.showDeleteDialog(objs.rows[0]);
                         }
                     });
-                    actions.push({
-                        title: this.translate.instant('Collection_TruncateAction_Title'),
-                        handler: async (objs) => {
-                            this.showTruncateWarning(objs.rows[0]);
-                        }
-                    });
+                    if (selectedCollection && selectedCollection.Type != 'contained') {
+                        actions.push({
+                            title: this.translate.instant('Collection_TruncateAction_Title'),
+                            handler: async (objs) => {
+                                this.showTruncateWarning(objs.rows[0]);
+                            }
+                        });
+                    }
                     if (selectedCollection && selectedCollection.Type != 'contained') {
                         if (this.collectionsService.isCollectionIndexed(selectedCollection)) {
                             actions.push({
@@ -379,6 +381,7 @@ export class CollectionListComponent implements OnInit {
             })
         } catch (error) {
             console.log(`Truncate collection for ${collectionName} failed with error: ${error}`);
+            this.snackbarService.completeTruncateCollectionSnackbar(status, error.message);
         }
     }
 }
