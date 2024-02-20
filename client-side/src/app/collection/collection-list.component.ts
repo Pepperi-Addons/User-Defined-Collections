@@ -212,8 +212,6 @@ export class CollectionListComponent implements OnInit {
                                 this.showTruncateWarning(objs.rows[0]);
                             }
                         });
-                    }
-                    if (selectedCollection && selectedCollection.Type != 'contained') {
                         if (this.collectionsService.isCollectionIndexed(selectedCollection)) {
                             actions.push({
                                 title: this.translate.instant('Collections_RebuildAction_Title'),
