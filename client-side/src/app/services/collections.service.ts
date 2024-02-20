@@ -7,13 +7,13 @@ import { PepAddonService, PepHttpService, PepSessionService } from '@pepperi-add
 
 import { existingErrorMessage, existingInRecycleBinErrorMessage } from 'udc-shared';
 import { UtilitiesService } from './utilities.service';
-import { API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, DELETE_FUNCTION_NAME, EVENTS_FUNCTION_NAME, REBUILD_FUNCTION_NAME } from '../entities';
+import { API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, CREATE_FUNCTION_NAME, DELETE_FUNCTION_NAME, EVENTS_FUNCTION_NAME, REBUILD_FUNCTION_NAME, TRUNCATE_FUNCTION_NAME } from '../entities';
 import { config } from '../addon.config';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
     constructor(
-        public session:  PepSessionService,
+        public session: PepSessionService,
         private httpService: PepHttpService,
         private addonService: PepAddonService,
         private utilities: UtilitiesService,
@@ -41,23 +41,24 @@ export class CollectionsService {
         const url = this.utilities.getFunctionURL(COLLECTIONS_FUNCTION_NAME, options)
         return await this.addonService.getAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
     }
-    
+
     async getMappingsCollections() {
         const collections = await this.getCollections();
         return collections.filter(collection => {
             return collection.DocumentKey.Type === 'Composite'
         })
     }
-    
+
     async upsertCollection(obj: Collection) {
-        
+
         return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, COLLECTIONS_FUNCTION_NAME, obj).toPromise();
     }
-    
+
+
     async createCollection(obj: Collection) {
         return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, CREATE_FUNCTION_NAME, obj).toPromise();
-    } 
-    
+    }
+
     async getContainedCollections(params?: FindOptions) {
         const collections = await this.getCollections();
         return collections.filter(collection => {
@@ -69,17 +70,17 @@ export class CollectionsService {
         let content = '';
         let title = this.translate.instant('Collection_UpdateFailed_Title');
         if (errorMessage.indexOf(existingInRecycleBinErrorMessage) >= 0) {
-            content = this.translate.instant('Collection_ExistingRecycleBinError_Content', {collectionName: collectionName});
+            content = this.translate.instant('Collection_ExistingRecycleBinError_Content', { collectionName: collectionName });
             this.utilities.showMessageDialog(title, content);
         }
-        else if(errorMessage.indexOf(existingErrorMessage) >= 0){
-            content = this.translate.instant('Collection_ExistingError_Content', {collectionName: collectionName});
+        else if (errorMessage.indexOf(existingErrorMessage) >= 0) {
+            content = this.translate.instant('Collection_ExistingError_Content', { collectionName: collectionName });
             this.utilities.showMessageDialog(title, content);
         }
         else {
             const errors = this.utilities.getErrors(errorMessage);
-            if(errors.length > 1) {
-                content = this.translate.instant('Collection_UpdateFailed_Content', {error: errors.map(error=> `<li>${error}</li>`)});
+            if (errors.length > 1) {
+                content = this.translate.instant('Collection_UpdateFailed_Content', { error: errors.map(error => `<li>${error}</li>`) });
             }
             else {
                 content = errorMessage;
@@ -90,7 +91,13 @@ export class CollectionsService {
 
     async cleanRebuild(collectionName: string): Promise<string> {
 
-        const url = this.utilities.getFunctionURL(REBUILD_FUNCTION_NAME, {collection_name: collectionName});
+        const url = this.utilities.getFunctionURL(REBUILD_FUNCTION_NAME, { collection_name: collectionName });
+        const result = await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, {}).toPromise();
+        return result ? result.URI : '';
+    }
+
+    async truncateCollection(collectionName: string) {
+        const url = this.utilities.getFunctionURL(TRUNCATE_FUNCTION_NAME, { collection_name: collectionName });
         const result = await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, {}).toPromise();
         return result ? result.URI : '';
     }
@@ -106,13 +113,13 @@ export class CollectionsService {
     }
 
     async getEvents(collectionName: string) {
-        const url = this.utilities.getFunctionURL(EVENTS_FUNCTION_NAME, {collection_name: collectionName});
+        const url = this.utilities.getFunctionURL(EVENTS_FUNCTION_NAME, { collection_name: collectionName });
         return await this.addonService.getAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
     }
 
-    async deleteCollection(collectionName: string){
-        const url = this.utilities.getFunctionURL(DELETE_FUNCTION_NAME, {collection_name: collectionName});
+    async deleteCollection(collectionName: string) {
+        const url = this.utilities.getFunctionURL(DELETE_FUNCTION_NAME, { collection_name: collectionName });
         return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
     }
-    
+
 }
