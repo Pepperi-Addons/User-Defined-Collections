@@ -57,8 +57,9 @@ export class FieldsFormComponent implements OnInit {
             this.dialogTitle = this.dialogData.Mode == 'Edit' ? translate.instant('FormField_Title_Edit', { field_name: this.dialogData.FieldName }) : translate.instant('FormField_Title_Add');
             this.fieldTypes = this.dialogData.AvailableTypes.filter(type => type !== 'Array').map(type => {
                 return {
+                    // if type is Resource, we want to display "Reference"
                     key: type,
-                    value: type,
+                    value: type === 'Resource' ? 'Reference' : type
                 }
             });
             if (this.dialogData.Field.Type === 'Array') {

@@ -181,10 +181,24 @@ export class GeneralTabComponent implements OnInit {
         init: async(params:any) => {
             let fields = this.collection.ListView.Fields.map(obj => {
                 const type = this.collection.Fields[obj.FieldID].Type;
+                let fieldType: string;
+
+                switch (type) {
+                    case 'Array':
+                        fieldType = `${this.collection.Fields[obj.FieldID].Items.Type} ${type}`;
+                        break;
+                    case 'Resource':
+                        fieldType = 'Reference';
+                        break;
+                    default:
+                        fieldType = type;
+                        break;
+                }
+
                 return {
                     Key: obj.FieldID,
-                    Type: type === 'Array' ? `${this.collection.Fields[obj.FieldID].Items.Type} ${type}` : type,
                     Description: this.collection.Fields[obj.FieldID].Description,
+                    Type: fieldType,
                     Mandatory: this.collection.Fields[obj.FieldID].Mandatory,
                     Indexed: this.collection.Fields[obj.FieldID].Indexed || false,
                 };
