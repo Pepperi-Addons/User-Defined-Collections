@@ -61,40 +61,40 @@ export const UsageMonitorRelations: Relation[] = [{
 export const AtdRelations: Relation[] = [{
     RelationName: "ATDImport",
     AddonUUID: config.AddonUUID,
-    Name:"UDCRelations",
-    Description:"Relation from UDC addon to ATD Import addon",
-    Type:"AddonAPI",
-    AddonRelativeURL:"/api/import_udc_mappings"
+    Name: "UDCRelations",
+    Description: "Relation from UDC addon to ATD Import addon",
+    Type: "AddonAPI",
+    AddonRelativeURL: "/api/import_udc_mappings"
 },
 {
     RelationName: "ATDExport",
     AddonUUID: config.AddonUUID,
-    Name:"UDCRelations",
-    Description:"Relation from UDC addon to ATD Export addon",
-    Type:"AddonAPI",
-    AddonRelativeURL:"/api/export_udc_mappings"
+    Name: "UDCRelations",
+    Description: "Relation from UDC addon to ATD Export addon",
+    Type: "AddonAPI",
+    AddonRelativeURL: "/api/export_udc_mappings"
 },
 {   //meta data for realtion of type NgComponent
     RelationName: "TransactionTypeListTabs",
     AddonUUID: config.AddonUUID,
-    Name:"UDCRelations",
-    Description:"Collections",
+    Name: "UDCRelations",
+    Description: "Collections",
     SubType: "NG11",
     ModuleName: "MappingsModule",
     ComponentName: "MappingListComponent",
-    Type:"NgComponent",
-    AddonRelativeURL:"mappings"
+    Type: "NgComponent",
+    AddonRelativeURL: "mappings"
 },
 {   //meta data for realtion of type NgComponent
     RelationName: "ActivityTypeListTabs",
     AddonUUID: config.AddonUUID,
-    Name:"UDCRelations",
-    Description:"Collections",
+    Name: "UDCRelations",
+    Description: "Collections",
     SubType: "NG11",
     ModuleName: "MappingsModule",
     ComponentName: "MappingListComponent",
-    Type:"NgComponent",
-    AddonRelativeURL:"mappings"
+    Type: "NgComponent",
+    AddonRelativeURL: "mappings"
 }]
 
 export const SettingsRelation: Relation[] = [{
@@ -130,36 +130,39 @@ export const UdcMappingsScheme: AddonDataScheme = {
 
 export const SettingsTableName = 'UserDefinedCollectionsSettings';
 
-export const settingsTable: AddonDataScheme= {
-    Name: SettingsTableName, 
-    Type: 'meta_data', 
+export const settingsTable: AddonDataScheme = {
+    Name: SettingsTableName,
+    Type: 'meta_data',
     Fields: {
-        metadata: { 
-            Type:'Integer'
+        metadata: {
+            Type: 'Integer'
         },
-        documents: { 
-            Type:'Integer'
+        documents: {
+            Type: 'Integer'
         },
-        documentsNotIndexed: { 
-            Type:'Integer'
+        documentsNotIndexed: {
+            Type: 'Integer'
         },
         containedArrayItems: {
-            Type:'Integer'
+            Type: 'Integer'
         },
         fields: {
-            Type:'Integer'
+            Type: 'Integer'
         },
         fieldsOfContained: {
-            Type:'Integer'
+            Type: 'Integer'
         }
-    } 
+    }
 }
 
 export const limitationTypes = {
-    Metadata : "metadata",
-    Documents : "documents",
-    NotIndexedDocument : "documentsNotIndexed",
+    Metadata: "metadata",
+    Documents: "documents",
+    NotIndexedDocument: "documentsNotIndexed",
     ItemsOfContainedArray: "containedArrayItems",
-    Fields : "fields",
-    ContainedSchemaFields : "fieldsOfContained"
+    Fields: "fields",
+    ContainedSchemaFields: "fieldsOfContained"
 }
+
+export const udcSchemesPermissionsPolicy = "udc_schemes";
+export const udcSchemesPermissionsPolicyDescription = "Permissions for User Defined Collections schemes endpoint";

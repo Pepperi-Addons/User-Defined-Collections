@@ -9,21 +9,27 @@ The error Message is importent! it will be written in the audit log and help the
 */
 
 import { Client, Request } from '@pepperi-addons/debug-server'
-import { AtdRelations, SettingsRelation, UsageMonitorRelations, VarSettingsRelation } from './metadata';
+import { AtdRelations, SettingsRelation, UsageMonitorRelations, VarSettingsRelation, udcSchemesPermissionsPolicy, udcSchemesPermissionsPolicyDescription } from './metadata';
 import { UtilitiesService } from './services/utilities.service';
 import semver from 'semver'
 import { VarSettingsService } from './services/var-settings.service';
 import { CollectionsService } from './services/collections.service';
+import { PermissionsService } from './services/permissions.service';
 
 export async function install(client: Client, request: Request): Promise<any> {
     // For page block template uncomment this.
     // const res = await createPageBlockRelation(client);
     // return res;
+
+    //upsert permissions
+    const permissionsService = new PermissionsService(client);
+    await permissionsService.createPermission(udcSchemesPermissionsPolicy, udcSchemesPermissionsPolicyDescription);
+    
     return await createObjects(client);
 }
 
 export async function uninstall(client: Client, request: Request): Promise<any> {
-   return {success:true,resultObject:{}}
+    return { success: true, resultObject: {} }
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
@@ -39,6 +45,12 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
             const collectionsService = new CollectionsService(client);
             result = await collectionsService.migrateDIMXRelations();
         }
+
+        // Create permissions if upgrading from a version before 0.9.37
+        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.37') < 0) {
+            const permissionsService = new PermissionsService(client);
+            await permissionsService.createPermission(udcSchemesPermissionsPolicy, udcSchemesPermissionsPolicyDescription);
+        }
     } catch (err) {
         result = { success: false, resultObject: err as Error };
     }
@@ -53,7 +65,7 @@ export async function downgrade(client: Client, request: Request): Promise<any> 
         return await collectionsService.unmigrateDIMXRelations();
     }
     else {
-        return {success:true,resultObject:{}}
+        return { success: true, resultObject: {} }
     }
 }
 
@@ -70,14 +82,14 @@ async function createObjects(client: Client) {
         await varSettingsService.createSettingsTable(); // create settings table with default values
 
         return {
-            success:true,
+            success: true,
             resultObject: {}
         }
-    } 
+    }
     catch (err) {
-        return { 
-            success: false, 
-            resultObject: err as Error, 
+        return {
+            success: false,
+            resultObject: err as Error,
             errorMessage: `Error in creating necessary objects . error - ${err}`
         };
     }

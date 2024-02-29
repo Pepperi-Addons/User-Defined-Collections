@@ -11,7 +11,7 @@ import { ResourcesService } from './services/resources-service';
 import { ServerDocumentsService } from './services/documents.service';
 
 import { VarSettingsService } from './services/var-settings.service';
-import { limitationTypes } from './metadata';
+import { limitationTypes, udcSchemesPermissionsPolicy } from './metadata';
 
 export async function var_settings(client: Client, request: Request) {
     const utilities = new UtilitiesService(client);
@@ -38,7 +38,7 @@ export async function var_settings(client: Client, request: Request) {
 
 
 export async function schemes(client: Client, request: Request) {
-    
+    await client.ValidatePermission(udcSchemesPermissionsPolicy);
     const collectionService = new CollectionsService(client);
     const apiService = new ApiService(client);
     const resourcesService = new ResourcesService(client);
@@ -61,7 +61,7 @@ export async function schemes(client: Client, request: Request) {
             break;
         }
         default: {
-            let err: any = new Error('Method not allowed'); 
+            let err: any = new Error('Method not allowed');
             err.code = 405;
             throw err;
         }
@@ -82,7 +82,7 @@ export async function documents(client: Client, request: Request) {
     const collectionName = request.query.name;
     switch (request.method) {
         case 'GET': {
-            
+
             const key = request.query.key;
             if (collectionName) {
                 if (key) {
@@ -117,7 +117,7 @@ export async function export_data_source(client: Client, request: Request) {
         return service.exportDataSource(request.body);
     }
     else if (request.method == 'GET') {
-        throw new Error(`Method ${request.method} not supported`);       
+        throw new Error(`Method ${request.method} not supported`);
     }
 }
 
@@ -129,7 +129,7 @@ export async function init_import_data_source(client: Client, request: Request) 
         const initData: DIMXImportInitData = await service.getDIMXImportInitData(collectionName);
         console.log(`init_import_data_source collected ${Object.keys(initData).length} resources`);
         return initData;
-        
+
     }
     catch (ex) {
         console.error(`import_init_source: ${ex}`);
@@ -152,7 +152,7 @@ export async function import_data_source(client: Client, request: Request) {
         }
     }
     else if (request.method == 'GET') {
-        throw new Error(`Method ${request.method} not supported`);       
+        throw new Error(`Method ${request.method} not supported`);
     }
 }
 
@@ -165,7 +165,7 @@ export async function collections_number(client: Client, request: Request) {
         "Resources": [
             {
                 "Data": "Collections",
-                "Description": "Number of collections", 
+                "Description": "Number of collections",
                 "Size": collections.length,
             },
         ],
@@ -178,7 +178,7 @@ export async function total_documents(client: Client, request: Request) {
     const collectionsService = new CollectionsService(client);
     const documentsService = new ServerDocumentsService(client);
     const count = await documentsService.getAllDocumentsCount(collectionsService);
-    
+
     return {
         Title: "Data",
         "Resources": [
@@ -196,16 +196,16 @@ export async function total_documents(client: Client, request: Request) {
 export async function documents_per_collection(client: Client, request: Request) {
     const collectionsService = new CollectionsService(client);
     const documentsService = new ServerDocumentsService(client);
-    const collections = await collectionsService.find({page_size: -1}) as Collection[];
+    const collections = await collectionsService.find({ page_size: -1 }) as Collection[];
     const documentsPerCollection = await documentsService.getDocumentsCountForCollection(collections);
-    
+
     return {
         Title: "Collections",
         Resources: documentsPerCollection,
         ReportingPeriod: "Weekly",
         AggregationFunction: "LAST"
     }
-    
+
 }
 
 export async function mappings(client: Client, request: Request) {
@@ -217,7 +217,7 @@ export async function mappings(client: Client, request: Request) {
             const atdID = Number(request.query.atd_id);
             result = await service.find(request.query, atdID);
             break;
-            
+
         }
         case 'POST': {
             result = await service.upsert(request.body);
@@ -229,15 +229,15 @@ export async function mappings(client: Client, request: Request) {
             throw err;
         }
     }
-    
+
     return result;
-    
+
 }
 
 export async function get_atd(client: Client, request: Request) {
     const service = new UtilitiesService(client);
     let result;
-    
+
     switch (request.method) {
         case 'GET': {
             const uuid = request.query.uuid;
@@ -248,10 +248,10 @@ export async function get_atd(client: Client, request: Request) {
             let err: any = new Error(`Method ${request.method} not allowed`);
             err.code = 405;
             throw err;
-        }        
+        }
     }
-    
-    return result;   
+
+    return result;
 }
 
 export async function fields(client: Client, request: Request) {
@@ -263,7 +263,7 @@ export async function fields(client: Client, request: Request) {
         Activities: [],
         TransactionLines: []
     }
-    
+
     switch (request.method) {
         case 'GET': {
             const atd_uuid = request.query.atd_uuid;
@@ -279,9 +279,9 @@ export async function fields(client: Client, request: Request) {
             let err: any = new Error(`Method ${request.method} not allowed`);
             err.code = 405;
             throw err;
-        }        
+        }
     }
-    
+
     return result;
 }
 
@@ -309,19 +309,19 @@ export async function export_udc_mappings(client: Client, request: Request) {
                 }
                 else {
                     return {
-                        success:true,
+                        success: true,
                         DataForImport: {}
                     }
                 }
             }
-            catch(err) {
+            catch (err) {
                 console.log('export_udc_mappings Failed with error:', err);
                 let errMessage = 'Unknown error occured';
                 if (err instanceof Error) {
                     errMessage = err.message;
                 }
                 return {
-                    success:false,
+                    success: false,
                     errorMessage: errMessage
                 }
             }
@@ -330,7 +330,7 @@ export async function export_udc_mappings(client: Client, request: Request) {
             let err: any = new Error(`Method ${request.method} not allowed`);
             err.code = 405;
             throw err;
-        }        
+        }
     }
 }
 
@@ -345,7 +345,7 @@ export async function import_udc_mappings(client: Client, request: Request) {
                 if (data && data.mappings) {
                     await Promise.all(data.mappings.map(async (item) => {
                         const objToUpdate = {
-                            AtdID : atdID,
+                            AtdID: atdID,
                             ...item
                         }
                         await mappingService.upsert(objToUpdate);
@@ -356,14 +356,14 @@ export async function import_udc_mappings(client: Client, request: Request) {
                     success: true
                 }
             }
-            catch(err) {
+            catch (err) {
                 console.log('import_udc_mappings Failed with error:', err);
                 let errMessage = 'Unknown error occured';
                 if (err instanceof Error) {
                     errMessage = err.message;
                 }
                 return {
-                    success:false,
+                    success: false,
                     errorMessage: errMessage
                 }
             }
@@ -372,7 +372,7 @@ export async function import_udc_mappings(client: Client, request: Request) {
             let err: any = new Error(`Method ${request.method} not allowed`);
             err.code = 405;
             throw err;
-        }        
+        }
     }
 }
 
@@ -386,7 +386,7 @@ export async function create(client: Client, request: Request) {
     switch (request.method) {
         case 'POST': {
             let collectionName = request.query.collection_name || '';
-            if(collectionName) {
+            if (collectionName) {
                 return await serverDocumentsService.create(collectionsService, collectionName, request.body)
             }
             else {
@@ -398,7 +398,7 @@ export async function create(client: Client, request: Request) {
             let err: any = new Error(`Method ${request.method} not allowed`);
             err.code = 405;
             throw err;
-            
+
         }
     }
 }
@@ -466,7 +466,7 @@ export async function search(client: Client, request: Request) {
     const resourcesService = new ResourcesService(client);
     const documentsService = new DocumentsService(apiService, resourcesService);
 
-    switch(request.method) {
+    switch (request.method) {
         case 'POST': {
             return await documentsService.search(resourceName, request.body);
         }
@@ -477,19 +477,19 @@ export async function search(client: Client, request: Request) {
         }
     }
 }
-    
+
 export async function collection_fields(client: Client, request: Request) {
     const resourceName = request.query.collection_name || '';
     const service = new CollectionsService(client);
-    
-    switch(request.method) {
+
+    switch (request.method) {
         case 'GET': {
             const fields = {};
             const collection = await service.findByName(resourceName);
             if (collection) {
                 const fieldNames = Object.keys(collection.Fields!).forEach(fieldName => {
                     if (collection.Fields![fieldName].Indexed) {
-                        fields[fieldName] = {...collection.Fields![fieldName]};
+                        fields[fieldName] = { ...collection.Fields![fieldName] };
                     }
                 });
             }
@@ -508,8 +508,8 @@ export async function collection_fields(client: Client, request: Request) {
 export async function clean_rebuild(client: Client, request: Request) {
     const resourceName = request.query.collection_name || '';
     const service = new CollectionsService(client);
-    
-    switch(request.method) {
+
+    switch (request.method) {
         case 'POST': {
             return await service.cleanRebuild(resourceName);
         }
