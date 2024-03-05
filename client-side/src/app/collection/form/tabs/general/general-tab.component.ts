@@ -37,6 +37,7 @@ export class GeneralTabComponent implements OnInit {
   @Output() documentKeyValidationChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Input() collection: Collection;
   @Input() insideTab: boolean = true;
+  @Input() fieldsLimit: number = 30;
   collectionName: string;
   emptyCollection: boolean = true;
   documentKeyValid: boolean = false;
@@ -379,6 +380,19 @@ openFieldForm(name: string) {
     dialogConfig.data = new PepDialogData({
         content: FieldsFormComponent,
     })
+    if (dialogData.Mode == 'Add') {
+        if (!this.fieldsLimit) { // error if no limit was received
+            throw new Error('No fields limit was received');
+        }
+        if (Object.keys(this.collection.Fields).length >= this.fieldsLimit) {
+            this.dialogService.openDefaultDialog(new PepDialogData({
+                title: this.translate.instant('Error'),
+                content: this.translate.instant('CollectionForm_FieldsLimitError', { limit: this.fieldsLimit }),
+                actionsType: 'close',
+            }));
+            return;
+        }
+    }
     this.dialogService.openDialog(FieldsFormComponent, dialogData, dialogConfig).afterClosed().subscribe(value => {
         if (value) {
             const fieldName = value.fieldName;

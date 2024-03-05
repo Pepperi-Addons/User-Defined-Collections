@@ -535,3 +535,9 @@ export async function collection_events(client: Client, request: Request) {
         }
     }
 }
+
+export async function get_fields_limit(client: Client, request: Request) {
+    const utilities = new UtilitiesService(client);
+    const varRelationService: VarSettingsService = new VarSettingsService(utilities);
+    return await varRelationService.getSettingsByName(limitationTypes.Fields);
+}

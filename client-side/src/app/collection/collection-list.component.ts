@@ -49,6 +49,8 @@ export class CollectionListComponent implements OnInit {
 
     abstractSchemes: AddonDataScheme[] = [];
 
+    fieldsLimit: number;
+
     constructor(
         public collectionsService: CollectionsService,
         public layoutService: PepLayoutService,
@@ -78,6 +80,7 @@ export class CollectionListComponent implements OnInit {
         }).catch(error => {
             console.log(`could not get abstract schemes. error:${error}`);
         })
+        this.utilitiesService.getFieldLimit().then((value: number) => sessionStorage.setItem('fieldsLimit', value.toString()));
     }
 
     getMenuItems() {

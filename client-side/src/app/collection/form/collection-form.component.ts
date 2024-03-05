@@ -25,6 +25,7 @@ export class CollectionFormComponent implements OnInit {
     collectionEvents: UserEvent[] = [];
     hasTabs: boolean = true;
     documentKeyValid: boolean = false;
+    fieldsLimit: number;
 
     constructor(private activateRoute: ActivatedRoute,
                 private router: Router,
@@ -35,6 +36,11 @@ export class CollectionFormComponent implements OnInit {
 
     ngOnInit(): void {
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
+        this.fieldsLimit = parseInt(sessionStorage.getItem('fieldsLimit'));
+        
+        if (!this.fieldsLimit) {
+            throw new Error('No fields limit in the session storage');
+        }
         
         this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
             this.collectionEvents = await this.collectionsService.getEvents(this.collectionName);

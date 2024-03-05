@@ -13,14 +13,14 @@ import { PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
 
 import { FileStatusPanelComponent } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
 
-import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME, API_PAGE_SIZE, SEARCH_DOCUMENTS_FUNCTION_NAME, DeletionStatus} from '../entities';
+import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME, API_PAGE_SIZE, SEARCH_DOCUMENTS_FUNCTION_NAME, DeletionStatus, FIELD_LIMIT_FUNCTION_NAME } from '../entities';
 import { config } from '../addon.config';
 import { IPepGenericListParams } from '@pepperi-addons/ngx-composite-lib/generic-list';
 
 @Injectable({ providedIn: 'root' })
 export class UtilitiesService {
     constructor(
-        public session:  PepSessionService,
+        public session: PepSessionService,
         private httpService: PepHttpService,
         private addonService: PepAddonService,
         private dialogService: PepDialogService,
@@ -28,7 +28,7 @@ export class UtilitiesService {
 
     async getCollectionByName(collectionName: string): Promise<Collection> {
         if (collectionName !== EMPTY_OBJECT_NAME) {
-            const url = this.getFunctionURL(COLLECTIONS_FUNCTION_NAME, {name: collectionName});
+            const url = this.getFunctionURL(COLLECTIONS_FUNCTION_NAME, { name: collectionName });
             return await this.addonService.getAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
         }
         else {
@@ -54,6 +54,11 @@ export class UtilitiesService {
         }
     }
 
+    async getFieldLimit(): Promise<number> {
+        const url = this.getFunctionURL(FIELD_LIMIT_FUNCTION_NAME);
+        return await this.addonService.getAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
+    }
+
     async getCollectionDocuments(collectionName: string, params: IPepGenericListParams = {}, searchFields: string[] = [], hidden: boolean = false, listViewFields: string[] = []): Promise<SearchData<AddonData>> {
         const pageSize = (params.toIndex - params.fromIndex) + 1 || API_PAGE_SIZE;
         const page = params.pageIndex || (params.fromIndex / pageSize) + 1 || 1;
@@ -63,12 +68,12 @@ export class UtilitiesService {
             IncludeCount:true,
             Where: ""
         };
-        
+
         if (hidden) {
             options.IncludeDeleted = true;
             options.Where = 'Hidden = true';
         }
-        
+
         if (params.searchString) {
             // DI-21452 - is there are no indexed fields, search only on 'Key'
             if (searchFields.length === 0) {
@@ -79,13 +84,13 @@ export class UtilitiesService {
             }
         }
 
-        if(listViewFields.length > 0) {
+        if (listViewFields.length > 0) {
             options.Fields = listViewFields;
         }
 
-        const qs = UtilitiesService.encodeQueryParams({resource_name: collectionName});
-        const url = qs ? `${SEARCH_DOCUMENTS_FUNCTION_NAME}?${qs}`: SEARCH_DOCUMENTS_FUNCTION_NAME;
-        
+        const qs = UtilitiesService.encodeQueryParams({ resource_name: collectionName });
+        const url = qs ? `${SEARCH_DOCUMENTS_FUNCTION_NAME}?${qs}` : SEARCH_DOCUMENTS_FUNCTION_NAME;
+
         return await this.addonService.postAddonApiCall(config.AddonUUID, API_FILE_NAME, url, options).toPromise();
     }
 
@@ -105,12 +110,12 @@ export class UtilitiesService {
         }
         return errors;
     }
-            
+
     async getReferenceResources(): Promise<AddonDataScheme[]> {
         const resources = await this.httpService.getPapiApiCall('/resources/resources').toPromise();
         return (resources as AddonDataScheme[]).filter(x => x.Type != 'contained' && x.Name != 'resources');
     }
-    
+
     async getResourceFields(resourceName: string): Promise<AddonDataScheme['Fields']> {
         const resource: AddonDataScheme = await this.httpService.getPapiApiCall(`/resources/resources/key/${resourceName}`).toPromise();
         let fields = {}
@@ -127,7 +132,7 @@ export class UtilitiesService {
             content: content
         });
         this.dialogService.openDefaultDialog(dataMsg).afterClosed().subscribe(value => {
-            if(callback) {
+            if (callback) {
                 callback(value);
             }
         });
@@ -144,15 +149,15 @@ export class UtilitiesService {
         return schemes.filter(scheme => scheme.Type === 'abstract');
     }
 
-    openComponentInDialog(ref: ComponentType<unknown> | TemplateRef<unknown>, data: any, callback: (value:any)=>void) {
+    openComponentInDialog(ref: ComponentType<unknown> | TemplateRef<unknown>, data: any, callback: (value: any) => void) {
         const dialogConfig = this.dialogService.getDialogConfig({}, 'large');
-        this.dialogService.openDialog(ref, data, dialogConfig).afterClosed().subscribe(value=> {
+        this.dialogService.openDialog(ref, data, dialogConfig).afterClosed().subscribe(value => {
             if (callback) {
                 callback(value);
             }
         })
     }
-    
+
     getFunctionURL(functionName: string, params: any = {}) {
         const paramsQS = UtilitiesService.encodeQueryParams(params);
         const query = paramsQS ? `?${paramsQS}` : '';
