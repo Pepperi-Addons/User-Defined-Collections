@@ -382,7 +382,10 @@ openFieldForm(name: string) {
     })
     if (dialogData.Mode == 'Add') {
         if (!this.fieldsLimit) { // error if no limit was received
-            throw new Error('No fields limit was received');
+            this.utilitiesService.getFieldLimit().then((value: number) => {
+                this.fieldsLimit = value;
+                sessionStorage.setItem('fieldsLimit', this.fieldsLimit.toString())
+            });
         }
         if (Object.keys(this.collection.Fields).length >= this.fieldsLimit) {
             this.dialogService.openDefaultDialog(new PepDialogData({

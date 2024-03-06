@@ -39,7 +39,10 @@ export class CollectionFormComponent implements OnInit {
         this.fieldsLimit = parseInt(sessionStorage.getItem('fieldsLimit'));
         
         if (!this.fieldsLimit) {
-            throw new Error('No fields limit in the session storage');
+            this.utilitiesService.getFieldLimit().then((value) => {
+                this.fieldsLimit = value;
+                sessionStorage.setItem('fieldsLimit', this.fieldsLimit.toString());
+            });
         }
         
         this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
