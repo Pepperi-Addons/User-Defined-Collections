@@ -1,6 +1,6 @@
 import { UtilitiesService } from './utilities.service';
 import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
-import { Client } from '@pepperi-addons/debug-server';
+import { Client, Request } from '@pepperi-addons/debug-server';
 import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, limitationTypes, UdcMappingsScheme } from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
 import { collectionSchema, documentKeySchema, dataViewSchema, fieldsSchema } from '../jsonSchemes/collections';
@@ -8,6 +8,7 @@ import { existingErrorMessage, existingInRecycleBinErrorMessage, DocumentsServic
 import { UserEventsService } from './user-events.service';
 import { VarSettingsService } from '../services/var-settings.service';
 import { AddonData } from '@pepperi-addons/papi-sdk/dist/entities';
+import semver from 'semver'
 
 export class CollectionsService {
 
@@ -47,6 +48,14 @@ export class CollectionsService {
                 // before sending data to ADAL, remove extended fields, without changing the DV
                 collectionObj = this.removeExtensionFields(collectionObj, false);
                 collectionObj = this.handleSyncForContained(collectionObj);
+
+                // Add DataSourceData with IndexName
+                if (!collectionObj.DataSourceData) {
+                    collectionObj.DataSourceData = {
+                        IndexName: `${this.client.AddonUUID}_data`,
+                    };
+                }
+
                 let collection = await this.utilities.papiClient.addons.data.schemes.post(collectionObj) as Collection;
                 await this.createDIMXRelations(collection);
                 // if the collection has no indexed fields (don't have data in elastic) or of type 'contained' don't create DQ relation
@@ -339,9 +348,29 @@ export class CollectionsService {
         return collection;
     }
 
-    async migrateDIMXRelations() {
+    async migrateCollections(request: Request, documentsService: DocumentsService): Promise<any> {
         try {
             const collections = await this.find({ page_size: -1 }) as Collection[];
+            let result = { success: true, resultObject: {} };
+
+            // Check version for migrateDIMXRelations
+            if (request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.27') < 0) {
+                result = await this.migrateDIMXRelations(collections);
+            }
+
+            // If successful, check version for migrateCollectionIndexName
+            if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.42') < 0) {
+                result = await this.migrateCollectionIndexName(collections, documentsService);
+            }
+
+            return result;
+        } catch (err) {
+            return { success: false, resultObject: err as Error, errorMessage: `Error in migrating collections. error - ${err}` };
+        }
+    }
+
+    private async migrateDIMXRelations(collections: Collection[]) {
+        try {
             await Promise.all(collections.map(collection => this.createDIMXRelations(collection)));
             return {
                 success: true,
@@ -353,6 +382,25 @@ export class CollectionsService {
                 resultObject: err as Error,
                 errorMessage: `Error in migrating DIMX relations. error - ${err}`
             };
+        }
+    }
+
+    private async migrateCollectionIndexName(collections: Collection[], documentsService: DocumentsService): Promise<any> {
+        try {
+            await Promise.all(collections.map(async (collection) => {
+                // Add DataSourceData property to each collection
+                if (!collection.DataSourceData) {
+                    collection.DataSourceData = {
+                        IndexName: `${this.client.AddonUUID}_data`,
+                    };
+                }
+
+                // Re-upsert the collection
+                await this.utilities.papiClient.addons.data.schemes.post(collection);
+            }));
+            return { success: true, resultObject: {} };
+        } catch (err) {
+            return { success: false, resultObject: err as Error, errorMessage: `Error in migrating collection index names. error - ${err}` };
         }
     }
 
