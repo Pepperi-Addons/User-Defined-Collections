@@ -52,8 +52,8 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
             result = await collectionsService.migrateCollections(request, documentsService);
         }
 
-        // Create permissions if upgrading from a version before 0.9.37
-        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.37') < 0) {
+        // Create permissions if upgrading from a version before 0.9.44
+        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.44') < 0) {
             const permissionsService = new PermissionsService(client);
             await permissionsService.createPermission(udcSchemesPermissionsPolicy, udcSchemesPermissionsPolicyDescription);
         }

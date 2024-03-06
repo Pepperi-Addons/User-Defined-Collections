@@ -37,7 +37,7 @@ export class PermissionsService {
         try {
             console.log(`Going to upsert policy with policyName - ${policyName}`);
             const result = await this.papiClient.post(this.policiesUrl, body);
-            console.log(`Policy created successfully, policyName - ${policyName} got result ${result}`);
+            console.log(`Policy created successfully, policyName - ${policyName} got result ${JSON.stringify(result)}`);
         } catch (err) {
             throw new Error(`Could not upsert policy, error: ${err}`)
         }
@@ -53,7 +53,7 @@ export class PermissionsService {
         try {
             console.log(`Going to upsert profile with policyName - ${policyName}`);
             const result = await this.papiClient.post(this.profilesUrl, body);
-            console.log(`Profile created successfully, policyName - ${policyName}, got result ${result}`);
+            console.log(`Profile created successfully, policyName - ${policyName}, got result ${JSON.stringify(result)}`);
         } catch (err) {
             throw new Error(`Could not upsert profile, error: ${err}`)
         }
