@@ -38,11 +38,12 @@ export class GeneralTabComponent implements OnInit {
   @Input() collection: Collection;
   @Input() insideTab: boolean = true;
   @Input() fieldsLimit: number = 30;
+  @Input() resources: AddonDataScheme[] = [];  
+  @Input() containedResources: AddonDataScheme[] = []; 
+  @Input() documents: SearchData<AddonData>;  
   collectionName: string;
   emptyCollection: boolean = true;
   documentKeyValid: boolean = false;
-  resources: AddonDataScheme[] = [];
-  containedResources: AddonDataScheme[] = [];
   booleanOptions = booleanOptions;
   syncData: SyncType = 'Offline';
   EMPTY_OBJECT_NAME = EMPTY_OBJECT_NAME;
@@ -124,10 +125,8 @@ export class GeneralTabComponent implements OnInit {
   
   constructor(private activateRoute: ActivatedRoute,
     private router: Router,
-    private collectionsService: CollectionsService,
     private translate: TranslateService,
-    private dialogService: PepDialogService,
-    private utilitiesService: UtilitiesService) { }
+    private dialogService: PepDialogService) { }
 
   ngOnInit(): void {
     this.translate.get(['SyncData_Options_Online', 'SyncData_Options_Offline', 'SyncData_Options_OnlyScheme', 'DocumentKey_Options_AutoGenerate', 'DocumentKey_Options_Composite']).subscribe(translations => {
@@ -143,13 +142,9 @@ export class GeneralTabComponent implements OnInit {
               value: translations[`SyncData_Options_${type}`],
           }
       })
-      this.fieldsDataSource = this.getFieldsDataSource();
-      this.utilitiesService.getReferenceResources().then(async (values) => {
-        this.resources = values.filter(collection => collection.Name !== this.collection.Name);
-        this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collection.Name);
-        this.collectionLoaded = true;
-        const documents: SearchData<AddonData> = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collection.Name): { Objects: [], Count: 0};
-        this.emptyCollection = documents.Count == 0 || (documents.Count === -1 && documents.Objects.length === 0);
+        this.fieldsDataSource = this.getFieldsDataSource();
+        this.collectionLoaded = true; // I left this here though I'm not sure if it's necessary now that the collection is being set in the parent component
+        this.emptyCollection = this.documents.Count == 0 || (this.documents.Count === -1 && this.documents.Objects.length === 0);
         if (this.uidList) {
             this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
             this.uidFieldsDataSource = this.getUIDFieldsDataSource();
@@ -172,8 +167,7 @@ export class GeneralTabComponent implements OnInit {
         this.documentKeyValidationChange.emit(this.documentKeyValid);
         // deep copy the object to avoid unwanted data changes
         this.originFields = JSON.parse(JSON.stringify(this.collection.Fields || {}));
-        this.extended = this.collection.Extends ? this.collection.Extends.Name : ''; 
-      });
+        this.extended = this.collection.Extends ? this.collection.Extends.Name : '';
     });
   }
   
@@ -381,12 +375,6 @@ openFieldForm(name: string) {
         content: FieldsFormComponent,
     })
     if (dialogData.Mode == 'Add') {
-        if (!this.fieldsLimit) { // error if no limit was received
-            this.utilitiesService.getFieldLimit().then((value: number) => {
-                this.fieldsLimit = value;
-                sessionStorage.setItem('fieldsLimit', this.fieldsLimit.toString())
-            });
-        }
         if (Object.keys(this.collection.Fields).length >= this.fieldsLimit) {
             this.dialogService.openDefaultDialog(new PepDialogData({
                 title: this.translate.instant('Error'),

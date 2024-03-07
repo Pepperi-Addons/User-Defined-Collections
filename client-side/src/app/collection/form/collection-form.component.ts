@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatTabChangeEvent } from "@angular/material/tabs";
 
-import { Collection } from '@pepperi-addons/papi-sdk';
+import { AddonData, Collection, SearchData } from '@pepperi-addons/papi-sdk';
 
 import { UserEvent } from 'udc-shared'
 
@@ -12,12 +12,12 @@ import { PepDialogData, PepDialogService } from '@pepperi-addons/ngx-lib/dialog'
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'collection-form',
-  templateUrl: './collection-form.component.html',
-  styleUrls: ['./collection-form.component.scss']
+    selector: 'collection-form',
+    templateUrl: './collection-form.component.html',
+    styleUrls: ['./collection-form.component.scss']
 })
 export class CollectionFormComponent implements OnInit {
-    
+
     collection: Collection;
     collectionName: string;
     currentTabIndex: number = 0;
@@ -26,78 +26,79 @@ export class CollectionFormComponent implements OnInit {
     hasTabs: boolean = true;
     documentKeyValid: boolean = false;
     fieldsLimit: number;
+    containedCollections: Collection[];
+    resources: Collection[];
+    documents: SearchData<AddonData>;
 
     constructor(private activateRoute: ActivatedRoute,
-                private router: Router,
-                private collectionsService: CollectionsService,
-                private translate: TranslateService,
-                private dialogService: PepDialogService,
-                private utilitiesService: UtilitiesService) { }
+        private router: Router,
+        private collectionsService: CollectionsService,
+        private translate: TranslateService,
+        private dialogService: PepDialogService,
+        private utilitiesService: UtilitiesService) { }
 
     ngOnInit(): void {
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
-        this.fieldsLimit = parseInt(sessionStorage.getItem('fieldsLimit'));
-        
-        if (!this.fieldsLimit) {
-            this.utilitiesService.getFieldLimit().then((value) => {
-                this.fieldsLimit = value;
-                sessionStorage.setItem('fieldsLimit', this.fieldsLimit.toString());
-            });
-        }
-        
-        this.utilitiesService.getCollectionByName(this.collectionName).then(async (value) => {
-            this.collectionEvents = await this.collectionsService.getEvents(this.collectionName);
+
+        this.utilitiesService.getDataForCollectionForm(this.collectionName).then(async (value) => {
+            
+            this.collectionEvents = value.Events;
+            this.collection = value.Collection;
+            this.fieldsLimit = value.FieldsLimit;
+            this.containedCollections = value.ContainedCollections;
+            this.resources = value.Resources;
+            this.documents = value.Documents;
+            
             this.hasTabs = this.collectionEvents.length > 0;
-            this.collection = value;
             this.collectionLoaded = true;
         });
     }
 
     goBack() {
-        this.router.navigate(['..'], {
-            relativeTo: this.activateRoute,
-            queryParamsHandling: 'preserve'
-        })
-    }
+            this.router.navigate(['..'], {
+                relativeTo: this.activateRoute,
+                queryParamsHandling: 'preserve'
+            })
+        }
 
     async saveClicked() {
-        try {
-            // we cannot change the collection name, so we need first to delete the "old" one
-            if (this.collection.Name != this.collectionName) { 
-                await this.collectionsService.upsertCollection({
-                    Name: this.collectionName,
-                    Hidden: true
-                });
-            }
-            await this.collectionsService.upsertCollection(this.collection);
-            this.showSuccessMessage();
+            try {
+                // we cannot change the collection name, so we need first to delete the "old" one
+                if(this.collection.Name != this.collectionName) {
+            await this.collectionsService.upsertCollection({
+                Name: this.collectionName,
+                Hidden: true
+            });
         }
-        catch (error) {
-            this.collectionsService.showUpsertFailureMessage(error, this.collection.Name);
-        }
+        await this.collectionsService.upsertCollection(this.collection);
+        this.showSuccessMessage();
     }
+    catch(error) {
+        this.collectionsService.showUpsertFailureMessage(error, this.collection.Name);
+    }
+}
 
-    saveCollection(collection) {
-        this.collection = collection;
-        this.saveClicked();
-    }
+saveCollection(collection) {
+    this.collection = collection;
+    this.saveClicked();
+}
 
-    showSuccessMessage() {
-        const dataMsg = new PepDialogData({
-            title: this.translate.instant('Collection_UpdateSuccess_Title'),
-            actionsType: 'close',
-            content: this.translate.instant('Collection_UpdateSuccess_Content')
-        });
-        this.dialogService.openDefaultDialog(dataMsg).afterClosed().subscribe(() => {
-            this.goBack();
-        });
-    }
+showSuccessMessage() {
+    const dataMsg = new PepDialogData({
+        title: this.translate.instant('Collection_UpdateSuccess_Title'),
+        actionsType: 'close',
+        content: this.translate.instant('Collection_UpdateSuccess_Content')
+    });
+    this.dialogService.openDefaultDialog(dataMsg).afterClosed().subscribe(() => {
+        this.goBack();
+    });
+}
 
-    onTabChanged(tabChangeEvent: MatTabChangeEvent): void {
-        this.currentTabIndex = tabChangeEvent.index;
-    }
+onTabChanged(tabChangeEvent: MatTabChangeEvent): void {
+    this.currentTabIndex = tabChangeEvent.index;
+}
 
-    documentKeyValidationChanged(event) {
-        this.documentKeyValid = event;
-    }
+documentKeyValidationChanged(event) {
+    this.documentKeyValid = event;
+}
 }

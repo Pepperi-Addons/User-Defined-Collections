@@ -79,8 +79,7 @@ export class CollectionListComponent implements OnInit {
             this.abstractSchemes = schemes;
         }).catch(error => {
             console.log(`could not get abstract schemes. error:${error}`);
-        })
-        this.utilitiesService.getFieldLimit().then((value: number) => sessionStorage.setItem('fieldsLimit', value.toString()));
+        });
     }
 
     getMenuItems() {

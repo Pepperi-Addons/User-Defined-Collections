@@ -1,4 +1,4 @@
-import { DataViewFieldType, AddonData, ApiFieldObject, AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk/';
+import { DataViewFieldType, AddonData, ApiFieldObject, AddonDataScheme, Collection, SearchData } from '@pepperi-addons/papi-sdk/';
 
 export const MappingFieldTypes: DataViewFieldType[] = [
     'TextBox',
@@ -98,6 +98,18 @@ export type ReferenceObjects = {
 export type DIMXImportInitData = {
     ReferenceSchemes: ReferenceSchemes,
     CollectionScheme: Collection
+}
+
+export type ResourcesForCollectionForm = {
+    Collection: Collection,
+    ContainedCollections: Collection[],
+    Resources: Collection[]
+}
+
+export type DataForCollectionForm = ResourcesForCollectionForm & {
+    Events: UserEvent[];
+    FieldsLimit: number;
+    Documents: SearchData<AddonData>;
 }
 
 export const existingErrorMessage = 'Object already Exist';

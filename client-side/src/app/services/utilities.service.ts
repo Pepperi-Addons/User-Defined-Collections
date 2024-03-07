@@ -13,8 +13,9 @@ import { PepSnackBarService } from '@pepperi-addons/ngx-lib/snack-bar';
 
 import { FileStatusPanelComponent } from '@pepperi-addons/ngx-composite-lib/file-status-panel';
 
-import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME, API_PAGE_SIZE, SEARCH_DOCUMENTS_FUNCTION_NAME, DeletionStatus, FIELD_LIMIT_FUNCTION_NAME } from '../entities';
+import { EMPTY_OBJECT_NAME, RebuildStatus, COLLECTIONS_FUNCTION_NAME, DOCUMENTS_FUNCTION_NAME, ADDONS_BASE_URL, API_FILE_NAME, API_PAGE_SIZE, SEARCH_DOCUMENTS_FUNCTION_NAME, DeletionStatus, DATA_FOR_COLLECTION_FORM_FUNCTION_NAME } from '../entities';
 import { config } from '../addon.config';
+import { DataForCollectionForm } from 'udc-shared/src/entities'
 import { IPepGenericListParams } from '@pepperi-addons/ngx-composite-lib/generic-list';
 
 @Injectable({ providedIn: 'root' })
@@ -54,8 +55,8 @@ export class UtilitiesService {
         }
     }
 
-    async getFieldLimit(): Promise<number> {
-        const url = this.getFunctionURL(FIELD_LIMIT_FUNCTION_NAME);
+    async getDataForCollectionForm(collectionName: string): Promise<DataForCollectionForm> {
+        const url = this.getFunctionURL(DATA_FOR_COLLECTION_FORM_FUNCTION_NAME, { collection_name: collectionName });
         return await this.addonService.getAddonApiCall(config.AddonUUID, API_FILE_NAME, url).toPromise();
     }
 
@@ -109,11 +110,6 @@ export class UtilitiesService {
             errors = message.substring(start).split("\n");
         }
         return errors;
-    }
-
-    async getReferenceResources(): Promise<AddonDataScheme[]> {
-        const resources = await this.httpService.getPapiApiCall('/resources/resources').toPromise();
-        return (resources as AddonDataScheme[]).filter(x => x.Type != 'contained' && x.Name != 'resources');
     }
 
     async getResourceFields(resourceName: string): Promise<AddonDataScheme['Fields']> {

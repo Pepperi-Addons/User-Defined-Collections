@@ -35,7 +35,7 @@
     </ng-template>
     
     <ng-template #noTabs>
-        <form-general-tab [collection]="collection" [insideTab]="false" [fieldsLimit]="fieldsLimit" (documentKeyValidationChange)="documentKeyValidationChanged($event)"></form-general-tab>
+        <form-general-tab [collection]="collection" [insideTab]="false" [fieldsLimit]="fieldsLimit" [containedResources] = "containedCollections" [resources] = "resources" [documents]="documents" (documentKeyValidationChange)="documentKeyValidationChanged($event)"></form-general-tab>
     </ng-template>
 </pep-page-layout>
 
