@@ -109,7 +109,7 @@ export type ResourcesForCollectionForm = {
 export type DataForCollectionForm = ResourcesForCollectionForm & {
     Events: UserEvent[];
     FieldsLimit: number;
-    Documents: SearchData<AddonData>;
+    CollectionIsEmpty: boolean;
 }
 
 export const existingErrorMessage = 'Object already Exist';

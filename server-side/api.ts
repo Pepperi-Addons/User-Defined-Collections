@@ -465,19 +465,21 @@ export async function get_data_for_collection_form(client: Client, request: Requ
         case 'GET': {
             const resourcesForCollectionForm: ResourcesForCollectionForm = await resourcesService.getResourcesForCollectionForm(collectionName);
             const collectionEvents = await collectionsService.getCollectionEvents(collectionName);
-            const fieldsLimit = await varRelationService.getSettingsByName(limitationTypes.Fields);
+            const fieldsLimit = await varRelationService.getSettingsByName(resourcesForCollectionForm.Collection.Type === 'contained' ? limitationTypes.ContainedSchemaFields : limitationTypes.Fields);
             const documentsOptions = {
                 IncludeCount: true,
-                MaxPageSize: 100,
+                MaxPageSize: 1,
                 Page: 1
             }
             const documents = resourcesForCollectionForm.Collection.Type !== 'contained' ? await documentsService.search(collectionName, documentsOptions) : { Objects: [], Count: 0 }
+
+            const collectionIsEmpty = documents.Count === 0 || documents.Count == -1 && documents.Objects.length === 0;
             
             const returnData: DataForCollectionForm = {
                 ...resourcesForCollectionForm,
                 Events: collectionEvents,
                 FieldsLimit: fieldsLimit,
-                Documents: documents
+                CollectionIsEmpty: collectionIsEmpty
             }
             return returnData;
         }

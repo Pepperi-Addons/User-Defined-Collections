@@ -4,7 +4,7 @@ import { MatTabChangeEvent } from "@angular/material/tabs";
 
 import { AddonData, Collection, SearchData } from '@pepperi-addons/papi-sdk';
 
-import { UserEvent } from 'udc-shared'
+import { UserEvent, DataForCollectionForm } from 'udc-shared'
 
 import { UtilitiesService } from '../../services/utilities.service';
 import { CollectionsService } from '../../services/collections.service';
@@ -25,10 +25,7 @@ export class CollectionFormComponent implements OnInit {
     collectionEvents: UserEvent[] = [];
     hasTabs: boolean = true;
     documentKeyValid: boolean = false;
-    fieldsLimit: number;
-    containedCollections: Collection[];
-    resources: Collection[];
-    documents: SearchData<AddonData>;
+    dataForCollectionForm: DataForCollectionForm;
 
     constructor(private activateRoute: ActivatedRoute,
         private router: Router,
@@ -41,15 +38,11 @@ export class CollectionFormComponent implements OnInit {
         this.collectionName = this.activateRoute.snapshot.params.collection_name;
 
         this.utilitiesService.getDataForCollectionForm(this.collectionName).then(async (value) => {
-            
-            this.collectionEvents = value.Events;
+            this.dataForCollectionForm = value;
             this.collection = value.Collection;
-            this.fieldsLimit = value.FieldsLimit;
-            this.containedCollections = value.ContainedCollections;
-            this.resources = value.Resources;
-            this.documents = value.Documents;
+            this.collectionEvents = value.Events;
             
-            this.hasTabs = this.collectionEvents.length > 0;
+            this.hasTabs = value.Events.length > 0;
             this.collectionLoaded = true;
         });
     }

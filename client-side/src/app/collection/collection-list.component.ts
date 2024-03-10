@@ -49,8 +49,6 @@ export class CollectionListComponent implements OnInit {
 
     abstractSchemes: AddonDataScheme[] = [];
 
-    fieldsLimit: number;
-
     constructor(
         public collectionsService: CollectionsService,
         public layoutService: PepLayoutService,
