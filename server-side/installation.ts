@@ -15,6 +15,9 @@ import semver from 'semver'
 import { VarSettingsService } from './services/var-settings.service';
 import { CollectionsService } from './services/collections.service';
 import { PermissionsService } from './services/permissions.service';
+import { DocumentsService } from 'udc-shared';
+import { ApiService } from './services/api-service';
+import { ResourcesService } from './services/resources-service';
 
 export async function install(client: Client, request: Request): Promise<any> {
     // For page block template uncomment this.
@@ -41,13 +44,16 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
         }
 
         // Check for the next condition only if the previous operation was successful
-        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.27') < 0) {
+        if (result.success) {
+            const apiService = new ApiService(client);
+            const resourcesService = new ResourcesService(client);
+            const documentsService = new DocumentsService(apiService, resourcesService);
             const collectionsService = new CollectionsService(client);
-            result = await collectionsService.migrateDIMXRelations();
+            result = await collectionsService.migrateCollections(request, documentsService);
         }
 
-        // Create permissions if upgrading from a version before 0.9.37
-        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.37') < 0) {
+        // Create permissions if upgrading from a version before 0.9.44
+        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.44') < 0) {
             const permissionsService = new PermissionsService(client);
             await permissionsService.createPermission(udcSchemesPermissionsPolicy, udcSchemesPermissionsPolicyDescription);
         }
