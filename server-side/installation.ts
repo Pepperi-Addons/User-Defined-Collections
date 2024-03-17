@@ -12,6 +12,7 @@ import { Client, Request } from '@pepperi-addons/debug-server'
 import { AtdRelations, SettingsRelation, UsageMonitorRelations, VarSettingsRelation, udcSchemesPermissionsPolicy, udcSchemesPermissionsPolicyDescription } from './metadata';
 import { UtilitiesService } from './services/utilities.service';
 import semver from 'semver'
+import jwtDecode from "jwt-decode";
 import { VarSettingsService } from './services/var-settings.service';
 import { CollectionsService } from './services/collections.service';
 import { PermissionsService } from './services/permissions.service';
@@ -36,6 +37,11 @@ export async function uninstall(client: Client, request: Request): Promise<any> 
 }
 
 export async function upgrade(client: Client, request: Request): Promise<any> {
+    console.log(`@@@@ User Info in upgrade: 
+    useruuid: ${jwtDecode(client.OAuthAccessToken)["pepperi.useruuid"]},
+    id: ${jwtDecode(client.OAuthAccessToken)["pepperi.id"]},
+    distributoruuid: ${jwtDecode(client.OAuthAccessToken)["pepperi.distributoruuid"]},
+    employee type: ${jwtDecode(client.OAuthAccessToken)["pepperi.employeetype"]}`);
     let result = { success: true, resultObject: {} }; // Initialize the result object
 
     try {
@@ -52,8 +58,9 @@ export async function upgrade(client: Client, request: Request): Promise<any> {
             result = await collectionsService.migrateCollections(request, documentsService);
         }
 
-        // Create permissions if upgrading from a version before 0.9.44
-        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.44') < 0) {
+        // Create permissions if upgrading from a version before 0.9.50
+        if (result.success && request.body.FromVersion && semver.compare(request.body.FromVersion, '0.9.50') < 0) {
+            console.log(`@@@@ Creating permissions for ${udcSchemesPermissionsPolicy}`)
             const permissionsService = new PermissionsService(client);
             await permissionsService.createPermission(udcSchemesPermissionsPolicy, udcSchemesPermissionsPolicyDescription);
         }

@@ -1,6 +1,6 @@
 import { Client, Request } from '@pepperi-addons/debug-server'
 import { ApiFieldObject, Collection } from '@pepperi-addons/papi-sdk';
-
+import jwtDecode from "jwt-decode";
 import { FieldsService } from './services/fields.service';
 import { CollectionsService } from './services/collections.service'
 import { MappingsService } from './services/mappings.service';
@@ -38,6 +38,11 @@ export async function var_settings(client: Client, request: Request) {
 
 
 export async function schemes(client: Client, request: Request) {
+    console.log(`@@@@ User Info in schemes: 
+    useruuid: ${jwtDecode(client.OAuthAccessToken)["pepperi.useruuid"]},
+    id: ${jwtDecode(client.OAuthAccessToken)["pepperi.id"]},
+    distributoruuid: ${jwtDecode(client.OAuthAccessToken)["pepperi.distributoruuid"]},
+    employee type: ${jwtDecode(client.OAuthAccessToken)["pepperi.employeetype"]}`);
     await client.ValidatePermission(udcSchemesPermissionsPolicy);
     const collectionService = new CollectionsService(client);
     const apiService = new ApiService(client);
