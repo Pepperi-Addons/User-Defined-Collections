@@ -81,7 +81,7 @@
     "Indexed_Select_Title": "Indexed",
     "CollectionForm_SyncData_Message": "are you sure you want to change the data availability?",
     "CollectionForm_FieldsLimitErrorBeforeAdd": "You have reached the maximum number of fields allowed for this collection: {{limit}}",
-    "CollectionForm_FieldsLimitErrorAfterAdd": "Adding this field will exceed the maximum number of fields allowed for this collection: {{limit}}",
+    "CollectionForm_FieldsLimitErrorAfterAdd": "Adding this field will exceed the maximum number of fields allowed for this collection: {{limit}}. Changes will be reverted",
     "Object_Fields_NoDataFound": "Click Add to define object fields",
     "Object_Field_Scheme": "Object fields schema",
     "Fields_Array_Title": "Is array",
