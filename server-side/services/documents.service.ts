@@ -118,7 +118,9 @@ export class ServerDocumentsService {
             const dimxObject = body.DIMXObjects[index];
             dimxObject.Object = {...element.Item};
             if (!element.ValidationResult.valid) {
-                const errors = element.ValidationResult.errors.map(error => error.stack.replace("instance.", ""));
+                const errors = element.ValidationResult.errors.map(error => {
+                    return this.documentsService.getValidationErrorMessage(element, error); 
+                });
                 dimxObject.Status = 'Error';
                 dimxObject.Details = `Document validation failed.\n ${errors.join("\n")}`;
                 dimxObject.Key = element.Item.Key;
