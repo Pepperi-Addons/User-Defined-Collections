@@ -37,7 +37,18 @@ export class DocumentsService {
             return await this.apiService.upsert(collectionName, item.Item, indexedCollection);
         }
         else {
-            const errors = item.ValidationResult.errors.map(error => error.stack.replace("instance.", ""));
+            const errors = item.ValidationResult.errors.map(error => {
+                // Check if the error is about enum validation
+                if (error.name === "enum") {
+                    console.log('enum error', error);
+                    // Extract the property name and its erroneous value
+                    const propertyName = error.property.replace("instance.", "");
+                    const erroneousValue = item.Item[propertyName];
+                    // Update the error message to include the erroneous value
+                    return `${propertyName} ${erroneousValue} ${error.message}`;
+                }
+                return error.stack.replace("instance.", "");
+            });
             throw new Error(errors.join("\n"));
         }
     }
