@@ -1,4 +1,5 @@
 import { DataViewFieldType, AddonData, ApiFieldObject, AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk/';
+import { Schema, ValidationError } from 'jsonschema';
 
 export const MappingFieldTypes: DataViewFieldType[] = [
     'TextBox',
@@ -92,6 +93,19 @@ export type ReferenceObjects = {
     [key: string]: {
         UniqueField: UniqueField,
         Items: AddonData[];   
+    }
+}
+
+export type ProcessedItemToSave = {
+    Item: AddonData;
+    ValidationResult: {
+        valid: boolean | undefined;
+        instance: any;
+        schema: Schema;
+        propertyPath: string;
+        errors: ValidationError[];
+        throwError: boolean;
+        disableFormat: boolean;
     }
 }
 

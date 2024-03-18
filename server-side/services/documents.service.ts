@@ -119,16 +119,7 @@ export class ServerDocumentsService {
             dimxObject.Object = {...element.Item};
             if (!element.ValidationResult.valid) {
                 const errors = element.ValidationResult.errors.map(error => {
-                    // Check if the error is about enum validation
-                    if (error.name === "enum") {
-                        console.log('enum error', error);
-                        // Extract the property name and its erroneous value
-                        const propertyName = error.property.replace("instance.", "");
-                        const erroneousValue = element.Item[propertyName];
-                        // Update the error message to include the erroneous value
-                        return `${propertyName} ${erroneousValue} ${error.message}`;
-                    }
-                    return error.stack.replace("instance.", "");
+                    return this.documentsService.getValidationErrorMessage(element, error); 
                 });
                 dimxObject.Status = 'Error';
                 dimxObject.Details = `Document validation failed.\n ${errors.join("\n")}`;
