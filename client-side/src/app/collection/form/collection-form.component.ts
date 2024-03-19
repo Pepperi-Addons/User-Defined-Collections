@@ -25,6 +25,7 @@ export class CollectionFormComponent implements OnInit {
     collectionEvents: UserEvent[] = [];
     hasTabs: boolean = true;
     documentKeyValid: boolean = false;
+    fieldIndexChange: boolean = false;
 
     constructor(private activateRoute: ActivatedRoute,
                 private router: Router,
@@ -49,6 +50,10 @@ export class CollectionFormComponent implements OnInit {
             relativeTo: this.activateRoute,
             queryParamsHandling: 'preserve'
         })
+    }
+
+    fieldIndexChanged(event) {
+        this.fieldIndexChange = event;
     }
 
     async saveClicked() {
@@ -77,7 +82,7 @@ export class CollectionFormComponent implements OnInit {
         const dataMsg = new PepDialogData({
             title: this.translate.instant('Collection_UpdateSuccess_Title'),
             actionsType: 'close',
-            content: this.translate.instant('Collection_UpdateSuccess_Content')
+            content: this.translate.instant(this.fieldIndexChange ? 'Collection_UpdateSuccess_IndexChange_Content' : 'Collection_UpdateSuccess_Content')
         });
         this.dialogService.openDefaultDialog(dataMsg).afterClosed().subscribe(() => {
             this.goBack();
