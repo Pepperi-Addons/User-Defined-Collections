@@ -86,7 +86,7 @@
     "Object_Field_Scheme": "Object fields schema",
     "Fields_Array_Title": "Is array",
     "Documents_LoadingErrorDialog_Title": "Loading Error",
-    "Documents_LoadingErrorDialog_Message": "Error occured while getting documents, please try again later",
+    "Documents_LoadingErrorDialog_Message": "Error occurred while getting documents, please try again later",
     "Fields_Indexed_Description": "When 'Indexed' is set to true, the user can search for values or do aggregation on this field. Note that each indexed field will consume additional storage",
     "Fields_Indexed_Title": "Indexed",
     "Collection_ContainedErrorDialog_Title": "Navigate to data",

@@ -394,10 +394,16 @@ openFieldForm(name: string) {
     this.dialogService.openDialog(FieldsFormComponent, dialogData, dialogConfig).afterClosed().subscribe(value => {
         if (value) {
             const fieldName = value.fieldName;
+            const previousField = this.collection.Fields[fieldName];
             this.collection.Fields[fieldName] = value.field;
             if (this.getTotalFieldsCount(this.collection) > this.fieldsLimit) {
-                // if the field is added to the collection, but the total fields count exceeds the limit, remove the field from the collection
-                delete this.collection.Fields[fieldName];
+                // if the field is added to the collection, but the total fields count exceeds the limit, revert changes
+                if (previousField !== undefined) {
+                    this.collection.Fields[fieldName] = previousField;
+                }
+                else {
+                    delete this.collection.Fields[fieldName];
+                }
                 this.dialogService.openDefaultDialog(new PepDialogData({
                     title: this.translate.instant('Error'),
                     content: this.translate.instant('CollectionForm_FieldsLimitErrorAfterAdd', { limit: this.fieldsLimit }),
