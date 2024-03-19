@@ -26,7 +26,7 @@
     <ng-template #tabs>
         <mat-tab-group #tabGroup animationDuration="0ms" [selectedIndex]="currentTabIndex" (selectedTabChange)="onTabChanged($event)">
             <mat-tab label="{{'General' | translate}}">
-                <form-general-tab [collection]="collection" [insideTab]="true" (saveCollection)="saveCollection($event)" (documentKeyValidationChange)="documentKeyValidationChanged($event)"></form-general-tab>
+                <form-general-tab [collection]="collection" [insideTab]="true" (saveCollection)="saveCollection($event)" (documentKeyValidationChange)="documentKeyValidationChanged($event)" (fieldIndexChange)="fieldIndexChanged($event)"></form-general-tab>
             </mat-tab>
             <mat-tab label="{{'Events' | translate}}">
                 <collection-events [collectionName]="collectionName" [collectionEvents]="collectionEvents"></collection-events>
@@ -35,7 +35,7 @@
     </ng-template>
     
     <ng-template #noTabs>
-        <form-general-tab [collection]="collection" [insideTab]="false" (documentKeyValidationChange)="documentKeyValidationChanged($event)"></form-general-tab>
+        <form-general-tab [collection]="collection" [insideTab]="false" (documentKeyValidationChange)="documentKeyValidationChanged($event)" (fieldIndexChange)="fieldIndexChanged($event)"></form-general-tab>
     </ng-template>
 </pep-page-layout>
 
