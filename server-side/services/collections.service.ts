@@ -1,5 +1,5 @@
 import { UtilitiesService } from './utilities.service';
-import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
+import { AddonDataScheme, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk'
 import { Client, Request } from '@pepperi-addons/debug-server';
 import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, limitationTypes, UdcMappingsScheme } from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
@@ -44,7 +44,7 @@ export class CollectionsService {
             const fieldsValid = await this.validateFieldsType(collectionObj);
             if (fieldsValid.size === 0) {
                 // DI-22303 after we create the collection, we need to update it's Data view to have all the fields, and then post the new object
-                collectionObj = this.updateListView(collectionObj);
+                collectionObj = await this.updateListView(collectionObj);
                 // before sending data to ADAL, remove extended fields, without changing the DV
                 collectionObj = this.removeExtensionFields(collectionObj, false);
                 collectionObj = this.handleSyncForContained(collectionObj);
@@ -307,7 +307,21 @@ export class CollectionsService {
         return res;
     }
 
-    private updateListView(collection: Collection): Collection {
+    private async getParentSchema(addonUUID: string, name: string): Promise<AddonDataScheme>{ 
+        const emulatedPapiClient = new PapiClient({
+            baseURL: this.client.BaseURL,
+            token: this.client.OAuthAccessToken,
+            addonUUID: addonUUID,
+            actionUUID: this.client.ActionUUID
+        });   
+        const parentSchema = await emulatedPapiClient.addons.data.schemes.name(name).get();
+        if (!parentSchema) {
+            throw new Error(`Parent schema ${name} of addon ${addonUUID} not found`);
+        }
+        return parentSchema;
+    }
+
+    private async updateListView(collection: Collection): Promise<Collection> {
         const res: Collection = JSON.parse(JSON.stringify(collection));
 
         // if there is no ListView, create an empty one
@@ -324,7 +338,17 @@ export class CollectionsService {
                 return res.Fields!.hasOwnProperty(element.FieldID);
             })
         }
-
+        // if this schema extends another, we'd want to add the fields from the extended schema to the list view
+        if (res.Extends && res.Extends.AddonUUID && res.Extends.Name) { 
+            const parentSchema = await this.getParentSchema(res.Extends.AddonUUID, res.Extends.Name);
+            const parentSchemaFields = parentSchema.Fields || {};
+            // for each parent field we will also add the property "ExtendedField" = true
+            for (const field of Object.keys(parentSchemaFields)) {
+                parentSchemaFields[field].ExtendedField = true;
+            }
+            // need to merge the fields from the parent schema with the fields from the current schema
+            collection.Fields = { ...parentSchemaFields, ...res.Fields };
+        }
         // append to the end all the fields that are not part of the list view
         Object.keys(collection.Fields || {}).forEach(fieldName => {
             let dvField = res.ListView!.Fields!.find(x => x.FieldID === fieldName);
