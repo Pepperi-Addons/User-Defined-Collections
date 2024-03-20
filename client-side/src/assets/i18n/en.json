@@ -23,6 +23,7 @@
     "Collection_ExistingRecycleBinError_Content": "Collection with name {{collectionName}} exist in recycle bin. <br /> Please restore and edit the existing collection",
     "Collection_UpdateSuccess_Title": "Collection saved",
     "Collection_UpdateSuccess_Content": "Collection saved successfuly",
+    "Collection_UpdateSuccess_IndexChange_Content": "Collection saved successfuly. <br />To apply the index changes, select the UDC and run rebuild index from the pencil menu. Note that this action will take some time.",
     "FormField_Title_Edit": "Edit - {{field_name}}",
     "FormField_Title_Add": "Create Field",
     "DeleteField_DialogTitle": "Delete Field",

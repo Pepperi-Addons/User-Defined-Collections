@@ -36,6 +36,7 @@ import { DataForCollectionForm } from 'udc-shared';
 export class GeneralTabComponent implements OnInit {
   @Output() saveCollection: EventEmitter<Collection> = new EventEmitter<Collection>();
   @Output() documentKeyValidationChange: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() fieldIndexChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Input() insideTab: boolean = true;
   @Input() dataForCollectionForm: DataForCollectionForm;  
   collection: Collection;
@@ -429,7 +430,10 @@ openFieldForm(name: string) {
             else {
                 this.collection.ListView.Fields.splice(index, 1, dvField);
             }
-
+            // if we edit a field, AND change it to indexed, AND there is data in the collection, we need to notify the parent component to show a message that the collection needs to be reindexed
+            if(name != EMPTY_OBJECT_NAME && !this.originFields[name]?.Indexed && value.field.Indexed && !this.emptyCollection) {
+                this.emitFieldIndexChange();
+            }
             this.fieldsDataSource = this.getFieldsDataSource();
         }
     })
@@ -443,6 +447,10 @@ getAllowedTypes(): SchemeFieldType[] {
     return types;
 }
 
+    emitFieldIndexChange() {
+    this.fieldIndexChange.emit(true);
+}
+    
 async saveClicked() {
     this.saveCollection.emit(this.collection);
 }

@@ -26,6 +26,7 @@ export class CollectionFormComponent implements OnInit {
     hasTabs: boolean = true;
     documentKeyValid: boolean = false;
     dataForCollectionForm: DataForCollectionForm;
+    fieldIndexChange: boolean = false;
 
     constructor(private activateRoute: ActivatedRoute,
         private router: Router,
@@ -54,44 +55,48 @@ export class CollectionFormComponent implements OnInit {
             })
         }
 
+    fieldIndexChanged(event) {
+        this.fieldIndexChange = event;
+    }
+
     async saveClicked() {
-            try {
-                // we cannot change the collection name, so we need first to delete the "old" one
-                if(this.collection.Name != this.collectionName) {
-            await this.collectionsService.upsertCollection({
-                Name: this.collectionName,
-                Hidden: true
-            });
+        try {
+            // we cannot change the collection name, so we need first to delete the "old" one
+            if (this.collection.Name != this.collectionName) {
+                await this.collectionsService.upsertCollection({
+                    Name: this.collectionName,
+                    Hidden: true
+                });
+            }
+            await this.collectionsService.upsertCollection(this.collection);
+            this.showSuccessMessage();
         }
-        await this.collectionsService.upsertCollection(this.collection);
-        this.showSuccessMessage();
+        catch (error) {
+            this.collectionsService.showUpsertFailureMessage(error, this.collection.Name);
+        }
     }
-    catch(error) {
-        this.collectionsService.showUpsertFailureMessage(error, this.collection.Name);
+
+    saveCollection(collection) {
+        this.collection = collection;
+        this.saveClicked();
     }
-}
 
-saveCollection(collection) {
-    this.collection = collection;
-    this.saveClicked();
-}
+    showSuccessMessage() {
+        const dataMsg = new PepDialogData({
+            title: this.translate.instant('Collection_UpdateSuccess_Title'),
+            actionsType: 'close',
+            content: this.translate.instant(this.fieldIndexChange ? 'Collection_UpdateSuccess_IndexChange_Content' : 'Collection_UpdateSuccess_Content')
+        });
+        this.dialogService.openDefaultDialog(dataMsg).afterClosed().subscribe(() => {
+            this.goBack();
+        });
+    }
 
-showSuccessMessage() {
-    const dataMsg = new PepDialogData({
-        title: this.translate.instant('Collection_UpdateSuccess_Title'),
-        actionsType: 'close',
-        content: this.translate.instant('Collection_UpdateSuccess_Content')
-    });
-    this.dialogService.openDefaultDialog(dataMsg).afterClosed().subscribe(() => {
-        this.goBack();
-    });
-}
+    onTabChanged(tabChangeEvent: MatTabChangeEvent): void {
+        this.currentTabIndex = tabChangeEvent.index;
+    }
 
-onTabChanged(tabChangeEvent: MatTabChangeEvent): void {
-    this.currentTabIndex = tabChangeEvent.index;
-}
-
-documentKeyValidationChanged(event) {
-    this.documentKeyValid = event;
-}
+    documentKeyValidationChanged(event) {
+        this.documentKeyValid = event;
+    }
 }

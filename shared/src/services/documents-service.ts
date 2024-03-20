@@ -1,6 +1,6 @@
 import { AddonData, AddonDataScheme, Collection, CollectionField, SearchData, SchemeFieldType, SearchBody } from "@pepperi-addons/papi-sdk";
-import { Schema, Validator } from "jsonschema";
-import { CollectionFields, DIMXImportInitData, ReferenceSchemes, ReferenceValidationResult } from "../entities";
+import { Schema, ValidationError, Validator } from "jsonschema";
+import { CollectionFields, DIMXImportInitData, ProcessedItemToSave, ReferenceSchemes, ReferenceValidationResult } from "../entities";
 import { DocumentSchema } from "../jsonSchemes/documents";
 import { IApiService } from "./api-service";
 import { GlobalService } from "./global-service";
@@ -27,6 +27,19 @@ export class DocumentsService {
     async getDocumentByKey(collectionName: any, key: any): Promise<AddonData> {
         return await this.apiService.getByKey(collectionName, key);
     }
+
+    getValidationErrorMessage(item: ProcessedItemToSave, error: ValidationError): string {
+        // Check if the error is about enum validation
+        if (error.name === "enum") {
+            console.log('enum error', error);
+            // Extract the property name and its erroneous value
+            const propertyName = error.property.replace("instance.", "");
+            const erroneousValue = item.Item[propertyName];
+            // Update the error message to include the erroneous value
+            return `${propertyName} ${erroneousValue} ${error.message}`;
+        }
+        return error.stack.replace("instance.", "");
+    }
     
     async upsert(collectionName: any, body: any, containedLimit?: number): Promise<AddonData> {
         const collectionScheme = await this.apiService.findCollectionByName(collectionName);
@@ -37,7 +50,9 @@ export class DocumentsService {
             return await this.apiService.upsert(collectionName, item.Item, indexedCollection);
         }
         else {
-            const errors = item.ValidationResult.errors.map(error => error.stack.replace("instance.", ""));
+            const errors = item.ValidationResult.errors.map(error => {
+                return this.getValidationErrorMessage(item, error);
+            });
             throw new Error(errors.join("\n"));
         }
     }
@@ -251,7 +266,7 @@ export class DocumentsService {
         return await this.referencesService.getReferenceSchemes(collectionFields);
     }
 
-    async processItemsToSave(collectionScheme: Collection, items: AddonData[]) {
+    async processItemsToSave(collectionScheme: Collection, items: AddonData[]):Promise<ProcessedItemToSave[]> {
         const collectionFields = collectionScheme.Fields || {};
         items = (await this.referencesService.handleDotAnnotationItems(collectionFields, items));
         const promises = items.map(async item => {
