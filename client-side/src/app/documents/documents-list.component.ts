@@ -24,36 +24,36 @@ import { config } from '../addon.config';
 })
 
 export class DocumentsListComponent implements OnInit {
-    
+
     @Input() hostObject: any;
-    
+
     @Output() hostEvents: EventEmitter<any> = new EventEmitter<any>();
 
     @ViewChild('documentsList') documentsList: GenericListComponent | undefined;
-    
+
     collectionName: string;
     recycleBin: boolean = false;
     collectionData: Collection;
-    documents: SearchData<AddonData> = {Objects: [], Count: 0};
-    
+    documents: SearchData<AddonData> = { Objects: [], Count: 0 };
+
     screenSize: PepScreenSizeType;
-    
+
     dataSource: IPepGenericListDataSource;
 
     menuItems: PepMenuItem[] = [];
-    
-    EMPTY_OBJECT_NAME:string = EMPTY_OBJECT_NAME;
-    
+
+    EMPTY_OBJECT_NAME: string = EMPTY_OBJECT_NAME;
+
     actions: IPepGenericListActions = {
         get: async (data: PepSelectionData) => {
             const actions = [];
             if (data && data.rows.length == 1) {
-                if(this.recycleBin) {
+                if (this.recycleBin) {
                     actions.push({
                         title: this.translate.instant('Restore'),
                         handler: async (objs) => {
                             let document = this.documents.Objects.find(doc => doc.Key === objs.rows[0]);
-                            if(document) {
+                            if (document) {
                                 try {
                                     document.Hidden = false;
                                     await this.documentsService.upsertDocument(this.collectionName, document);
@@ -73,11 +73,11 @@ export class DocumentsListComponent implements OnInit {
                     actions.push({
                         title: this.translate.instant('Delete'),
                         handler: async (objs) => {
-                            try{
+                            try {
                                 await this.documentsService.deleteDocument(this.collectionName, objs.rows[0]);
                                 this.dataSource = this.getDataSource();
                             }
-                            catch(error){
+                            catch (error) {
                                 const dataMsg = new PepDialogData({
                                     title: this.translate.instant('Documents_DeleteDialogTitle'),
                                     actionsType: 'close',
@@ -86,7 +86,7 @@ export class DocumentsListComponent implements OnInit {
                                 this.dialogService.openDefaultDialog(dataMsg);
                             }
                         }
-                    });  
+                    });
                 }
                 else {
                     actions.push({
@@ -106,7 +106,7 @@ export class DocumentsListComponent implements OnInit {
             return actions;
         }
     }
-    
+
     constructor(
         private activateRoute: ActivatedRoute,
         private translate: TranslateService,
@@ -162,6 +162,12 @@ export class DocumentsListComponent implements OnInit {
                         Type: 'Grid',
                         Title: '',
                         Fields: [
+                            {
+                                FieldID: 'Key',
+                                Title: this.translate.instant('Key'),
+                                ReadOnly: true,
+                                Type: 'TextBox'
+                            },
                             ...this.collectionData.ListView.Fields.filter(field => {
                                 return this.collectionData.Fields[field.FieldID].Type !== 'Array' && this.collectionData.Fields[field.FieldID].Type !== 'ContainedResource';
                             }),
@@ -178,13 +184,16 @@ export class DocumentsListComponent implements OnInit {
                                 Type: 'DateAndTime'
                             },
                         ],
-                        Columns: [ 
+                        Columns: [
+                            {
+                                Width: 10
+                            },
                             ...this.collectionData.ListView.Columns,
                             {
-                                Width:10
+                                Width: 10
                             },
                             {
-                                Width:10
+                                Width: 10
                             }
                         ],
                         FrozenColumnsCount: 0,
@@ -212,12 +221,12 @@ export class DocumentsListComponent implements OnInit {
 
     getMenuItems() {
         return [{
-            key:'Import',
+            key: 'Import',
             text: this.translate.instant('Import'),
             hidden: this.recycleBin
         },
         {
-            key:'Export',
+            key: 'Export',
             text: this.translate.instant('Export'),
             hidden: this.recycleBin
         },
@@ -234,7 +243,7 @@ export class DocumentsListComponent implements OnInit {
     }
 
     menuItemClicked(event: any) {
-         switch (event.source.key) {
+        switch (event.source.key) {
             case 'RecycleBin':
             case 'BackToList': {
                 this.recycleBin = !this.recycleBin;
@@ -247,34 +256,34 @@ export class DocumentsListComponent implements OnInit {
                         relativeTo: this.activateRoute,
                         replaceUrl: true
                     })
-                }, 0); 
-                this.dataSource = this.getDataSource(); 
+                }, 0);
+                this.dataSource = this.getDataSource();
                 this.menuItems = this.getMenuItems();
                 break;
             }
             case 'Import': {
-              this.dimxService.import({
-                OverwriteObject: false,
-                Delimiter: ",",
-                OwnerID: config.AddonUUID
-              });
-              this.dataSource = this.getDataSource();
-              break
+                this.dimxService.import({
+                    OverwriteObject: false,
+                    Delimiter: ",",
+                    OwnerID: config.AddonUUID
+                });
+                this.dataSource = this.getDataSource();
+                break
             }
             case 'Export': {
-              this.dimxService.export({
-                DIMXExportFormat: "csv",
-                DIMXExportIncludeDeleted: false,
-                DIMXExportFileName: this.collectionName,
-                DIMXExportFields: this.collectionData.ListView.Fields.map(field => field.FieldID).concat(['Key']).join(),
-                DIMXExportDelimiter: ","
-            });
-              break;
+                this.dimxService.export({
+                    DIMXExportFormat: "csv",
+                    DIMXExportIncludeDeleted: false,
+                    DIMXExportFileName: this.collectionName,
+                    DIMXExportFields: this.collectionData.ListView.Fields.map(field => field.FieldID).concat(['Key']).join(),
+                    DIMXExportDelimiter: ","
+                });
+                break;
             }
-          }
+        }
     }
-    
-    onDIMXProcessDone(event){
+
+    onDIMXProcessDone(event) {
         this.dataSource = this.getDataSource();
     }
 
@@ -337,15 +346,15 @@ export class DocumentsListComponent implements OnInit {
                         this.dataSource = this.getDataSource();
                     }
                     catch (error) {
-                            const dataMsg = new PepDialogData({
-                                title: this.translate.instant('Documents_DeleteDialogTitle'),
-                                actionsType: 'close',
-                                content: this.translate.instant('Documents_DeleteDialogError')
-                            });
-                            this.dialogService.openDefaultDialog(dataMsg);
+                        const dataMsg = new PepDialogData({
+                            title: this.translate.instant('Documents_DeleteDialogTitle'),
+                            actionsType: 'close',
+                            content: this.translate.instant('Documents_DeleteDialogError')
+                        });
+                        this.dialogService.openDefaultDialog(dataMsg);
                     }
                 }
-        });      
+            });
     }
 
     BackToCollections() {
@@ -357,14 +366,24 @@ export class DocumentsListComponent implements OnInit {
 
     getFormDataView(formMode: string): FormDataView {
         let dataView: FormDataView = {
-            Type:"Form",
+            Type: "Form",
             Fields: [],
             Context: {
                 Name: "",
-                Profile: { },
+                Profile: {},
                 ScreenSize: 'Tablet'
             }
         };
+
+        const keyIsEnabled = formMode == 'Add' && this.collectionData.DocumentKey?.Type == "AutoGenerate";
+        // Add the Key field to the form
+        dataView.Fields.push({
+            FieldID: 'Key',
+            Mandatory: false,
+            Type: 'TextBox',
+            Title: `Key${keyIsEnabled ? ` ${this.translate.instant("Documents_BlankKeyDisclaimer")}` : ''}`,
+            ReadOnly: !keyIsEnabled
+        });
 
         this.collectionData.ListView.Fields.forEach(field => {
             const formField = {

@@ -77,7 +77,7 @@ export class CollectionListComponent implements OnInit {
             this.abstractSchemes = schemes;
         }).catch(error => {
             console.log(`could not get abstract schemes. error:${error}`);
-        })
+        });
     }
 
     getMenuItems() {

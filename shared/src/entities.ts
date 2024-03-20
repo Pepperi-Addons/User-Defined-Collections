@@ -114,6 +114,18 @@ export type DIMXImportInitData = {
     CollectionScheme: Collection
 }
 
+export type ResourcesForCollectionForm = {
+    Collection: Collection,
+    ContainedCollections: Collection[],
+    Resources: Collection[]
+}
+
+export type DataForCollectionForm = ResourcesForCollectionForm & {
+    Events: UserEvent[];
+    FieldsLimit: number;
+    CollectionIsEmpty: boolean;
+}
+
 export const existingErrorMessage = 'Object already Exist';
 export const existingInRecycleBinErrorMessage = 'Object already Exist in recycle bin';
 export const collectionNameRegex = "^([A-Z]){1}([\Sa-zA-Z0-9-_])*$"
