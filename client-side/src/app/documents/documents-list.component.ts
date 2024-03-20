@@ -380,7 +380,7 @@ export class DocumentsListComponent implements OnInit {
             FieldID: 'Key',
             Mandatory: false,
             Type: 'TextBox',
-            Title: 'Key (Leaving this field empty will generate a new key)',
+            Title: 'Key',
             ReadOnly: formMode == 'Edit'
         });
 
