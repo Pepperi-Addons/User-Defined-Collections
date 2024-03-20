@@ -375,13 +375,14 @@ export class DocumentsListComponent implements OnInit {
             }
         };
 
+        const keyIsEnabled = formMode == 'Add' && this.collectionData.DocumentKey?.Type == "AutoGenerate";
         // Add the Key field to the form
         dataView.Fields.push({
             FieldID: 'Key',
             Mandatory: false,
             Type: 'TextBox',
-            Title: `Key${formMode == 'Edit' || this.collectionData.DocumentKey?.Type == "AutoGenerate" ? '' : ' (Leave blank to auto-generate)'}`,
-            ReadOnly: formMode == 'Edit'
+            Title: `Key${keyIsEnabled ? ' (Leave blank to auto-generate)' : ''}`,
+            ReadOnly: !keyIsEnabled
         });
 
         this.collectionData.ListView.Fields.forEach(field => {
