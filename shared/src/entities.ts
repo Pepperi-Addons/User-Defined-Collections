@@ -1,4 +1,5 @@
 import { DataViewFieldType, AddonData, ApiFieldObject, AddonDataScheme, Collection } from '@pepperi-addons/papi-sdk/';
+import { Schema, ValidationError } from 'jsonschema';
 
 export const MappingFieldTypes: DataViewFieldType[] = [
     'TextBox',
@@ -95,9 +96,34 @@ export type ReferenceObjects = {
     }
 }
 
+export type ProcessedItemToSave = {
+    Item: AddonData;
+    ValidationResult: {
+        valid: boolean | undefined;
+        instance: any;
+        schema: Schema;
+        propertyPath: string;
+        errors: ValidationError[];
+        throwError: boolean;
+        disableFormat: boolean;
+    }
+}
+
 export type DIMXImportInitData = {
     ReferenceSchemes: ReferenceSchemes,
     CollectionScheme: Collection
+}
+
+export type ResourcesForCollectionForm = {
+    Collection: Collection,
+    ContainedCollections: Collection[],
+    Resources: Collection[]
+}
+
+export type DataForCollectionForm = ResourcesForCollectionForm & {
+    Events: UserEvent[];
+    FieldsLimit: number;
+    CollectionIsEmpty: boolean;
 }
 
 export const existingErrorMessage = 'Object already Exist';

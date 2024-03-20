@@ -26,6 +26,7 @@ import { booleanOptions, EMPTY_OBJECT_NAME, FieldsFormDialogData, SelectOptions,
 import { CollectionFormComponent } from '../../collection-form.component';
 import { FieldsFormComponent } from '../../fields/fields-form.component';
 import { SortingFormComponent } from '../../sorting/sorting-form.component';
+import { DataForCollectionForm } from 'udc-shared';
 
 @Component({
   selector: 'form-general-tab',
@@ -35,13 +36,16 @@ import { SortingFormComponent } from '../../sorting/sorting-form.component';
 export class GeneralTabComponent implements OnInit {
   @Output() saveCollection: EventEmitter<Collection> = new EventEmitter<Collection>();
   @Output() documentKeyValidationChange: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Input() collection: Collection;
+  @Output() fieldIndexChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Input() insideTab: boolean = true;
+  @Input() dataForCollectionForm: DataForCollectionForm;  
+  collection: Collection;
+  fieldsLimit: number = 30;
+  resources: AddonDataScheme[] = [];  
+  containedResources: AddonDataScheme[] = []; 
   collectionName: string;
   emptyCollection: boolean = true;
   documentKeyValid: boolean = false;
-  resources: AddonDataScheme[] = [];
-  containedResources: AddonDataScheme[] = [];
   booleanOptions = booleanOptions;
   syncData: SyncType = 'Offline';
   EMPTY_OBJECT_NAME = EMPTY_OBJECT_NAME;
@@ -123,10 +127,8 @@ export class GeneralTabComponent implements OnInit {
   
   constructor(private activateRoute: ActivatedRoute,
     private router: Router,
-    private collectionsService: CollectionsService,
     private translate: TranslateService,
-    private dialogService: PepDialogService,
-    private utilitiesService: UtilitiesService) { }
+    private dialogService: PepDialogService) { }
 
   ngOnInit(): void {
     this.translate.get(['SyncData_Options_Online', 'SyncData_Options_Offline', 'SyncData_Options_OnlyScheme', 'DocumentKey_Options_AutoGenerate', 'DocumentKey_Options_Composite']).subscribe(translations => {
@@ -142,13 +144,15 @@ export class GeneralTabComponent implements OnInit {
               value: translations[`SyncData_Options_${type}`],
           }
       })
-      this.fieldsDataSource = this.getFieldsDataSource();
-      this.utilitiesService.getReferenceResources().then(async (values) => {
-        this.resources = values.filter(collection => collection.Name !== this.collection.Name);
-        this.containedResources = (await this.collectionsService.getContainedCollections()).filter(collection => collection.Name !== this.collection.Name);
-        this.collectionLoaded = true;
-        const documents: SearchData<AddonData> = this.collection.Type !== 'contained' ? await this.utilitiesService.getCollectionDocuments(this.collection.Name): { Objects: [], Count: 0};
-        this.emptyCollection = documents.Count == 0 || (documents.Count === -1 && documents.Objects.length === 0);
+        this.fieldsDataSource = this.getFieldsDataSource();
+        // get all data from input
+        this.emptyCollection = this.dataForCollectionForm.CollectionIsEmpty;
+        this.resources = this.dataForCollectionForm.Resources;
+        this.collection = this.dataForCollectionForm.Collection;
+        this.containedResources = this.dataForCollectionForm.ContainedCollections;
+        this.fieldsLimit = this.dataForCollectionForm.FieldsLimit;
+        
+        this.collectionLoaded = true; // I left this here though I'm not sure if it's necessary now that the collection is being set in the parent component
         if (this.uidList) {
             this.uidList.selectionType = this.emptyCollection ? 'single': 'none';
             this.uidFieldsDataSource = this.getUIDFieldsDataSource();
@@ -171,8 +175,7 @@ export class GeneralTabComponent implements OnInit {
         this.documentKeyValidationChange.emit(this.documentKeyValid);
         // deep copy the object to avoid unwanted data changes
         this.originFields = JSON.parse(JSON.stringify(this.collection.Fields || {}));
-        this.extended = this.collection.Extends ? this.collection.Extends.Name : ''; 
-      });
+        this.extended = this.collection.Extends ? this.collection.Extends.Name : '';
     });
   }
   
@@ -379,10 +382,36 @@ openFieldForm(name: string) {
     dialogConfig.data = new PepDialogData({
         content: FieldsFormComponent,
     })
+    if (dialogData.Mode == 'Add') {
+        if (this.getTotalFieldsCount(this.collection) >= this.fieldsLimit) {
+            this.dialogService.openDefaultDialog(new PepDialogData({
+                title: this.translate.instant('Error'),
+                content: this.translate.instant('CollectionForm_FieldsLimitErrorBeforeAdd', { limit: this.fieldsLimit }),
+                actionsType: 'close',
+            }));
+            return;
+        }
+    }
     this.dialogService.openDialog(FieldsFormComponent, dialogData, dialogConfig).afterClosed().subscribe(value => {
         if (value) {
             const fieldName = value.fieldName;
+            const previousField = this.collection.Fields[fieldName];
             this.collection.Fields[fieldName] = value.field;
+            if (this.getTotalFieldsCount(this.collection) > this.fieldsLimit) {
+                // if the field is added to the collection, but the total fields count exceeds the limit, revert changes
+                if (previousField !== undefined) {
+                    this.collection.Fields[fieldName] = previousField;
+                }
+                else {
+                    delete this.collection.Fields[fieldName];
+                }
+                this.dialogService.openDefaultDialog(new PepDialogData({
+                    title: this.translate.instant('Error'),
+                    content: this.translate.instant('CollectionForm_FieldsLimitErrorAfterAdd', { limit: this.fieldsLimit }),
+                    actionsType: 'close',
+                }));
+                return;
+            }
             const dvField = this.getDataViewField(fieldName, value.field);
             let index = this.collection.ListView.Fields.findIndex(field => field.FieldID === fieldName);
             const nameChanged = (name != EMPTY_OBJECT_NAME && name != fieldName);
@@ -401,7 +430,10 @@ openFieldForm(name: string) {
             else {
                 this.collection.ListView.Fields.splice(index, 1, dvField);
             }
-
+            // if we edit a field, AND change it to indexed, AND there is data in the collection, we need to notify the parent component to show a message that the collection needs to be reindexed
+            if(name != EMPTY_OBJECT_NAME && !this.originFields[name]?.Indexed && value.field.Indexed && !this.emptyCollection) {
+                this.emitFieldIndexChange();
+            }
             this.fieldsDataSource = this.getFieldsDataSource();
         }
     })
@@ -415,6 +447,10 @@ getAllowedTypes(): SchemeFieldType[] {
     return types;
 }
 
+    emitFieldIndexChange() {
+    this.fieldIndexChange.emit(true);
+}
+    
 async saveClicked() {
     this.saveCollection.emit(this.collection);
 }
@@ -611,5 +647,33 @@ changeSyncData(newSyncData: SyncType) {
             break;
         }
     }
+}
+    
+getTotalFieldsCount(collection: Collection): number { 
+    let totalFieldsCount = 0;
+
+    // Check if there are fields in the current collection
+    if (collection && collection.Fields) {
+        // Iterate over each field in the collection
+        Object.keys(collection.Fields).forEach(fieldID => {
+            const field = collection.Fields[fieldID];
+            
+            // If the field type is 'ContainedResource', find the contained collection and count its fields
+            if (field.Type === 'ContainedResource' && field.Resource) {
+                // Find the contained collection from the pre-loaded contained collections
+                const containedCollection = this.dataForCollectionForm.ContainedCollections.find(c => c.Name === field.Resource);
+                
+                // Add the fields count of the contained collection to the total, if the contained collection is found
+                if (containedCollection && containedCollection.Fields) {
+                    totalFieldsCount += Object.keys(containedCollection.Fields).length;
+                }
+            } else {
+                // Regular field, increment the total fields count by 1
+                totalFieldsCount++;
+            }
+        });
+    }
+
+    return totalFieldsCount;
 }
 }

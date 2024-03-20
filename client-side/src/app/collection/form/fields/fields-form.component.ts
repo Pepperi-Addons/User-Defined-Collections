@@ -80,7 +80,7 @@ export class FieldsFormComponent implements OnInit {
         }
         
         saveOptionalValues(value: string) {
-            this.dialogData.Field.OptionalValues = value.split("\n");
+            this.dialogData.Field.OptionalValues = value ? value.split("\n") : [];
         }
         
         async resourceChanged($event) {
