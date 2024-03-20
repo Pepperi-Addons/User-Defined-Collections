@@ -140,7 +140,7 @@ export class UtilitiesService {
             suppressLogging: true
         });
 
-        const abstractSchemes = await papiClient.addons.data.schemes.get({page_size: -1, where: "Type='abstract'"});
+        const abstractSchemes = await papiClient.addons.data.schemes.get({ page_size: 500, where: "Type='abstract'" });
         return abstractSchemes;
     }
 
