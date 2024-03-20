@@ -381,7 +381,7 @@ export class DocumentsListComponent implements OnInit {
             FieldID: 'Key',
             Mandatory: false,
             Type: 'TextBox',
-            Title: `Key${keyIsEnabled ? ' (Leave blank to auto-generate)' : ''}`,
+            Title: `Key${keyIsEnabled ? ` ${this.translate.instant("Documents_BlankKeyDisclaimer")}` : ''}`,
             ReadOnly: !keyIsEnabled
         });
 
