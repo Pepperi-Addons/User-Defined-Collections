@@ -380,7 +380,7 @@ export class DocumentsListComponent implements OnInit {
             FieldID: 'Key',
             Mandatory: false,
             Type: 'TextBox',
-            Title: 'Key',
+            Title: `Key${formMode == 'Edit' || this.collectionData.DocumentKey?.Type == "AutoGenerate" ? '' : ' (Leave blank to auto-generate)'}`,
             ReadOnly: formMode == 'Edit'
         });
 
