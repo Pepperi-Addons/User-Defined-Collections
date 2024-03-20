@@ -62,15 +62,6 @@ export class GeneralTabComponent implements OnInit {
                           this.openFieldForm(objs.rows[0]);
                       }
                   });
-                  // if the field is indexed than it cannot be deleted
-                  if (!fieldIndexed) {
-                      actions.push({
-                          title: this.translate.instant('Delete'),
-                          handler: async (objs) => {
-                              this.showDeleteDialog(objs.rows[0]);
-                          }
-                      })
-                  }
               }
               actions.push({
                   title: this.translate.instant('Change Sort'),
