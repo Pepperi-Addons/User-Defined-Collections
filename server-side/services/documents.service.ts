@@ -152,8 +152,8 @@ export class ServerDocumentsService {
             else {
                 throw new Error(existingErrorMessage);
             }
-        }
-        catch (error) {
+        } hahahaha 
+        catch (error) { 
             if(error instanceof Error) {
                 if (error?.message?.indexOf('Object ID does not exist') >= 0) {
                     const containedArrayLimit = await this.varRelationService.getSettingsByName(limitationTypes.ItemsOfContainedArray);
