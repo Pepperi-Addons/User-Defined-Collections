@@ -244,7 +244,7 @@ export class CollectionListComponent implements OnInit {
 
     openAddCollectionForm() {
         const data = {
-            AsbtractSchemes: this.abstractSchemes
+            AbstractSchemes: this.abstractSchemes
         };
         this.utilitiesService.openComponentInDialog(AddCollectionDialogComponent, data, (collection) => {
             if (collection) {

@@ -140,8 +140,8 @@ export class UtilitiesService {
             suppressLogging: true
         });
 
-        const schemes = await papiClient.addons.data.schemes.get({});
-        return schemes.filter(scheme => scheme.Type === 'abstract');
+        const abstractSchemes = await papiClient.addons.data.schemes.get({page_size: -1, where: "Type='abstract'"});
+        return abstractSchemes;
     }
 
     openComponentInDialog(ref: ComponentType<unknown> | TemplateRef<unknown>, data: any, callback: (value:any)=>void) {
