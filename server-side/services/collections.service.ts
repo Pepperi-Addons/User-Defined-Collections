@@ -342,12 +342,13 @@ export class CollectionsService {
         if (res.Extends && res.Extends.AddonUUID && res.Extends.Name) { 
             const parentSchema = await this.getParentSchema(res.Extends.AddonUUID, res.Extends.Name);
             const parentSchemaFields = parentSchema.Fields || {};
-            // for each parent field we will also add the property "ExtendedField" = true
+            const parentCollectionFields = {};
+            // for each parent field we will also add the property "ExtendedField" = true, and "Mandatory" = false
             for (const field of Object.keys(parentSchemaFields)) {
-                parentSchemaFields[field].ExtendedField = true;
+                parentCollectionFields[field] = { ...parentSchemaFields[field], ExtendedField: true, Mandatory: false}
             }
             // need to merge the fields from the parent schema with the fields from the current schema
-            collection.Fields = { ...parentSchemaFields, ...res.Fields };
+            collection.Fields = { ...parentCollectionFields, ...res.Fields };
         }
         // append to the end all the fields that are not part of the list view
         Object.keys(collection.Fields || {}).forEach(fieldName => {
