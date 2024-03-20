@@ -199,27 +199,40 @@ export class CollectionsService {
         return Object.keys(res.Fields!).length;
     }
 
-    async validateFieldsType(collectionObj: Collection) {
-        let validMap = new Map();
+    private async getTotalFieldsCount(collectionObj: Collection): Promise<number> {
         let fieldsCount = 0;
-        const collections = await this.find({ include_deleted: true, where: `Name != ${collectionObj.Name}` });
-        // only check for field's type when there are Fields on the collection
         if (collectionObj.Fields) {
-            for (const fieldID of Object.keys(collectionObj.Fields!)) {
-                if (collectionObj.Fields![fieldID].Type === 'ContainedResource') { // if field type is contained, count contained schema fields
-                    const collectionFieldsCount = await this.getCollectionFieldsLength(collectionObj.Fields![fieldID].Resource!);
+            for (const fieldID of Object.keys(collectionObj.Fields)) {
+                if (collectionObj.Fields[fieldID].Type === 'ContainedResource') {
+                    // If field type is ContainedResource, count contained schema fields
+                    const collectionFieldsCount = await this.getCollectionFieldsLength(collectionObj.Fields[fieldID].Resource!);
                     fieldsCount += collectionFieldsCount;
                 } else {
+                    // Regular field, count it directly
                     fieldsCount++;
                 }
+            }
+        }
+        return fieldsCount;
+    }
+
+    async validateFieldsType(collectionObj: Collection) {
+        let validMap = new Map();
+    
+        const fieldsCount = await this.getTotalFieldsCount(collectionObj);
+    
+        const collections = await this.find({ include_deleted: true, where: `Name != '${collectionObj.Name}'` });
+        // Only check for field's type when there are Fields in the collection
+        if (collectionObj.Fields) {
+            for (const fieldID of Object.keys(collectionObj.Fields)) {
                 collections.forEach((collection => {
                     if (collection.Fields && collection.Fields[fieldID]) {
-                        // if one of the collection has a field with the same ID, check to see if it's the same type.
-                        if (collectionObj.Fields![fieldID].Type != collection.Fields![fieldID].Type) {
+                        // if one of the collections has a field with the same ID, check to see if it's the same type.
+                        if (collectionObj.Fields![fieldID].Type !== collection.Fields[fieldID].Type) {
                             this.addFieldToMap(validMap, fieldID, collection.Name);
                         }
                         // If they both of type 'Array' check their item's type.
-                        else if (collectionObj.Fields![fieldID].Type === 'Array' && collectionObj.Fields![fieldID].Items!.Type != collection.Fields![fieldID].Items!.Type) {
+                        else if (collectionObj.Fields![fieldID].Type === 'Array' && collectionObj.Fields![fieldID].Items!.Type !== collection.Fields[fieldID].Items!.Type) {
                             this.addFieldToMap(validMap, fieldID, collection.Name);
                         }
                     }
