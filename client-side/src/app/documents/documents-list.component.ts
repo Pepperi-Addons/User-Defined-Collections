@@ -377,10 +377,10 @@ export class DocumentsListComponent implements OnInit {
 
         // Add the Key field to the form
         dataView.Fields.push({
-            FieldID: 'Key (Leaving this field empty will generate a new key)',
+            FieldID: 'Key',
             Mandatory: false,
             Type: 'TextBox',
-            Title: 'Key',
+            Title: 'Key (Leaving this field empty will generate a new key)',
             ReadOnly: formMode == 'Edit'
         });
 
