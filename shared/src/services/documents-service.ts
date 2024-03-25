@@ -7,6 +7,7 @@ import { GlobalService } from "./global-service";
 import { ReferenceService } from "./reference-service";
 import { IResourcesServices } from "./resources-service";
 import { SchemesService } from "./schemes-service";
+import { performance } from "perf_hooks";
 
 
 export class DocumentsService {
@@ -42,10 +43,15 @@ export class DocumentsService {
     }
     
     async upsert(collectionName: any, body: any, containedLimit?: number): Promise<AddonData> {
+        const timeX = performance.now();
         const collectionScheme = await this.apiService.findCollectionByName(collectionName);
+        const timeY = performance.now();
+        console.log(`findCollectionByName took ${timeY - timeX} ms`);
         const indexedCollection = this.globalService.isCollectionIndexed(collectionScheme)
         this.containedLimit = containedLimit;
         const item = (await this.processItemsToSave(collectionScheme, [body]))[0];
+        const timeZ = performance.now();
+        console.log(`processItemsToSave took ${timeZ - timeY} ms`);
         if (item.ValidationResult.valid) {
             return await this.apiService.upsert(collectionName, item.Item, indexedCollection);
         }
@@ -67,10 +73,9 @@ export class DocumentsService {
         }
     }
 
-    async validateDocument(collection: Collection, body: any, collectionFields: CollectionFields) {
+    async validateDocument(collection: Collection, body: any, collectionFields: CollectionFields, schema: Schema) {
         const referenceResult = this.validateReference(collectionFields, body);
         body = { ...referenceResult.Document };
-        const schema = await this.createSchema(collection);
         console.log(`validating document ${JSON.stringify(body)} for collection ${collection.Name}. schema is ${JSON.stringify(schema)}`);
         const validator = new Validator();
         const result = validator.validate(body, schema);
@@ -268,11 +273,15 @@ export class DocumentsService {
 
     async processItemsToSave(collectionScheme: Collection, items: AddonData[]):Promise<ProcessedItemToSave[]> {
         const collectionFields = collectionScheme.Fields || {};
+        const timeX = performance.now();
         items = (await this.referencesService.handleDotAnnotationItems(collectionFields, items));
+        const timeY = performance.now();
+        console.log(`handleDotAnnotationItems for ${items.length} items took ${timeY - timeX} ms`);
+        const schema = await this.createSchema(collectionScheme);
         const promises = items.map(async item => {
             const updatingHidden = 'Hidden' in item && item.Hidden;
             item.Key = this.globalService.getItemKey(collectionScheme, item);
-            const validationResult = await this.validateDocument(collectionScheme, item, collectionFields);
+            const validationResult = await this.validateDocument(collectionScheme, item, collectionFields, schema);
 
             return {
                 Item: item,

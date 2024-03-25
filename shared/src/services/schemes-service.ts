@@ -16,6 +16,7 @@ export class SchemesService {
         let cachedResource = this.containedSchemes[resource];
 
         if (cachedResource === undefined) {
+            console.log(`Resource ${resource} not found in cache, fetching from server`);
             cachedResource = await this.apiService.findCollectionByName(resource);
             this.containedSchemes[resource] = cachedResource;
         }
