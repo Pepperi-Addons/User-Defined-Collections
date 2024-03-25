@@ -7,7 +7,6 @@ import { GlobalService } from "./global-service";
 import { ReferenceService } from "./reference-service";
 import { IResourcesServices } from "./resources-service";
 import { SchemesService } from "./schemes-service";
-import { performance } from "perf_hooks";
 
 
 export class DocumentsService {
@@ -43,14 +42,14 @@ export class DocumentsService {
     }
     
     async upsert(collectionName: any, body: any, containedLimit?: number): Promise<AddonData> {
-        const timeX = performance.now();
+        const timeX = new Date().getTime();
         const collectionScheme = await this.apiService.findCollectionByName(collectionName);
-        const timeY = performance.now();
+        const timeY = new Date().getTime();
         console.log(`findCollectionByName took ${timeY - timeX} ms`);
         const indexedCollection = this.globalService.isCollectionIndexed(collectionScheme)
         this.containedLimit = containedLimit;
         const item = (await this.processItemsToSave(collectionScheme, [body]))[0];
-        const timeZ = performance.now();
+        const timeZ = new Date().getTime();
         console.log(`processItemsToSave took ${timeZ - timeY} ms`);
         if (item.ValidationResult.valid) {
             return await this.apiService.upsert(collectionName, item.Item, indexedCollection);
@@ -273,9 +272,9 @@ export class DocumentsService {
 
     async processItemsToSave(collectionScheme: Collection, items: AddonData[]):Promise<ProcessedItemToSave[]> {
         const collectionFields = collectionScheme.Fields || {};
-        const timeX = performance.now();
+        const timeX = new Date().getTime();
         items = (await this.referencesService.handleDotAnnotationItems(collectionFields, items));
-        const timeY = performance.now();
+        const timeY = new Date().getTime();
         console.log(`handleDotAnnotationItems for ${items.length} items took ${timeY - timeX} ms`);
         const schema = await this.createSchema(collectionScheme);
         const promises = items.map(async item => {
