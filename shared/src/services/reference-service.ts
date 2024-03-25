@@ -20,7 +20,10 @@ export class ReferenceService {
     }
 
     async handleDotAnnotationItems(schemeFields: CollectionFields, documents: AddonData[]) {
+        const timeX = new Date().getTime();
         await this.handleReferences(schemeFields, documents);
+        const timeY = new Date().getTime();
+        console.log(`@@@@@@@@ handleReferences took ${timeY - timeX} ms`);
         return await Promise.all(documents.map(async (doc) => {
             await Promise.all(Object.keys(doc).map(async (prop) => {
                 // if the property name has '.' in it, the we need to split it and get referenced object by it's unique field
@@ -33,7 +36,10 @@ export class ReferenceService {
                         const field = schemeFields![parts[0]];
                         if (field) {
                             // if the referenced field is not unique, ignore it
+                            const timeX2 = new Date().getTime();
                             const unique = await this.isUniqueField(field.Resource, parts[1]);
+                            const timeY2 = new Date().getTime();
+                            console.log(`@@@@@@@@ isUniqueField took ${timeY2 - timeX2} ms`);
                             if (unique) {
                                 const item = this.getItemByUniqueField(field.Resource || '', parts[1], doc[prop]);
                                 doc[parts[0]] = item ? item.Key : '';
