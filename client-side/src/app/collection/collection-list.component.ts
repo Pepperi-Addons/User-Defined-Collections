@@ -77,7 +77,7 @@ export class CollectionListComponent implements OnInit {
             this.abstractSchemes = schemes;
         }).catch(error => {
             console.log(`could not get abstract schemes. error:${error}`);
-        })
+        });
     }
 
     getMenuItems() {
@@ -276,7 +276,7 @@ export class CollectionListComponent implements OnInit {
 
     openAddCollectionForm() {
         const data = {
-            AsbtractSchemes: this.abstractSchemes
+            AbstractSchemes: this.abstractSchemes
         };
         this.utilitiesService.openComponentInDialog(AddCollectionDialogComponent, data, (collection) => {
             if (collection) {

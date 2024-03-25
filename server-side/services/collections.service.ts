@@ -1,5 +1,5 @@
 import { UtilitiesService } from './utilities.service';
-import { AddonDataScheme, Collection, FindOptions } from '@pepperi-addons/papi-sdk'
+import { AddonDataScheme, Collection, FindOptions, PapiClient } from '@pepperi-addons/papi-sdk'
 import { Client, Request } from '@pepperi-addons/debug-server';
 import { DataQueryRelation, DimxRelations, EXPORT_FUNCTION_NAME, IMPORT_FUNCTION_NAME, limitationTypes, UdcMappingsScheme } from '../metadata';
 import { Validator, ValidatorResult } from 'jsonschema';
@@ -44,7 +44,7 @@ export class CollectionsService {
             const fieldsValid = await this.validateFieldsType(collectionObj);
             if (fieldsValid.size === 0) {
                 // DI-22303 after we create the collection, we need to update it's Data view to have all the fields, and then post the new object
-                collectionObj = this.updateListView(collectionObj);
+                collectionObj = await this.updateListView(collectionObj);
                 // before sending data to ADAL, remove extended fields, without changing the DV
                 collectionObj = this.removeExtensionFields(collectionObj, false);
                 collectionObj = this.handleSyncForContained(collectionObj);
@@ -199,27 +199,40 @@ export class CollectionsService {
         return Object.keys(res.Fields!).length;
     }
 
-    async validateFieldsType(collectionObj: Collection) {
-        let validMap = new Map();
+    private async getTotalFieldsCount(collectionObj: Collection): Promise<number> {
         let fieldsCount = 0;
-        const collections = await this.find({ include_deleted: true, where: `Name != ${collectionObj.Name}` });
-        // only check for field's type when there are Fields on the collection
         if (collectionObj.Fields) {
-            for (const fieldID of Object.keys(collectionObj.Fields!)) {
-                if (collectionObj.Fields![fieldID].Type === 'ContainedResource') { // if field type is contained, count contained schema fields
-                    const collectionFieldsCount = await this.getCollectionFieldsLength(collectionObj.Fields![fieldID].Resource!);
+            for (const fieldID of Object.keys(collectionObj.Fields)) {
+                if (collectionObj.Fields[fieldID].Type === 'ContainedResource') {
+                    // If field type is ContainedResource, count contained schema fields
+                    const collectionFieldsCount = await this.getCollectionFieldsLength(collectionObj.Fields[fieldID].Resource!);
                     fieldsCount += collectionFieldsCount;
                 } else {
+                    // Regular field, count it directly
                     fieldsCount++;
                 }
+            }
+        }
+        return fieldsCount;
+    }
+
+    async validateFieldsType(collectionObj: Collection) {
+        let validMap = new Map();
+    
+        const fieldsCount = await this.getTotalFieldsCount(collectionObj);
+    
+        const collections = await this.find({ include_deleted: true, where: `Name != '${collectionObj.Name}'` });
+        // Only check for field's type when there are Fields in the collection
+        if (collectionObj.Fields) {
+            for (const fieldID of Object.keys(collectionObj.Fields)) {
                 collections.forEach((collection => {
                     if (collection.Fields && collection.Fields[fieldID]) {
-                        // if one of the collection has a field with the same ID, check to see if it's the same type.
-                        if (collectionObj.Fields![fieldID].Type != collection.Fields![fieldID].Type) {
+                        // if one of the collections has a field with the same ID, check to see if it's the same type.
+                        if (collectionObj.Fields![fieldID].Type !== collection.Fields[fieldID].Type) {
                             this.addFieldToMap(validMap, fieldID, collection.Name);
                         }
                         // If they both of type 'Array' check their item's type.
-                        else if (collectionObj.Fields![fieldID].Type === 'Array' && collectionObj.Fields![fieldID].Items!.Type != collection.Fields![fieldID].Items!.Type) {
+                        else if (collectionObj.Fields![fieldID].Type === 'Array' && collectionObj.Fields![fieldID].Items!.Type !== collection.Fields[fieldID].Items!.Type) {
                             this.addFieldToMap(validMap, fieldID, collection.Name);
                         }
                     }
@@ -307,7 +320,21 @@ export class CollectionsService {
         return res;
     }
 
-    private updateListView(collection: Collection): Collection {
+    private async getParentSchema(addonUUID: string, name: string): Promise<AddonDataScheme>{ 
+        const emulatedPapiClient = new PapiClient({
+            baseURL: this.client.BaseURL,
+            token: this.client.OAuthAccessToken,
+            addonUUID: addonUUID,
+            actionUUID: this.client.ActionUUID
+        });   
+        const parentSchema = await emulatedPapiClient.addons.data.schemes.name(name).get();
+        if (!parentSchema) {
+            throw new Error(`Parent schema ${name} of addon ${addonUUID} not found`);
+        }
+        return parentSchema;
+    }
+
+    private async updateListView(collection: Collection): Promise<Collection> {
         const res: Collection = JSON.parse(JSON.stringify(collection));
 
         // if there is no ListView, create an empty one
@@ -324,7 +351,18 @@ export class CollectionsService {
                 return res.Fields!.hasOwnProperty(element.FieldID);
             })
         }
-
+        // if this schema extends another, we'd want to add the fields from the extended schema to the list view
+        if (res.Extends && res.Extends.AddonUUID && res.Extends.Name) { 
+            const parentSchema = await this.getParentSchema(res.Extends.AddonUUID, res.Extends.Name);
+            const parentSchemaFields = parentSchema.Fields || {};
+            const parentCollectionFields = {};
+            // for each parent field we will also add the property "ExtendedField" = true, and "Mandatory" = false
+            for (const field of Object.keys(parentSchemaFields)) {
+                parentCollectionFields[field] = { ...parentSchemaFields[field], ExtendedField: true, Mandatory: false}
+            }
+            // need to merge the fields from the parent schema with the fields from the current schema
+            collection.Fields = { ...parentCollectionFields, ...res.Fields };
+        }
         // append to the end all the fields that are not part of the list view
         Object.keys(collection.Fields || {}).forEach(fieldName => {
             let dvField = res.ListView!.Fields!.find(x => x.FieldID === fieldName);

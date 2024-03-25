@@ -118,7 +118,9 @@ export class ServerDocumentsService {
             const dimxObject = body.DIMXObjects[index];
             dimxObject.Object = {...element.Item};
             if (!element.ValidationResult.valid) {
-                const errors = element.ValidationResult.errors.map(error => error.stack.replace("instance.", ""));
+                const errors = element.ValidationResult.errors.map(error => {
+                    return this.documentsService.getValidationErrorMessage(element, error); 
+                });
                 dimxObject.Status = 'Error';
                 dimxObject.Details = `Document validation failed.\n ${errors.join("\n")}`;
                 dimxObject.Key = element.Item.Key;
@@ -140,20 +142,25 @@ export class ServerDocumentsService {
     }
 
     async create(collectionsService: CollectionsService, collectionName: string, body: any) {
+        const documentNotFoundErrorMessage = 'Object ID does not exist';
         try {
             const collection = await collectionsService.findByName(collectionName);
             const itemKey = this.globalService.getItemKey(collection, body);
             const document = await this.documentsService.getDocumentByKey(collectionName, itemKey);
             if (document.Hidden) {
-                throw new Error(existingInRecycleBinErrorMessage)
+                // if the document is in the recycle bin, we want to hard delete it and then create a new one
+                await this.hardDelete(collectionName, itemKey, true);
+                // to create we could throw the error that will be caught in the catch block a few lines below, it's ugly but it works
+                throw new Error(documentNotFoundErrorMessage);
+
             }
             else {
                 throw new Error(existingErrorMessage);
             }
-        }
-        catch (error) {
+        } 
+        catch (error) { 
             if(error instanceof Error) {
-                if (error?.message?.indexOf('Object ID does not exist') >= 0) {
+                if (error?.message?.indexOf(documentNotFoundErrorMessage) >= 0) {
                     const containedArrayLimit = await this.varRelationService.getSettingsByName(limitationTypes.ItemsOfContainedArray);
                     const result = await this.documentsService.upsert(collectionName, body, containedArrayLimit)
                     return result;

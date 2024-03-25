@@ -26,7 +26,7 @@ export class AddCollectionDialogComponent implements OnInit {
                 private translate: TranslateService,
                 private utilities: UtilitiesService,
                 @Inject(MAT_DIALOG_DATA) public incoming: any ) { 
-                    this.extentionOptions = incoming.AsbtractSchemes.map(collection => {
+                    this.extentionOptions = incoming.AbstractSchemes.map(collection => {
                         return {
                             key: collection.Name,
                             value: collection.Name
@@ -71,7 +71,7 @@ export class AddCollectionDialogComponent implements OnInit {
             GenericResource: true
         }
         if(this.extention != '') {
-            const addonUUID = this.incoming.AsbtractSchemes.find(collection => collection.Name === this.extention).AddonUUID;
+            const addonUUID = this.incoming.AbstractSchemes.find(collection => collection.Name === this.extention).AddonUUID;
             collection.Extends = {
                 AddonUUID: addonUUID,
                 Name: this.extention

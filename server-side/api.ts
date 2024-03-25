@@ -12,6 +12,7 @@ import { ServerDocumentsService } from './services/documents.service';
 
 import { VarSettingsService } from './services/var-settings.service';
 import { limitationTypes, udcSchemesPermissionsPolicy } from './metadata';
+import { DataForCollectionForm, ResourcesForCollectionForm } from 'udc-shared/src/entities';
 
 export async function var_settings(client: Client, request: Request) {
     const utilities = new UtilitiesService(client);
@@ -35,7 +36,6 @@ export async function var_settings(client: Client, request: Request) {
         throw error;
     }
 }
-
 
 export async function schemes(client: Client, request: Request) {
     await client.ValidatePermission(udcSchemesPermissionsPolicy);
@@ -453,6 +453,43 @@ export async function truncate(client: Client, request: Request) {
     }
 }
 
+export async function get_data_for_collection_form(client: Client, request: Request) {
+    const collectionName = request.query.collection_name || '';
+    const resourcesService = new ResourcesService(client);
+    const collectionsService = new CollectionsService(client);
+    const utilities = new UtilitiesService(client);
+    const varRelationService: VarSettingsService = new VarSettingsService(utilities);
+    const apiService = new ApiService(client);
+    const documentsService = new DocumentsService(apiService, resourcesService);
+    switch (request.method) {
+        case 'GET': {
+            const resourcesForCollectionForm: ResourcesForCollectionForm = await resourcesService.getResourcesForCollectionForm(collectionName);
+            const collectionEvents = await collectionsService.getCollectionEvents(collectionName);
+            const fieldsLimit = await varRelationService.getSettingsByName(resourcesForCollectionForm.Collection.Type === 'contained' ? limitationTypes.ContainedSchemaFields : limitationTypes.Fields);
+            const documentsOptions = {
+                IncludeCount: true,
+                MaxPageSize: 1,
+                Page: 1
+            }
+            const documents = resourcesForCollectionForm.Collection.Type !== 'contained' ? await documentsService.search(collectionName, documentsOptions) : { Objects: [], Count: 0 }
+
+            const collectionIsEmpty = documents.Count === 0 || documents.Count == -1 && documents.Objects.length === 0;
+            
+            const returnData: DataForCollectionForm = {
+                ...resourcesForCollectionForm,
+                Events: collectionEvents,
+                FieldsLimit: fieldsLimit,
+                CollectionIsEmpty: collectionIsEmpty
+            }
+            return returnData;
+        }
+        default: {
+            let err: any = new Error(`Method ${request.method} not allowed`);
+            err.code = 405;
+            throw err;
+        }
+    }
+}
 
 export function unique(client: Client, request: Request) {
     const error: any = new Error("this method is not supported by this resource");
