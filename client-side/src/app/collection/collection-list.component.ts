@@ -123,13 +123,43 @@ export class CollectionListComponent implements OnInit {
                                 Mandatory: false,
                                 ReadOnly: true
                             },
+                            {
+                                FieldID: 'DataAccess',
+                                Type: 'TextBox',
+                                Title: this.translate.instant('Data Access'),
+                                Mandatory: false,
+                                ReadOnly: true
+                            },
+                            {
+                                FieldID: 'CreationDateTime',
+                                Type: 'DateAndTime',
+                                Title: this.translate.instant('Creation DateTime'),
+                                Mandatory: false,
+                                ReadOnly: true
+                            },
+                            {
+                                FieldID: 'ModificationDateTime',
+                                Type: "DateAndTime",
+                                Title: this.translate.instant('Modification DateTime'),
+                                Mandatory: false,
+                                ReadOnly: true
+                            }
                         ],
                         Columns: [
                             {
-                                Width: 50
+                                Width: 20,
                             },
                             {
-                                Width: 50
+                                Width: 20,
+                            },
+                            {
+                                Width: 20,
+                            },
+                            {
+                                Width: 20,
+                            },
+                            {
+                                Width: 20,
                             }
                         ],
 
@@ -137,7 +167,9 @@ export class CollectionListComponent implements OnInit {
                         MinimumColumnWidth: 0
                     },
                     totalCount: this.collections.length,
-                    items: this.collections
+                    items: this.collections.map(collection => {
+                        return { ...collection, 'DataAccess': collection.SyncData?.Sync ? 'Online & Offline' : 'Online' }
+                    })
                 });
             },
             inputs: {
