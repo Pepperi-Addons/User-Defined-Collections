@@ -53,11 +53,18 @@ export class ReferenceService {
     }
 
     private async handleReferences(schemeFields: CollectionFields, documents: AddonData[]) {
+        const timeX = new Date().getTime();
         await this.getReferenceFields(schemeFields);
+        const timeY = new Date().getTime();
+        console.log(`@@@@@@@@ getReferenceFields took ${timeY - timeX} ms`);
         await Promise.all(documents.map(async (doc) => {
             await this.collectItemReferences(doc, schemeFields);
         }));
+        const timeZ = new Date().getTime();
+        console.log(`@@@@@@@@ collectItemReferences took ${timeZ - timeY} ms`);
         await this.popualateAllResources();
+        const timeW = new Date().getTime();
+        console.log(`@@@@@@@@ popualateAllResources took ${timeW - timeZ} ms`);
     }
 
     private addValueToResource(resourceName: string, fieldName: string, fieldValue: string | string[]) {
@@ -108,7 +115,10 @@ export class ReferenceService {
                     searchBody.Fields?.push('Key');
                 }
                 console.log(`about to call search on resource ${resourceName} with body ${JSON.stringify(searchBody)}`);
+                const timeX = new Date().getTime();
                 const items = await this.resourcesService.search(resourceName, searchBody);
+                const timeY = new Date().getTime();
+                console.log(`@@@@@@@@ search for resource ${resourceName} with body ${JSON.stringify(searchBody)} took ${timeY - timeX} ms`);
                 console.log(`after getting items from resource ${resourceName}. recieved ${items.Objects.length} objects`);
                 this.referenceObjects[resourceName].Items = items.Objects;
             }
@@ -154,7 +164,10 @@ export class ReferenceService {
                 const field = schemeFields![prop];
                 // property has unique field of resource
                 if (prop.indexOf('.') > 0) {
+                    const timeX = new Date().getTime();
                     await this.handleDotAnnotationFields(doc, prop, this.referenceFields)
+                    const timeY = new Date().getTime();
+                    console.log(`@@@@@@@@ handleDotAnnotationFields took ${timeY - timeX} ms`);
                 }
                 // current prop is a reference by itself, need to add it's value with 'Key' field
                 else if (refField) {
